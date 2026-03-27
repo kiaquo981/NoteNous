@@ -23,6 +23,7 @@ final class AppState: ObservableObject {
     @Published var shouldClassifyNote: Bool = false
     @Published var isImportVisible: Bool = false
     @Published var isExportVisible: Bool = false
+    @Published var isZettelCreationVisible: Bool = false
     @Published var navigateFolgezettel: FolgezettelDirection? = nil
 
     let coreData = CoreDataStack.shared

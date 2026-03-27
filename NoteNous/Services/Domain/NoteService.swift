@@ -128,7 +128,7 @@ final class NoteService {
         }
     }
 
-    func countNotes(para: PARACategory? = nil, codeStage: CODEStage? = nil) -> Int {
+    func countNotes(para: PARACategory? = nil, codeStage: CODEStage? = nil, noteType: NoteType? = nil) -> Int {
         let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
         var predicates = [NSPredicate(format: "isArchived == NO")]
 
@@ -137,6 +137,9 @@ final class NoteService {
         }
         if let codeStage = codeStage {
             predicates.append(NSPredicate(format: "codeStageRaw == %d", codeStage.rawValue))
+        }
+        if let noteType = noteType {
+            predicates.append(NSPredicate(format: "noteTypeRaw == %d", noteType.rawValue))
         }
 
         request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)

@@ -41,6 +41,11 @@ struct MainWindowView: View {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, context)
         }
+        .sheet(isPresented: $appState.isZettelCreationVisible) {
+            ZettelCreationSheet()
+                .environmentObject(appState)
+                .environment(\.managedObjectContext, context)
+        }
         .morosBackground()
     }
 

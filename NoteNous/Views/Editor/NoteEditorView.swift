@@ -22,6 +22,9 @@ struct NoteEditorView: View {
     // Auto-classify debounce
     @State private var autoClassifyTask: Task<Void, Never>?
 
+    // Promotion
+    @State private var showPromotionSheet: Bool = false
+
     var body: some View {
         VStack(spacing: 0) {
             // Sequence Navigator
@@ -76,6 +79,9 @@ struct NoteEditorView: View {
                 }
             }
             .padding()
+
+            // Methodology Context Bar
+            noteTypeContextBar
 
             Rectangle()
                 .fill(Moros.border)
@@ -208,6 +214,101 @@ struct NoteEditorView: View {
                 .environment(\.managedObjectContext, context)
                 .environmentObject(appState)
                 .frame(minWidth: 500, minHeight: 400)
+        }
+        .sheet(isPresented: $showPromotionSheet) {
+            PromotionSheet(note: note)
+                .environment(\.managedObjectContext, context)
+                .environmentObject(appState)
+        }
+    }
+
+    // MARK: - Methodology Context Bar
+
+    @ViewBuilder
+    private var noteTypeContextBar: some View {
+        switch note.noteType {
+        case .fleeting:
+            HStack(spacing: 8) {
+                Image(systemName: "bolt.fill")
+                    .foregroundStyle(Moros.ambient)
+                Text("Fleeting note")
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textSub)
+                Text("Process within 7 days or discard")
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textDim)
+                Spacer()
+                Button("Promote") {
+                    showPromotionSheet = true
+                }
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.verdit)
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .background(Moros.ambient.opacity(0.06))
+
+        case .literature:
+            HStack(spacing: 8) {
+                Image(systemName: "book.fill")
+                    .foregroundStyle(Moros.oracle)
+                if let sourceTitle = note.sourceTitle {
+                    Text("From: \(sourceTitle)")
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.textSub)
+                } else {
+                    Text("Literature note")
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.textSub)
+                    Text("No source linked")
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.signal)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .background(Moros.oracle.opacity(0.06))
+
+        case .permanent:
+            HStack(spacing: 8) {
+                Image(systemName: "diamond.fill")
+                    .foregroundStyle(Moros.verdit)
+                if let zettelId = note.zettelId {
+                    Text(zettelId)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Moros.verdit)
+                    let fz = FolgezettelService(context: context)
+                    if let parentId = fz.parentId(of: zettelId),
+                       let parentNote = fz.findNote(byFolgezettelId: parentId, in: context) {
+                        Text("continues from '\(parentId): \(parentNote.title)'")
+                            .font(Moros.fontCaption)
+                            .foregroundStyle(Moros.textDim)
+                            .lineLimit(1)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .background(Moros.verdit.opacity(0.06))
+
+        case .structure:
+            HStack(spacing: 8) {
+                Image(systemName: "folder.fill")
+                    .foregroundStyle(Moros.textSub)
+                Text("Structure note")
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textSub)
+                Text("Curated overview / index note")
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textDim)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .background(Moros.textSub.opacity(0.06))
         }
     }
 

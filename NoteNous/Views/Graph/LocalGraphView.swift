@@ -228,6 +228,7 @@ struct LocalGraphView: View {
         case .fleeting: .yellow
         case .literature: .cyan
         case .permanent: .purple
+        case .structure: .gray
         }
     }
 

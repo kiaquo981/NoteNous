@@ -19,7 +19,11 @@ struct FleetingReviewQueue: View {
     @State private var selectedFleetingNote: NoteEntity?
     @State private var showPromotionSheet = false
     @State private var showDiscardAlert = false
+    @State private var showLiteratureSheet = false
+    @State private var showMergeSheet = false
     @State private var promotionTarget: NoteEntity?
+    @State private var literatureTarget: NoteEntity?
+    @State private var mergeTarget: NoteEntity?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,6 +42,20 @@ struct FleetingReviewQueue: View {
         .sheet(isPresented: $showPromotionSheet) {
             if let note = promotionTarget {
                 PromotionSheet(note: note)
+                    .environmentObject(appState)
+            }
+        }
+        .sheet(isPresented: $showLiteratureSheet) {
+            if let note = literatureTarget {
+                LiteratureNoteSheet(existingNote: note)
+                    .environment(\.managedObjectContext, context)
+                    .environmentObject(appState)
+            }
+        }
+        .sheet(isPresented: $showMergeSheet) {
+            if let note = mergeTarget {
+                MergeNoteSheet(sourceNote: note)
+                    .environment(\.managedObjectContext, context)
                     .environmentObject(appState)
             }
         }
@@ -75,6 +93,15 @@ struct FleetingReviewQueue: View {
                     .foregroundStyle(oldestSeverityColor)
             }
 
+            Rectangle().fill(Moros.border).frame(width: 1, height: 16)
+
+            let stale = staleCount
+            if stale > 0 {
+                Text("\(stale) older than 7d")
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.signal)
+            }
+
             Spacer()
 
             Text("OLDEST FIRST")
@@ -95,12 +122,16 @@ struct FleetingReviewQueue: View {
                     promotionTarget = note
                     showPromotionSheet = true
                 } onConvertToLiterature: {
-                    convertToLiterature(note)
+                    literatureTarget = note
+                    showLiteratureSheet = true
                 } onDiscard: {
                     selectedFleetingNote = note
                     showDiscardAlert = true
                 } onDevelop: {
                     appState.selectedNote = note
+                } onMerge: {
+                    mergeTarget = note
+                    showMergeSheet = true
                 }
                 .tag(note)
                 .listRowBackground(Moros.limit01)
@@ -136,12 +167,13 @@ struct FleetingReviewQueue: View {
     }
 
     private func convertToLiterature(_ note: NoteEntity) {
-        note.noteTypeRaw = NoteType.literature.rawValue
-        note.updatedAt = Date()
-        try? context.save()
+        literatureTarget = note
+        showLiteratureSheet = true
+    }
 
-        promotionTarget = note
-        showPromotionSheet = true
+    private var staleCount: Int {
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        return fleetingNotes.filter { ($0.createdAt ?? Date()) < sevenDaysAgo }.count
     }
 
     // MARK: - Computed
@@ -188,6 +220,7 @@ struct FleetingNoteCard: View {
     let onConvertToLiterature: () -> Void
     let onDiscard: () -> Void
     let onDevelop: () -> Void
+    var onMerge: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -229,6 +262,15 @@ struct FleetingNoteCard: View {
                 .buttonStyle(.borderless)
                 .font(Moros.fontCaption)
                 .foregroundStyle(Moros.oracle)
+
+                if let onMerge = onMerge {
+                    Button("Merge", systemImage: "arrow.triangle.merge") {
+                        onMerge()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.ambient)
+                }
 
                 Spacer()
 

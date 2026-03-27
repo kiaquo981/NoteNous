@@ -24,18 +24,99 @@ struct SidebarView: View {
             DailyNoteButton()
                 .padding(.bottom, 4)
 
-            // New Note Button
-            Button(action: createNewNote) {
+            // New Zettel Button (opens ZettelCreationSheet)
+            Button(action: { appState.isZettelCreationVisible = true }) {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
                         .symbolRenderingMode(.monochrome)
                         .foregroundStyle(Moros.oracle)
-                    Text("New Note")
+                    Text("New Zettel")
                         .foregroundStyle(Moros.oracle)
                 }
             }
             .buttonStyle(.plain)
             .padding(.bottom, 8)
+
+            // ZETTELKASTEN Section
+            Section {
+                SidebarNoteTypeRow(noteType: .fleeting, icon: "bolt.fill", label: "Fleeting", color: Moros.ambient)
+                SidebarNoteTypeRow(noteType: .literature, icon: "book.fill", label: "Literature", color: Moros.oracle)
+                SidebarNoteTypeRow(noteType: .permanent, icon: "diamond.fill", label: "Permanent", color: Moros.verdit)
+                SidebarNoteTypeRow(noteType: .structure, icon: "folder.fill", label: "Structure", color: Moros.textSub)
+            } header: {
+                Text("ZETTELKASTEN")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
+            }
+
+            // PIPELINE Section
+            Section {
+                ForEach(CODEStage.allCases) { stage in
+                    SidebarCODERow(stage: stage, isSelected: appState.selectedCODEFilter == stage)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if appState.selectedCODEFilter == stage {
+                                appState.selectedCODEFilter = nil
+                            } else {
+                                appState.selectedCODEFilter = stage
+                            }
+                        }
+                }
+            } header: {
+                Text("PIPELINE")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
+            }
+
+            // NOTECARDS (Greene/Holiday)
+            Section {
+                NavigationLink(destination: SourceBrowserView(sourceService: SourceService())) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "books.vertical").foregroundStyle(Moros.ambient)
+                        Text("Sources").foregroundStyle(Moros.textSub)
+                    }
+                }
+            } header: {
+                Text("NOTECARDS")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
+            }
+
+            // TOOLS
+            Section {
+                NavigationLink(destination: IndexBrowserView(indexService: IndexService()).environment(\.managedObjectContext, context)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass").foregroundStyle(Moros.ambient)
+                        Text("Index").foregroundStyle(Moros.textSub)
+                    }
+                }
+                NavigationLink(destination: WorkflowDashboard(sourceService: SourceService(), indexService: IndexService()).environment(\.managedObjectContext, context)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "chart.bar").foregroundStyle(Moros.oracle)
+                        Text("Dashboard").foregroundStyle(Moros.textSub)
+                    }
+                }
+                NavigationLink(destination: FleetingReviewQueue().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock.arrow.circlepath").foregroundStyle(Moros.ambient)
+                        Text("Processing Queue").foregroundStyle(Moros.textSub)
+                    }
+                }
+                NavigationLink(destination: ProcessingPipeline().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.right.arrow.left").foregroundStyle(Moros.oracle)
+                        Text("Pipeline").foregroundStyle(Moros.textSub)
+                    }
+                }
+            } header: {
+                Text("TOOLS")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
+            }
 
             // PARA Section
             Section {
@@ -52,59 +133,6 @@ struct SidebarView: View {
                 }
             } header: {
                 Text("PARA")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
-            }
-
-            // CODE Pipeline
-            Section {
-                ForEach(CODEStage.allCases) { stage in
-                    SidebarCODERow(stage: stage, isSelected: appState.selectedCODEFilter == stage)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if appState.selectedCODEFilter == stage {
-                                appState.selectedCODEFilter = nil
-                            } else {
-                                appState.selectedCODEFilter = stage
-                            }
-                        }
-                }
-            } header: {
-                Text("CODE PIPELINE")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
-            }
-
-            // Workflow
-            Section {
-                NavigationLink(destination: FleetingReviewQueue().environment(\.managedObjectContext, context)) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "tray.full").foregroundStyle(Moros.ambient)
-                        Text("Fleeting Queue").foregroundStyle(Moros.textSub)
-                    }
-                }
-                NavigationLink(destination: SourceBrowserView(sourceService: SourceService())) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "books.vertical").foregroundStyle(Moros.ambient)
-                        Text("Sources").foregroundStyle(Moros.textSub)
-                    }
-                }
-                NavigationLink(destination: IndexBrowserView(indexService: IndexService()).environment(\.managedObjectContext, context)) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "list.bullet.rectangle").foregroundStyle(Moros.ambient)
-                        Text("Index").foregroundStyle(Moros.textSub)
-                    }
-                }
-                NavigationLink(destination: WorkflowDashboard(sourceService: SourceService(), indexService: IndexService()).environment(\.managedObjectContext, context)) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "chart.bar").foregroundStyle(Moros.oracle)
-                        Text("Dashboard").foregroundStyle(Moros.textSub)
-                    }
-                }
-            } header: {
-                Text("WORKFLOW")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
                     .textCase(.uppercase)
                     .foregroundStyle(Moros.textDim)
@@ -135,12 +163,6 @@ struct SidebarView: View {
         .tint(Moros.oracle)
         .scrollContentBackground(.hidden)
         .morosBackground(Moros.limit01)
-    }
-
-    private func createNewNote() {
-        let service = NoteService(context: context)
-        let note = service.createNote()
-        appState.selectedNote = note
     }
 }
 
@@ -207,5 +229,38 @@ struct SidebarCODERow: View {
     private var count: Int {
         let service = NoteService(context: context)
         return service.countNotes(codeStage: stage)
+    }
+}
+
+// MARK: - Zettelkasten Note Type Row
+
+struct SidebarNoteTypeRow: View {
+    let noteType: NoteType
+    let icon: String
+    let label: String
+    let color: Color
+    @Environment(\.managedObjectContext) private var context
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .foregroundStyle(color)
+                .frame(width: 16)
+            Text(label)
+                .foregroundStyle(Moros.textSub)
+            Spacer()
+            Text("\(count)")
+                .font(Moros.fontMonoSmall)
+                .foregroundStyle(Moros.textDim)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Moros.limit03, in: Rectangle())
+        }
+        .font(Moros.fontSmall)
+    }
+
+    private var count: Int {
+        let service = NoteService(context: context)
+        return service.countNotes(noteType: noteType)
     }
 }

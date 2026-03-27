@@ -338,6 +338,7 @@ struct GraphView: View {
         case .fleeting: return Moros.ambient
         case .literature: return Moros.oracle
         case .permanent: return Moros.verdit
+        case .structure: return Moros.textSub
         }
     }
 

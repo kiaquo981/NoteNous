@@ -6,8 +6,8 @@ struct KeyboardCommands: Commands {
     var body: some Commands {
         // Replace default New Item
         CommandGroup(replacing: .newItem) {
-            Button("New Note") {
-                appState.selectedNote = nil
+            Button("New Zettel") {
+                appState.isZettelCreationVisible = true
             }
             .keyboardShortcut("n", modifiers: .command)
 
