@@ -6,13 +6,29 @@ final class CoreDataStack: ObservableObject {
 
     private let logger = Logger(subsystem: "com.notenous.app", category: "CoreData")
 
-    lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "NoteNous", managedObjectModel: Self.model)
+    static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
+    lazy var persistentContainer: NSPersistentCloudKitContainer = {
+        let container = NSPersistentCloudKitContainer(name: "NoteNous", managedObjectModel: Self.model)
 
         let description = NSPersistentStoreDescription()
-        description.url = Self.storeURL
-        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        if Self.isRunningTests {
+            // Use in-memory store during tests to avoid CloudKit validation issues
+            description.type = NSInMemoryStoreType
+        } else {
+            description.url = Self.storeURL
+            description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+            // CloudKit sync
+            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: "iCloud.com.notenous.app"
+            )
+        }
+
         container.persistentStoreDescriptions = [description]
 
         container.loadPersistentStores { description, error in
@@ -26,6 +42,15 @@ final class CoreDataStack: ObservableObject {
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = UndoManager()
+
+        // Listen for remote CloudKit changes
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name.NSPersistentStoreRemoteChange,
+            object: container.persistentStoreCoordinator,
+            queue: .main
+        ) { [weak self] notification in
+            self?.logger.info("CloudKit remote change received")
+        }
 
         return container
     }()
