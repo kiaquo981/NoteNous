@@ -7,6 +7,8 @@ struct NoteNousApp: App {
 
     init() {
         EnvLoader.loadIfNeeded()
+        // Force dark appearance globally — MOROS is dark-only
+        NSApp.appearance = NSAppearance(named: .darkAqua)
     }
 
     var body: some Scene {
@@ -14,10 +16,13 @@ struct NoteNousApp: App {
             MainWindowView()
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, appState.viewContext)
+                .preferredColorScheme(.dark)
+                .tint(Color(red: 0.267, green: 0.467, blue: 0.800)) // ORACLE blue
                 .sheet(isPresented: $appState.isQuickCaptureVisible) {
                     QuickCapturePanel()
                         .environmentObject(appState)
                         .environment(\.managedObjectContext, appState.viewContext)
+                        .preferredColorScheme(.dark)
                 }
                 .onAppear {
                     OnboardingService.runIfNeeded(context: appState.viewContext)

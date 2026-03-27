@@ -26,8 +26,13 @@ struct SidebarView: View {
 
             // New Note Button
             Button(action: createNewNote) {
-                Label("New Note", systemImage: "plus.circle.fill")
-                    .foregroundStyle(Moros.oracle)
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill")
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(Moros.oracle)
+                    Text("New Note")
+                        .foregroundStyle(Moros.oracle)
+                }
             }
             .buttonStyle(.plain)
             .padding(.bottom, 8)
