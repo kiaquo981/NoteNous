@@ -1,54 +1,57 @@
 import Foundation
 import os.log
 
-/// Loads environment variables from a .env file at the project root
-/// and stores secrets in Keychain for secure access at runtime.
+/// Reads environment variables directly from .env file.
+/// No Keychain, no prompts, no friction.
 struct EnvLoader {
     private static let logger = Logger(subsystem: "com.notenous.app", category: "EnvLoader")
+    private static var cachedVars: [String: String]?
 
-    /// Load .env file and populate Keychain with API keys.
-    /// Called once at app startup.
+    /// Load .env on startup — caches in memory.
     static func loadIfNeeded() {
-        // Only load if Keychain doesn't already have the key
-        if KeychainManager.load(key: "openrouter_api_key") != nil {
-            logger.info("OpenRouter API key already in Keychain")
-            return
-        }
+        guard cachedVars == nil else { return }
 
         guard let envPath = findEnvFile() else {
             logger.info("No .env file found — configure API key in Settings")
+            cachedVars = [:]
             return
         }
 
         guard let contents = try? String(contentsOfFile: envPath, encoding: .utf8) else {
             logger.warning("Failed to read .env file")
+            cachedVars = [:]
             return
         }
 
-        let vars = parseEnv(contents)
-
-        if let apiKey = vars["OPENROUTER_API_KEY"], !apiKey.isEmpty {
-            let saved = KeychainManager.save(key: "openrouter_api_key", value: apiKey)
-            if saved {
-                logger.info("OpenRouter API key loaded from .env into Keychain")
-            } else {
-                logger.error("Failed to save API key to Keychain")
-            }
-        }
+        cachedVars = parseEnv(contents)
+        logger.info("Loaded \(cachedVars?.count ?? 0) env vars from .env")
     }
 
-    /// Force reload from .env (useful when key changes)
+    /// Get the OpenRouter API key (from .env or UserDefaults fallback).
+    static var apiKey: String? {
+        if cachedVars == nil { loadIfNeeded() }
+        let key = cachedVars?["OPENROUTER_API_KEY"]
+        if let key, !key.isEmpty { return key }
+        return UserDefaults.standard.string(forKey: "openRouterAPIKey")
+    }
+
+    /// Get any env var by name.
+    static func get(_ name: String) -> String? {
+        if cachedVars == nil { loadIfNeeded() }
+        return cachedVars?[name]
+    }
+
+    /// Force reload (when .env changes).
     static func forceReload() {
-        KeychainManager.delete(key: "openrouter_api_key")
+        cachedVars = nil
         loadIfNeeded()
     }
 
     // MARK: - Private
 
     private static func findEnvFile() -> String? {
-        // Look relative to the app bundle first (dev builds), then common locations
         let candidates = [
-            Bundle.main.bundlePath + "/../../../../.env",  // DerivedData → project root
+            Bundle.main.bundlePath + "/../../../../.env",
             Bundle.main.bundlePath + "/../../../.env",
             FileManager.default.currentDirectoryPath + "/.env",
             NSHomeDirectory() + "/code/NoteNous/.env"

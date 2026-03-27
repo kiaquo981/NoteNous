@@ -43,7 +43,8 @@ final class OpenRouterClient {
     private let logger = Logger(subsystem: "com.notenous.app", category: "OpenRouter")
 
     private var apiKey: String? {
-        KeychainManager.load(key: "openrouter_api_key")
+        // Read from .env file directly (no Keychain, no prompts)
+        EnvLoader.apiKey ?? UserDefaults.standard.string(forKey: "openRouterAPIKey")
     }
 
     var isConfigured: Bool {
