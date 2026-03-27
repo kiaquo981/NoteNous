@@ -62,7 +62,14 @@ struct StackView: View {
     }
 
     private var filteredNotes: [NoteEntity] {
-        var result = Array(notes)
+        // Deduplicate by zettelId to prevent showing same note twice
+        var seen = Set<String>()
+        var result = Array(notes).filter { note in
+            guard let zid = note.zettelId else { return true }
+            if seen.contains(zid) { return false }
+            seen.insert(zid)
+            return true
+        }
 
         if let para = appState.selectedPARAFilter {
             result = result.filter { $0.paraCategory == para }

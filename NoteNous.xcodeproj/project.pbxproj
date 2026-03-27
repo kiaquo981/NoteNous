@@ -112,6 +112,7 @@
 		9256D4E7609F127CAE48C6B7 /* PromotionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A07ECBFC6D53EB35A4F6DE /* PromotionSheet.swift */; };
 		92B3AB128A89DBF3F44857F6 /* ClipServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5692B3B5D20FC08189CB0CE /* ClipServer.swift */; };
 		97106708DE44FF391A84775A /* FallbackClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6893BEC65953D539D0E8A293 /* FallbackClassifier.swift */; };
+		984D4885BB5C2BF264E1A479 /* NightlyAgentScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E4CD6B92AF37E047F104B99 /* NightlyAgentScheduler.swift */; };
 		997D6A72DA68C5B187FE3AAA /* CODEStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ABB769ABEC5B895E8D22F1F /* CODEStage.swift */; };
 		9A281EA295B5E6904D1C93F5 /* WorkflowDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF1C221C514B7AD16770B9C /* WorkflowDataModelTests.swift */; };
 		9B8999CF17C16AABB4B59E8D /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB002EEA844E334A9EF6934B /* SafariWebExtensionHandler.swift */; };
@@ -230,6 +231,7 @@
 		3BF83F7BFC9447F5CD85DFF7 /* TagBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagBadge.swift; sourceTree = "<group>"; };
 		3DE66508463076920FE1E471 /* PDFAnnotationPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFAnnotationPanel.swift; sourceTree = "<group>"; };
 		3DFF5684EA0C2EA246249C2C /* LinkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkService.swift; sourceTree = "<group>"; };
+		3E4CD6B92AF37E047F104B99 /* NightlyAgentScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightlyAgentScheduler.swift; sourceTree = "<group>"; };
 		400473A59D02EF41FA4F508B /* AgentActivityLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentActivityLog.swift; sourceTree = "<group>"; };
 		4057D68CBD6A33E00ADAB4F3 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		42EBA210DBE76C2815F90360 /* ReadwiseBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadwiseBrowserView.swift; sourceTree = "<group>"; };
@@ -623,6 +625,7 @@
 				6893BEC65953D539D0E8A293 /* FallbackClassifier.swift */,
 				BAB1BF9C25F69CA205C3E325 /* LinkSuggestionService.swift */,
 				0F6E0E466600C4A3C3CE4A68 /* LocalAIService.swift */,
+				3E4CD6B92AF37E047F104B99 /* NightlyAgentScheduler.swift */,
 				A96026F53C43F48FE5FC3472 /* OpenRouterClient.swift */,
 				08ABC83B5DA0A29A2CA4823D /* SynthesisService.swift */,
 				7C8204C5BAEC08437B247D22 /* ZettelkastenAgent.swift */,
@@ -1101,6 +1104,7 @@
 				FD5C4209B421CE71C18334C0 /* MergeNoteSheet.swift in Sources */,
 				A977E3608ABB6407DE1DD582 /* MorosTheme.swift in Sources */,
 				89CFD210714DD707C36A48D5 /* NetworkMonitor.swift in Sources */,
+				984D4885BB5C2BF264E1A479 /* NightlyAgentScheduler.swift in Sources */,
 				B991263CA9662F3B2E2DFE45 /* NoteCardView.swift in Sources */,
 				6660CE4258FD32CC450A4106 /* NoteEditorView.swift in Sources */,
 				79A8B56E2ADC9F29575F2B1F /* NoteEntity+Extensions.swift in Sources */,

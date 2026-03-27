@@ -58,6 +58,9 @@ struct NoteNousApp: App {
                     if VoiceInkAutoSync.shared.isEnabled {
                         VoiceInkAutoSync.shared.startAutoSync(context: appState.viewContext)
                     }
+
+                    // Start nightly Zettelkasten Agent scheduler
+                    NightlyAgentScheduler.shared.start()
                 }
                 .onDisappear {
                     ClipServer.shared.stop()
