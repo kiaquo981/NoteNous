@@ -22,6 +22,7 @@ public class NoteEntity: NSManagedObject {
     @NSManaged public var createdAt: Date?
     @NSManaged public var updatedAt: Date?
     @NSManaged public var archivedAt: Date?
+    @NSManaged public var contextNote: String?
 
     @NSManaged public var tags: NSSet?
     @NSManaged public var concepts: NSSet?

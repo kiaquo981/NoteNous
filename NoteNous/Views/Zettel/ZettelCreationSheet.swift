@@ -21,6 +21,7 @@ struct ZettelCreationSheet: View {
     // Content
     @State private var title: String = ""
     @State private var content: String = ""
+    @State private var contextNote: String = ""
 
     // Source (literature only)
     @State private var selectedSource: Source?
@@ -621,6 +622,30 @@ struct ZettelCreationSheet: View {
                 // Atomicity bar
                 atomicityBar
             }
+
+            // Context — why this note exists
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "brain.filled.head.profile")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Moros.oracle)
+                    Text("CONTEXT")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Moros.textDim)
+                    Text("— por que essa nota existe?")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Moros.textGhost)
+                }
+
+                TextField("De onde veio essa ideia? Por que é relevante? Como se conecta ao que você já sabe?", text: $contextNote, axis: .vertical)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(Moros.textSub)
+                    .lineLimit(2...4)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(Moros.oracle.opacity(0.04), in: Rectangle())
+                    .overlay(Rectangle().stroke(Moros.oracle.opacity(0.12), lineWidth: 1))
+            }
         }
     }
 
@@ -941,8 +966,10 @@ struct ZettelCreationSheet: View {
             paraCategory: selectedNoteType == .fleeting ? .inbox : .resource
         )
 
-        // Set note type
+        // Set note type and context
         note.noteType = selectedNoteType
+        let ctx = contextNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !ctx.isEmpty { note.contextNote = ctx }
 
         // Folgezettel ID for permanent notes
         if selectedNoteType == .permanent {

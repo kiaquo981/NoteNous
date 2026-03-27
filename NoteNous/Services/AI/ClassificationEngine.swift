@@ -65,6 +65,7 @@ final class ClassificationEngine {
     func classify(
         title: String,
         content: String,
+        contextNote: String? = nil,
         existingTags: [String] = [],
         recentNotes: [(zettelId: String, title: String)] = []
     ) async throws -> ClassificationResult {
@@ -80,9 +81,15 @@ final class ClassificationEngine {
         \(notesContext)
         """
 
+        let contextSection = if let ctx = contextNote, !ctx.isEmpty {
+            "\nUser-provided context: \(ctx)"
+        } else {
+            ""
+        }
+
         let userPrompt = """
         Note title: \(title)
-        Note content: \(content.prefix(3000))
+        Note content: \(content.prefix(3000))\(contextSection)
         """
 
         let (responseContent, _) = try await client.sendWithFallback(

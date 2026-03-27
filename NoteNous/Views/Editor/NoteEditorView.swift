@@ -24,6 +24,8 @@ struct NoteEditorView: View {
 
     // Promotion
     @State private var showPromotionSheet: Bool = false
+    @State private var contextNote: String = ""
+    @State private var isContextExpanded: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -82,6 +84,13 @@ struct NoteEditorView: View {
 
             // Methodology Context Bar
             noteTypeContextBar
+
+            Rectangle()
+                .fill(Moros.border)
+                .frame(height: 1)
+
+            // Context Note — WHY this note exists, for AI classification
+            contextNoteSection
 
             Rectangle()
                 .fill(Moros.border)
@@ -312,17 +321,83 @@ struct NoteEditorView: View {
         }
     }
 
+    // MARK: - Context Note Section
+
+    @ViewBuilder
+    private var contextNoteSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Toggle header
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isContextExpanded.toggle()
+                }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: isContextExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9))
+                        .foregroundStyle(Moros.textDim)
+                    Image(systemName: "brain.filled.head.profile")
+                        .font(.system(size: 11))
+                        .foregroundStyle(contextNote.isEmpty ? Moros.textDim : Moros.oracle)
+                    Text("CONTEXT")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Moros.textDim)
+                    if !contextNote.isEmpty {
+                        Text("(\(contextNote.count) chars)")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(Moros.textGhost)
+                    }
+                    Spacer()
+                    if contextNote.isEmpty {
+                        Text("Por que essa nota existe?")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Moros.textGhost)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
+
+            // Context editor (expandable)
+            if isContextExpanded {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Descreva o contexto: de onde veio essa ideia, por que é relevante, como se conecta ao que você já sabe.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Moros.textDim)
+                        .padding(.horizontal)
+
+                    TextEditor(text: $contextNote)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(Moros.textSub)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: 48, maxHeight: 120)
+                        .padding(.horizontal, 12)
+                        .onChange(of: contextNote) { saveChanges() }
+                }
+                .padding(.bottom, 6)
+                .background(Moros.oracle.opacity(0.03))
+            }
+        }
+    }
+
     // MARK: - Note Loading / Saving
 
     private func loadNote() {
         title = note.title
         content = note.content
+        contextNote = note.contextNote ?? ""
+        isContextExpanded = !contextNote.isEmpty
     }
 
     private func saveChanges() {
-        guard title != note.title || content != note.content else { return }
+        guard title != note.title || content != note.content || contextNote != (note.contextNote ?? "") else { return }
         let service = NoteService(context: context)
         service.updateNote(note, title: title, content: content)
+        if contextNote != (note.contextNote ?? "") {
+            note.contextNote = contextNote.isEmpty ? nil : contextNote
+            try? context.save()
+        }
     }
 
     // MARK: - Wikilink Insertion
@@ -374,6 +449,7 @@ struct NoteEditorView: View {
                 let result = try await engine.classify(
                     title: title,
                     content: content,
+                    contextNote: contextNote.isEmpty ? nil : contextNote,
                     existingTags: existingTags,
                     recentNotes: recentNotes
                 )
