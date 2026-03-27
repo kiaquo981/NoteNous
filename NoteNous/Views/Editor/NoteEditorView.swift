@@ -6,9 +6,9 @@ struct NoteEditorView: View {
     @EnvironmentObject var appState: AppState
     @State private var title: String = ""
     @State private var content: String = ""
-    @State private var showBacklinks: Bool = true
-    @State private var showSimilarNotes: Bool = true
-    @State private var showLinkSuggestions: Bool = true
+    @State private var showBacklinks: Bool = false
+    @State private var showSimilarNotes: Bool = false
+    @State private var showLinkSuggestions: Bool = false
     @State private var showLinkBrowser: Bool = false
     @State private var showLinkCreation: Bool = false
     @State private var showLocalGraph: Bool = false
