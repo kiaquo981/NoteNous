@@ -52,6 +52,17 @@ struct GeneralSettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .onChange(of: themeMode) {
+                    let mode = MorosThemeMode(rawValue: themeMode) ?? .auto
+                    switch mode {
+                    case .dark:
+                        NSApp.appearance = NSAppearance(named: .darkAqua)
+                    case .light:
+                        NSApp.appearance = NSAppearance(named: .aqua)
+                    case .auto:
+                        NSApp.appearance = nil
+                    }
+                }
                 Text("Auto follows your Mac's appearance (System Settings → Appearance)")
                     .font(.caption)
                     .foregroundStyle(.secondary)

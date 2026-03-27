@@ -30,8 +30,16 @@ struct NoteNousApp: App {
                         .frame(minWidth: 600, minHeight: 500)
                 }
                 .onAppear {
-                    // Force dark mode after NSApp is ready
-                    NSApp.appearance = NSAppearance(named: .darkAqua)
+                    // Apply theme mode from settings
+                    let mode = MorosThemeMode.current
+                    switch mode {
+                    case .dark:
+                        NSApp.appearance = NSAppearance(named: .darkAqua)
+                    case .light:
+                        NSApp.appearance = NSAppearance(named: .aqua)
+                    case .auto:
+                        NSApp.appearance = nil  // follows system
+                    }
                     OnboardingService.runIfNeeded(context: appState.viewContext)
                     SpotlightService.shared.indexAllNotes(context: appState.viewContext)
                     ClipServer.shared.start()
