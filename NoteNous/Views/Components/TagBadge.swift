@@ -18,11 +18,8 @@ struct TagBadge: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(
-            Rectangle()
-                .fill(Color.clear)
-                .overlay(Rectangle().stroke(Moros.borderLit, lineWidth: 1))
-        )
-        .foregroundStyle(Moros.ambient)
+        .background(Moros.oracle.opacity(0.1), in: Rectangle())
+        .overlay(Rectangle().stroke(Moros.oracle.opacity(0.25), lineWidth: 1))
+        .foregroundStyle(Moros.oracle)
     }
 }

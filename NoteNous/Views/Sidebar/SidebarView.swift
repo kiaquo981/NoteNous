@@ -75,20 +75,28 @@ struct SidebarView: View {
             // Workflow
             Section {
                 NavigationLink(destination: FleetingReviewQueue().environment(\.managedObjectContext, context)) {
-                    Label("Fleeting Queue", systemImage: "tray.full")
-                        .foregroundStyle(Moros.textSub)
+                    HStack(spacing: 8) {
+                        Image(systemName: "tray.full").foregroundStyle(Moros.ambient)
+                        Text("Fleeting Queue").foregroundStyle(Moros.textSub)
+                    }
                 }
                 NavigationLink(destination: SourceBrowserView(sourceService: SourceService())) {
-                    Label("Sources", systemImage: "books.vertical")
-                        .foregroundStyle(Moros.textSub)
+                    HStack(spacing: 8) {
+                        Image(systemName: "books.vertical").foregroundStyle(Moros.ambient)
+                        Text("Sources").foregroundStyle(Moros.textSub)
+                    }
                 }
                 NavigationLink(destination: IndexBrowserView(indexService: IndexService()).environment(\.managedObjectContext, context)) {
-                    Label("Index", systemImage: "list.bullet.rectangle")
-                        .foregroundStyle(Moros.textSub)
+                    HStack(spacing: 8) {
+                        Image(systemName: "list.bullet.rectangle").foregroundStyle(Moros.ambient)
+                        Text("Index").foregroundStyle(Moros.textSub)
+                    }
                 }
                 NavigationLink(destination: WorkflowDashboard(sourceService: SourceService(), indexService: IndexService()).environment(\.managedObjectContext, context)) {
-                    Label("Dashboard", systemImage: "chart.bar")
-                        .foregroundStyle(Moros.textSub)
+                    HStack(spacing: 8) {
+                        Image(systemName: "chart.bar").foregroundStyle(Moros.oracle)
+                        Text("Dashboard").foregroundStyle(Moros.textSub)
+                    }
                 }
             } header: {
                 Text("WORKFLOW")
@@ -102,9 +110,11 @@ struct SidebarView: View {
                 Section {
                     ForEach(tags.prefix(15), id: \.objectID) { tag in
                         if let name = tag.name {
-                            Label(name, systemImage: "tag")
-                                .font(Moros.fontSmall)
-                                .foregroundStyle(Moros.textDim)
+                            HStack(spacing: 6) {
+                                Image(systemName: "tag").foregroundStyle(Moros.ambient)
+                                Text(name).foregroundStyle(Moros.textSub)
+                            }
+                            .font(Moros.fontSmall)
                         }
                     }
                 } header: {
@@ -117,6 +127,7 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .frame(minWidth: 200)
+        .tint(Moros.oracle)
         .scrollContentBackground(.hidden)
         .morosBackground(Moros.limit01)
     }

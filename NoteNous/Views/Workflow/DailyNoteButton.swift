@@ -18,6 +18,7 @@ struct DailyNoteButton: View {
 
                 Text("Today's Note")
             }
+            .foregroundStyle(Moros.oracle)
         }
         .buttonStyle(.plain)
     }
