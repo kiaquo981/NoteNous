@@ -37,16 +37,17 @@ final class ForceDirectedLayout {
         let isConfirmed: Bool
     }
 
-    // MARK: - Physics Constants
+    // MARK: - Physics Constants (tuned for organic Obsidian-like feel)
 
-    private let repulsionStrength: CGFloat = 500
-    private let attractionStrength: CGFloat = 0.02
-    private let restLength: CGFloat = 120
-    private let centerGravity: CGFloat = 0.01
-    private let damping: CGFloat = 0.85
-    private let collisionPadding: CGFloat = 4
-    private let kineticEnergyThreshold: CGFloat = 0.5
-    private let maxVelocity: CGFloat = 50
+    private let repulsionStrength: CGFloat = 800      // stronger repulsion = more spread
+    private let attractionStrength: CGFloat = 0.008    // softer springs = elastic, bouncy
+    private let restLength: CGFloat = 160              // longer rest = more breathing room
+    private let centerGravity: CGFloat = 0.005         // gentler gravity = organic drift
+    private let damping: CGFloat = 0.92                // higher damping = smoother deceleration
+    private let collisionPadding: CGFloat = 8
+    private let kineticEnergyThreshold: CGFloat = 0.1  // lower threshold = settles more gently
+    private let maxVelocity: CGFloat = 30              // slower max = no snapping, fluid motion
+    private let jitter: CGFloat = 0.3                  // subtle random force for life-like feel
 
     // MARK: - State
 
@@ -119,13 +120,19 @@ final class ForceDirectedLayout {
             }
         }
 
-        // 3. Center gravity
+        // 3. Center gravity (distance-proportional for organic clustering)
         for i in 0..<count {
             guard !nodes[i].isFixed else { continue }
             let dx = centerPoint.x - nodes[i].position.x
             let dy = centerPoint.y - nodes[i].position.y
-            forces[i].x += dx * centerGravity
-            forces[i].y += dy * centerGravity
+            let dist = sqrt(dx * dx + dy * dy)
+            let gravityScale = centerGravity * (1.0 + dist * 0.0005) // stronger pull at edges
+            forces[i].x += dx * gravityScale
+            forces[i].y += dy * gravityScale
+
+            // Subtle jitter for organic "breathing" feel
+            forces[i].x += CGFloat.random(in: -jitter...jitter)
+            forces[i].y += CGFloat.random(in: -jitter...jitter)
         }
 
         // 4. Apply forces, velocity, damping, collision

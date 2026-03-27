@@ -187,7 +187,7 @@ struct GraphView: View {
             let transform = CGAffineTransform(translationX: offset.x, y: offset.y)
                 .scaledBy(x: zoom, y: zoom)
 
-            // Draw edges
+            // Draw edges as organic curves (not straight lines)
             for edge in filteredEdges {
                 guard let si = layout.nodeIndex(for: edge.sourceId),
                       let ti = layout.nodeIndex(for: edge.targetId) else { continue }
@@ -196,21 +196,30 @@ struct GraphView: View {
                 let target = layout.nodes[ti].position.applying(transform)
 
                 let edgeColor = colorForLinkType(edge.linkType)
-                let lineWidth = 1.0 + CGFloat(edge.strength) * 3.0
+                let lineWidth = 0.8 + CGFloat(edge.strength) * 2.0
+
+                // Compute curved path — offset control point perpendicular to the line
+                let midX = (source.x + target.x) / 2
+                let midY = (source.y + target.y) / 2
+                let dx = target.x - source.x
+                let dy = target.y - source.y
+                let dist = sqrt(dx * dx + dy * dy)
+                let curvature: CGFloat = min(dist * 0.15, 30) // proportional curve
+                // Perpendicular offset
+                let nx = -dy / max(dist, 1) * curvature
+                let ny = dx / max(dist, 1) * curvature
+                let controlPoint = CGPoint(x: midX + nx, y: midY + ny)
 
                 var path = Path()
                 path.move(to: source)
-                path.addLine(to: target)
+                path.addQuadCurve(to: target, control: controlPoint)
 
                 if !edge.isConfirmed || edge.isAISuggested {
-                    let style = StrokeStyle(lineWidth: lineWidth, dash: [6, 4])
-                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.6)), style: style)
+                    let style = StrokeStyle(lineWidth: lineWidth, dash: [5, 3])
+                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.4)), style: style)
                 } else {
-                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.7)), lineWidth: lineWidth)
+                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.5)), lineWidth: lineWidth)
                 }
-
-                // Draw arrowhead
-                drawArrowhead(in: &canvasContext, from: source, to: target, color: edgeColor, nodeRadius: layout.nodes[ti].radius * zoom)
             }
 
             // Draw nodes
@@ -223,19 +232,32 @@ struct GraphView: View {
                 let isSelected = node.id == selectedNodeId
                 let isHovered = node.id == hoveredNodeId
 
-                // Glow for selected
-                if isSelected {
-                    let glowRect = rect.insetBy(dx: -4, dy: -4)
-                    canvasContext.fill(Circle().path(in: glowRect), with: .color(Moros.oracle.opacity(0.3)))
-                }
+                // Ambient glow halo — makes nodes look like neurons
+                let glowRadius: CGFloat = isSelected ? 12 : (isHovered ? 8 : 4)
+                let glowOpacity: Double = isSelected ? 0.35 : (isHovered ? 0.2 : 0.08)
+                let haloRect = rect.insetBy(dx: -glowRadius, dy: -glowRadius)
+                canvasContext.fill(Circle().path(in: haloRect), with: .color(nodeColor.opacity(glowOpacity)))
 
-                // Node circle
-                canvasContext.fill(Circle().path(in: rect), with: .color(nodeColor))
+                // Inner halo
+                let innerHalo = rect.insetBy(dx: -2, dy: -2)
+                canvasContext.fill(Circle().path(in: innerHalo), with: .color(nodeColor.opacity(0.15)))
 
-                // Border
-                let borderColor: Color = isSelected ? Moros.oracle : (isHovered ? Color.white.opacity(0.4) : Moros.borderLit)
-                let borderWidth: CGFloat = isSelected ? 2.5 : (isHovered ? 2.0 : 1.0)
-                canvasContext.stroke(Circle().path(in: rect), with: .color(borderColor), lineWidth: borderWidth)
+                // Node circle (solid core)
+                canvasContext.fill(Circle().path(in: rect), with: .color(nodeColor.opacity(0.85)))
+
+                // Bright center dot (neuron soma)
+                let coreSize = max(r * 0.4, 3)
+                let coreRect = CGRect(
+                    x: screenPos.x - coreSize,
+                    y: screenPos.y - coreSize,
+                    width: coreSize * 2,
+                    height: coreSize * 2
+                )
+                canvasContext.fill(Circle().path(in: coreRect), with: .color(nodeColor.opacity(1.0)))
+
+                // Subtle ring border
+                let borderColor: Color = isSelected ? Moros.oracle : (isHovered ? nodeColor.opacity(0.6) : nodeColor.opacity(0.2))
+                canvasContext.stroke(Circle().path(in: rect), with: .color(borderColor), lineWidth: isSelected ? 2 : 0.5)
 
                 // Label (only if zoomed in enough)
                 if zoom > 0.4 {
