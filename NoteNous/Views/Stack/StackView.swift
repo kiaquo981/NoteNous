@@ -58,6 +58,7 @@ struct StackView: View {
         .onChange(of: appState.searchQuery) { updateMatchCount() }
         .onChange(of: appState.selectedPARAFilter) { updateMatchCount() }
         .onChange(of: appState.selectedCODEFilter) { updateMatchCount() }
+        .onChange(of: appState.selectedNoteTypeFilter) { updateMatchCount() }
     }
 
     private var filteredNotes: [NoteEntity] {
@@ -68,6 +69,9 @@ struct StackView: View {
         }
         if let code = appState.selectedCODEFilter {
             result = result.filter { $0.codeStage == code }
+        }
+        if let noteType = appState.selectedNoteTypeFilter {
+            result = result.filter { $0.noteType == noteType }
         }
 
         if !appState.searchQuery.isEmpty {

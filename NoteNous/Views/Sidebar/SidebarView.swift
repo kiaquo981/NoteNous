@@ -37,12 +37,37 @@ struct SidebarView: View {
             .buttonStyle(.plain)
             .padding(.bottom, 8)
 
-            // ZETTELKASTEN Section
+            // ZETTELKASTEN Section — tappable filters
             Section {
-                SidebarNoteTypeRow(noteType: .fleeting, icon: "bolt.fill", label: "Fleeting", color: Moros.ambient)
-                SidebarNoteTypeRow(noteType: .literature, icon: "book.fill", label: "Literature", color: Moros.oracle)
-                SidebarNoteTypeRow(noteType: .permanent, icon: "diamond.fill", label: "Permanent", color: Moros.verdit)
-                SidebarNoteTypeRow(noteType: .structure, icon: "folder.fill", label: "Structure", color: Moros.textSub)
+                ForEach([NoteType.fleeting, .literature, .permanent, .structure], id: \.self) { type in
+                    let config: (icon: String, label: String, color: Color) = {
+                        switch type {
+                        case .fleeting: return ("bolt.fill", "Fleeting", Moros.ambient)
+                        case .literature: return ("book.fill", "Literature", Moros.oracle)
+                        case .permanent: return ("diamond.fill", "Permanent", Moros.verdit)
+                        case .structure: return ("folder.fill", "Structure", Moros.textSub)
+                        }
+                    }()
+                    SidebarNoteTypeRow(
+                        noteType: type,
+                        icon: config.icon,
+                        label: config.label,
+                        color: config.color,
+                        isSelected: appState.selectedNoteTypeFilter == type
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if appState.selectedNoteTypeFilter == type {
+                            appState.selectedNoteTypeFilter = nil
+                        } else {
+                            appState.selectedNoteTypeFilter = type
+                            // Clear other filters
+                            appState.selectedPARAFilter = nil
+                            appState.selectedCODEFilter = nil
+                        }
+                        appState.selectedView = .stack
+                    }
+                }
             } header: {
                 Text("ZETTELKASTEN")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
@@ -60,7 +85,10 @@ struct SidebarView: View {
                                 appState.selectedCODEFilter = nil
                             } else {
                                 appState.selectedCODEFilter = stage
+                                appState.selectedNoteTypeFilter = nil
+                                appState.selectedPARAFilter = nil
                             }
+                            appState.selectedView = .stack
                         }
                 }
             } header: {
@@ -146,7 +174,10 @@ struct SidebarView: View {
                                 appState.selectedPARAFilter = nil
                             } else {
                                 appState.selectedPARAFilter = category
+                                appState.selectedNoteTypeFilter = nil
+                                appState.selectedCODEFilter = nil
                             }
+                            appState.selectedView = .stack
                         }
                 }
             } header: {
@@ -257,24 +288,29 @@ struct SidebarNoteTypeRow: View {
     let icon: String
     let label: String
     let color: Color
+    var isSelected: Bool = false
     @Environment(\.managedObjectContext) private var context
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .foregroundStyle(color)
+                .foregroundStyle(isSelected ? .white : color)
                 .frame(width: 16)
             Text(label)
-                .foregroundStyle(Moros.textSub)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .foregroundStyle(isSelected ? .white : Moros.textSub)
             Spacer()
             Text("\(count)")
                 .font(Moros.fontMonoSmall)
-                .foregroundStyle(Moros.textDim)
+                .foregroundStyle(isSelected ? .white.opacity(0.7) : Moros.textDim)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Moros.limit03, in: Rectangle())
+                .background(isSelected ? color.opacity(0.3) : Moros.limit03, in: Rectangle())
         }
         .font(Moros.fontSmall)
+        .padding(.vertical, 2)
+        .padding(.horizontal, 6)
+        .background(isSelected ? color.opacity(0.2) : .clear, in: Rectangle())
     }
 
     private var count: Int {

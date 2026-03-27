@@ -10,23 +10,19 @@ final class CoreDataStack: ObservableObject {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
-    lazy var persistentContainer: NSPersistentCloudKitContainer = {
-        let container = NSPersistentCloudKitContainer(name: "NoteNous", managedObjectModel: Self.model)
+    lazy var persistentContainer: NSPersistentContainer = {
+        // Use CloudKit container only when iCloud entitlement is properly provisioned
+        // For now, use standard container to avoid crashes without provisioning profile
+        let container = NSPersistentContainer(name: "NoteNous", managedObjectModel: Self.model)
 
         let description = NSPersistentStoreDescription()
 
         if Self.isRunningTests {
-            // Use in-memory store during tests to avoid CloudKit validation issues
             description.type = NSInMemoryStoreType
         } else {
             description.url = Self.storeURL
             description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-
-            // CloudKit sync
-            description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
-                containerIdentifier: "iCloud.com.notenous.app"
-            )
         }
 
         container.persistentStoreDescriptions = [description]
@@ -34,7 +30,8 @@ final class CoreDataStack: ObservableObject {
         container.loadPersistentStores { description, error in
             if let error = error as NSError? {
                 self.logger.error("Core Data store failed to load: \(error.localizedDescription)")
-                fatalError("Core Data store failed: \(error)")
+                // Don't fatalError — log and continue with degraded state
+                return
             }
             self.logger.info("Core Data store loaded at \(description.url?.absoluteString ?? "unknown")")
         }
@@ -42,15 +39,6 @@ final class CoreDataStack: ObservableObject {
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = UndoManager()
-
-        // Listen for remote CloudKit changes
-        NotificationCenter.default.addObserver(
-            forName: NSNotification.Name.NSPersistentStoreRemoteChange,
-            object: container.persistentStoreCoordinator,
-            queue: .main
-        ) { [weak self] notification in
-            self?.logger.info("CloudKit remote change received")
-        }
 
         return container
     }()
