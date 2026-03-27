@@ -4,11 +4,20 @@ import SwiftUI
 struct NoteNousApp: App {
     @StateObject private var appState = AppState()
 
+    init() {
+        EnvLoader.loadIfNeeded()
+    }
+
     var body: some Scene {
         WindowGroup {
             MainWindowView()
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, appState.viewContext)
+                .sheet(isPresented: $appState.isQuickCaptureVisible) {
+                    QuickCapturePanel()
+                        .environmentObject(appState)
+                        .environment(\.managedObjectContext, appState.viewContext)
+                }
         }
         .commands {
             CommandGroup(replacing: .newItem) {
@@ -16,6 +25,11 @@ struct NoteNousApp: App {
                     appState.selectedNote = nil // triggers new note in editor
                 }
                 .keyboardShortcut("n", modifiers: .command)
+
+                Button("Quick Capture") {
+                    appState.isQuickCaptureVisible = true
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
             }
 
             CommandMenu("View") {

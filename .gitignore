@@ -13,6 +13,10 @@ xcuserdata/
 # Claude
 .claude/memory/
 
+# Secrets
+.env
+.env.*
+
 # App data
 *.sqlite
 *.sqlite-shm

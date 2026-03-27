@@ -17,6 +17,10 @@ struct SidebarView: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(.bottom, 4)
 
+            // Daily Note Button
+            DailyNoteButton()
+                .padding(.bottom, 4)
+
             // New Note Button
             Button(action: createNewNote) {
                 Label("New Note", systemImage: "plus.circle.fill")
