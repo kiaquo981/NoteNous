@@ -13,6 +13,7 @@ final class AppState: ObservableObject {
     @Published var selectedPARAFilter: PARACategory?
     @Published var selectedCODEFilter: CODEStage?
     @Published var selectedNoteTypeFilter: NoteType?
+    @Published var sidebarNavSelection: String?
     @Published var isQuickCaptureVisible: Bool = false
     @Published var isCommandPaletteVisible: Bool = false
     @Published var isSidebarVisible: Bool = true

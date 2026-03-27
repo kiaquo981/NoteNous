@@ -12,7 +12,7 @@ struct SidebarView: View {
     ) private var tags: FetchedResults<TagEntity>
 
     var body: some View {
-        List {
+        List(selection: $appState.sidebarNavSelection) {
             // Search
             TextField("Search...", text: $appState.searchQuery)
                 .textFieldStyle(.plain)
@@ -67,6 +67,7 @@ struct SidebarView: View {
                             appState.selectedCODEFilter = nil
                         }
                         appState.selectedView = .stack
+                        appState.sidebarNavSelection = nil
                     }
                 }
             } header: {
@@ -90,6 +91,7 @@ struct SidebarView: View {
                                 appState.selectedPARAFilter = nil
                             }
                             appState.selectedView = .stack
+                        appState.sidebarNavSelection = nil
                         }
                 }
             } header: {
@@ -202,6 +204,7 @@ struct SidebarView: View {
                                 appState.selectedCODEFilter = nil
                             }
                             appState.selectedView = .stack
+                        appState.sidebarNavSelection = nil
                         }
                 }
             } header: {
@@ -234,6 +237,7 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .frame(minWidth: 200)
         .tint(Moros.oracle)
+        .accentColor(Color(red: 0.267, green: 0.467, blue: 0.800)) // ORACLE for selection highlight
         .scrollContentBackground(.hidden)
         .morosBackground(Moros.limit01)
     }
