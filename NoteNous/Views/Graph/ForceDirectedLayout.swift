@@ -39,15 +39,15 @@ final class ForceDirectedLayout {
 
     // MARK: - Physics Constants (tuned for organic Obsidian-like feel)
 
-    private let repulsionStrength: CGFloat = 800      // stronger repulsion = more spread
-    private let attractionStrength: CGFloat = 0.008    // softer springs = elastic, bouncy
-    private let restLength: CGFloat = 160              // longer rest = more breathing room
-    private let centerGravity: CGFloat = 0.005         // gentler gravity = organic drift
-    private let damping: CGFloat = 0.92                // higher damping = smoother deceleration
+    private let repulsionStrength: CGFloat = 1200      // strong repulsion = visible spread force
+    private let attractionStrength: CGFloat = 0.012    // noticeable springs = rubber band feel
+    private let restLength: CGFloat = 140              // moderate rest = compact but not crowded
+    private let centerGravity: CGFloat = 0.008         // moderate gravity = holds cluster together
+    private let damping: CGFloat = 0.88                // lower damping = more visible oscillation
     private let collisionPadding: CGFloat = 8
-    private let kineticEnergyThreshold: CGFloat = 0.1  // lower threshold = settles more gently
-    private let maxVelocity: CGFloat = 30              // slower max = no snapping, fluid motion
-    private let jitter: CGFloat = 0.3                  // subtle random force for life-like feel
+    private let kineticEnergyThreshold: CGFloat = 2.0   // higher = stays active longer before settling
+    private let maxVelocity: CGFloat = 40              // faster = more visible movement
+    private let jitter: CGFloat = 0.5                  // active jitter for organic settling
 
     // MARK: - State
 
@@ -132,9 +132,15 @@ final class ForceDirectedLayout {
             forces[i].y += dy * gravityScale
 
             if isSettled {
-                // Idle breathing: very subtle random drift to keep the graph alive
-                forces[i].x += CGFloat.random(in: -0.08...0.08)
-                forces[i].y += CGFloat.random(in: -0.08...0.08)
+                // Idle breathing: visible drift to keep the graph alive like neurons pulsing
+                let breathForce: CGFloat = 0.5
+                forces[i].x += CGFloat.random(in: -breathForce...breathForce)
+                forces[i].y += CGFloat.random(in: -breathForce...breathForce)
+                // Occasional stronger nudge (1 in 60 chance per node per frame)
+                if Int.random(in: 0..<60) == 0 {
+                    forces[i].x += CGFloat.random(in: -3.0...3.0)
+                    forces[i].y += CGFloat.random(in: -3.0...3.0)
+                }
             } else {
                 // Active jitter for organic feel during settling
                 forces[i].x += CGFloat.random(in: -jitter...jitter)

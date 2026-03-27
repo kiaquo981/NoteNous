@@ -53,6 +53,9 @@ struct GraphView: View {
     // Timer for physics simulation
     @State private var simulationTimer: Timer?
 
+    // Render tick — forces Canvas redraw every frame
+    @State private var renderTick: UInt64 = 0
+
     // Background particles for depth effect
     @State private var particles: [BackgroundParticle] = []
 
@@ -64,7 +67,10 @@ struct GraphView: View {
     var body: some View {
         ZStack {
             // Canvas rendering
-            graphCanvas
+            TimelineView(.animation) { timeline in
+                graphCanvas
+                    .drawingGroup()
+            }
                 .gesture(backgroundDragGesture)
                 .gesture(scrollZoomGesture)
                 .onTapGesture(count: 2) { location in
@@ -590,25 +596,28 @@ struct GraphView: View {
 
     private func startSimulationTimer() {
         simulationTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
-            if physicsEnabled {
-                // Always step — the layout switches to idle breathing mode when settled
-                if !layout.isRunning { layout.startSimulation() }
-                layout.step(dt: 1.0 / 60.0)
-            }
+            DispatchQueue.main.async {
+                if physicsEnabled {
+                    if !layout.isRunning { layout.startSimulation() }
+                    layout.step(dt: 1.0 / 60.0)
+                }
 
-            // Animate pulse phase for selected node glow
-            pulsePhase += 0.03
-            if pulsePhase > .pi * 2 { pulsePhase -= .pi * 2 }
+                // Animate pulse phase for selected node glow
+                pulsePhase += 0.03
+                if pulsePhase > .pi * 2 { pulsePhase -= .pi * 2 }
 
-            // Drift background particles
-            for i in 0..<particles.count {
-                particles[i].position.x += particles[i].velocity.x
-                particles[i].position.y += particles[i].velocity.y
-                // Wrap around
-                if particles[i].position.x < -50 { particles[i].position.x = 850 }
-                if particles[i].position.x > 850 { particles[i].position.x = -50 }
-                if particles[i].position.y < -50 { particles[i].position.y = 650 }
-                if particles[i].position.y > 650 { particles[i].position.y = -50 }
+                // Drift background particles
+                for i in 0..<particles.count {
+                    particles[i].position.x += particles[i].velocity.x
+                    particles[i].position.y += particles[i].velocity.y
+                    if particles[i].position.x < -50 { particles[i].position.x = 850 }
+                    if particles[i].position.x > 850 { particles[i].position.x = -50 }
+                    if particles[i].position.y < -50 { particles[i].position.y = 650 }
+                    if particles[i].position.y > 650 { particles[i].position.y = -50 }
+                }
+
+                // Force Canvas redraw
+                renderTick &+= 1
             }
         }
     }
