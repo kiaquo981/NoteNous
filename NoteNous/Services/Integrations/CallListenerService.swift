@@ -145,41 +145,135 @@ final class CallListenerService: ObservableObject {
         return buffers.reduce(0) { $0 + Int($1.mNumberChannels) } > 0
     }
 
-    /// Create an aggregate device combining mic + BlackHole for both-sides capture
-    private func createAggregateDevice() -> AudioDeviceID? {
+    /// Detect what output and input the user is CURRENTLY using
+    private func detectCurrentAudioDevices() -> (outputID: AudioDeviceID, outputName: String, inputID: AudioDeviceID, inputName: String) {
+        // Get current default output (what user hears through)
+        var outputID = AudioDeviceID(0)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var addr = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &outputID)
+
+        // Get current default input (what user speaks into)
+        var inputID = AudioDeviceID(0)
+        addr.mSelector = kAudioHardwarePropertyDefaultInputDevice
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &inputID)
+
+        let outputName = getDeviceName(outputID) ?? "Unknown"
+        let inputName = getDeviceName(inputID) ?? "Unknown"
+
+        logger.info("Current audio: Output=\(outputName) (\(outputID)), Input=\(inputName) (\(inputID))")
+        return (outputID, outputName, inputID, inputName)
+    }
+
+    private var savedOutputDeviceID: AudioDeviceID = 0
+    private var createdMultiOutputDeviceID: AudioDeviceID = 0
+
+    /// Full auto-setup: creates Multi-Output (speakers + BlackHole) AND Aggregate (mic + BlackHole)
+    /// Returns the aggregate device ID to use as input, or nil on failure
+    private func autoSetupBothSidesCapture() -> AudioDeviceID? {
         guard let blackHoleID = findBlackHoleDeviceID(),
-              let micID = findBuiltInMicDeviceID() else {
-            logger.warning("Cannot create aggregate: BlackHole or mic not found")
+              let bhUID = getDeviceUID(blackHoleID) else {
+            logger.warning("BlackHole not found")
             return nil
         }
 
-        let blackHoleUID = getDeviceUID(blackHoleID)
-        let micUID = getDeviceUID(micID)
+        let current = detectCurrentAudioDevices()
 
-        guard let bhUID = blackHoleUID, let mUID = micUID else {
-            logger.warning("Cannot get device UIDs")
+        guard let currentOutputUID = getDeviceUID(current.outputID),
+              let currentInputUID = getDeviceUID(current.inputID) else {
+            logger.warning("Cannot get current device UIDs")
             return nil
         }
 
+        // Save current output to restore later
+        savedOutputDeviceID = current.outputID
+
+        // Step 1: Create Multi-Output Device (current output + BlackHole)
+        // This routes call audio to BOTH the user's speakers/headphones AND BlackHole
+        let multiOutputDesc: [String: Any] = [
+            kAudioAggregateDeviceNameKey as String: "NoteNous Multi-Output",
+            kAudioAggregateDeviceUIDKey as String: "com.notenous.multioutput.\(UUID().uuidString.prefix(8))",
+            kAudioAggregateDeviceIsPrivateKey as String: true,
+            kAudioAggregateDeviceSubDeviceListKey as String: [
+                [kAudioSubDeviceUIDKey as String: currentOutputUID],
+                [kAudioSubDeviceUIDKey as String: bhUID]
+            ]
+        ]
+
+        var multiOutputID: AudioDeviceID = 0
+        var status = AudioHardwareCreateAggregateDevice(multiOutputDesc as CFDictionary, &multiOutputID)
+
+        guard status == noErr else {
+            logger.error("Failed to create multi-output device: \(status)")
+            return nil
+        }
+        createdMultiOutputDeviceID = multiOutputID
+        logger.info("Created multi-output: \(current.outputName) + BlackHole (ID: \(multiOutputID))")
+
+        // Set system output to the multi-output device
+        var mutableMultiOutputID = multiOutputID
+        var outputAddr = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        AudioObjectSetPropertyData(AudioObjectID(kAudioObjectSystemObject), &outputAddr, 0, nil,
+                                   UInt32(MemoryLayout<AudioDeviceID>.size), &mutableMultiOutputID)
+        logger.info("System output set to multi-output device")
+
+        // Step 2: Create Aggregate Input Device (current mic + BlackHole)
+        // This lets NoteNous capture BOTH the user's voice AND the call audio
         let aggregateDesc: [String: Any] = [
             kAudioAggregateDeviceNameKey as String: "NoteNous Call Capture",
             kAudioAggregateDeviceUIDKey as String: "com.notenous.aggregate.\(UUID().uuidString.prefix(8))",
             kAudioAggregateDeviceIsPrivateKey as String: true,
             kAudioAggregateDeviceSubDeviceListKey as String: [
-                [kAudioSubDeviceUIDKey as String: mUID],
+                [kAudioSubDeviceUIDKey as String: currentInputUID],
                 [kAudioSubDeviceUIDKey as String: bhUID]
             ]
         ]
 
         var aggregateID: AudioDeviceID = 0
-        let status = AudioHardwareCreateAggregateDevice(aggregateDesc as CFDictionary, &aggregateID)
+        status = AudioHardwareCreateAggregateDevice(aggregateDesc as CFDictionary, &aggregateID)
 
-        if status == noErr {
-            logger.info("Created aggregate device: \(aggregateID) (mic + BlackHole)")
-            return aggregateID
-        } else {
+        guard status == noErr else {
             logger.error("Failed to create aggregate device: \(status)")
+            // Cleanup multi-output
+            restoreAudioRouting()
             return nil
+        }
+        createdAggregateDeviceID = aggregateID
+        logger.info("Created aggregate input: \(current.inputName) + BlackHole (ID: \(aggregateID))")
+
+        return aggregateID
+    }
+
+    /// Restore original audio routing — destroy temp devices, reset system output
+    private func restoreAudioRouting() {
+        // Restore original output device
+        if savedOutputDeviceID != 0 {
+            var mutableID = savedOutputDeviceID
+            var addr = AudioObjectPropertyAddress(
+                mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+                mScope: kAudioObjectPropertyScopeGlobal,
+                mElement: kAudioObjectPropertyElementMain
+            )
+            AudioObjectSetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil,
+                                       UInt32(MemoryLayout<AudioDeviceID>.size), &mutableID)
+            let name = getDeviceName(savedOutputDeviceID) ?? "Unknown"
+            logger.info("Restored system output to: \(name)")
+            savedOutputDeviceID = 0
+        }
+
+        // Destroy multi-output device
+        if createdMultiOutputDeviceID != 0 {
+            AudioHardwareDestroyAggregateDevice(createdMultiOutputDeviceID)
+            logger.info("Destroyed multi-output device")
+            createdMultiOutputDeviceID = 0
         }
     }
 
@@ -307,14 +401,14 @@ final class CallListenerService: ObservableObject {
             return
         }
 
-        // If BlackHole available and both-sides mode, create aggregate device
+        // Auto-setup both-sides capture if BlackHole available
         if captureMode == .bothSides, blackHoleAvailable {
-            if let aggregateID = createAggregateDevice() {
-                createdAggregateDeviceID = aggregateID
+            if let aggregateID = autoSetupBothSidesCapture() {
                 setAudioEngineInputDevice(aggregateID)
-                logger.info("Using aggregate device (mic + BlackHole) for both-sides capture")
+                let current = detectCurrentAudioDevices()
+                logger.info("Both-sides capture ready: mic=\(current.inputName) + system audio via BlackHole")
             } else {
-                logger.warning("Falling back to mic-only")
+                logger.warning("Auto-setup failed, falling back to mic-only")
                 await MainActor.run { captureMode = .micOnly }
             }
         }
@@ -382,7 +476,8 @@ final class CallListenerService: ObservableObject {
         recognitionTask = nil
         audioEngine = nil
 
-        // Cleanup aggregate device
+        // Cleanup: restore original audio routing + destroy temp devices
+        restoreAudioRouting()
         destroyAggregateDevice()
 
         let finalTranscription = liveTranscription
