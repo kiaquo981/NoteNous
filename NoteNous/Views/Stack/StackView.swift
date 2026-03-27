@@ -14,6 +14,12 @@ struct StackView: View {
         animation: .default
     ) private var notes: FetchedResults<NoteEntity>
 
+    @State private var searchMatchCount: Int = 0
+
+    private var searchService: SearchService {
+        SearchService(context: context)
+    }
+
     var body: some View {
         List(selection: Binding(
             get: { appState.selectedNote },
@@ -36,6 +42,19 @@ struct StackView: View {
         }
         .listStyle(.inset(alternatesRowBackgrounds: true))
         .searchable(text: $appState.searchQuery, prompt: "Search notes...")
+        .toolbar {
+            if !appState.searchQuery.isEmpty {
+                ToolbarItem(placement: .automatic) {
+                    Text("\(searchMatchCount) match\(searchMatchCount == 1 ? "" : "es")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .onChange(of: appState.searchQuery) { updateMatchCount() }
+        .onChange(of: appState.selectedPARAFilter) { updateMatchCount() }
+        .onChange(of: appState.selectedCODEFilter) { updateMatchCount() }
     }
 
     private var filteredNotes: [NoteEntity] {
@@ -47,16 +66,27 @@ struct StackView: View {
         if let code = appState.selectedCODEFilter {
             result = result.filter { $0.codeStage == code }
         }
+
         if !appState.searchQuery.isEmpty {
-            let query = appState.searchQuery.lowercased()
-            result = result.filter {
-                $0.title.lowercased().contains(query) ||
-                $0.contentPlainText.lowercased().contains(query) ||
-                ($0.zettelId?.lowercased().contains(query) ?? false)
+            let searchResults = searchService.search(query: appState.searchQuery)
+            let matchedIDs = Set(searchResults.map(\.note.objectID))
+            result = result.filter { matchedIDs.contains($0.objectID) }
+
+            // Sort by search relevance while keeping pinned at top
+            let scoreMap = Dictionary(uniqueKeysWithValues: searchResults.map { ($0.note.objectID, $0.relevanceScore) })
+            result.sort { lhs, rhs in
+                if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
+                let lhsScore = scoreMap[lhs.objectID] ?? 0
+                let rhsScore = scoreMap[rhs.objectID] ?? 0
+                return lhsScore > rhsScore
             }
         }
 
         return result
+    }
+
+    private func updateMatchCount() {
+        searchMatchCount = filteredNotes.count
     }
 }
 

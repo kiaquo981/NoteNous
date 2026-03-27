@@ -6,7 +6,12 @@ struct CommandPaletteView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var context
     @State private var query = ""
-    @State private var searchResults: [NoteEntity] = []
+    @State private var searchResults: [SearchResult] = []
+    @State private var selectedScope: SearchScope = .all
+
+    private var searchService: SearchService {
+        SearchService(context: context)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,12 +34,62 @@ struct CommandPaletteView: View {
             }
             .padding()
 
+            // Scope filter pills
+            if !query.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(SearchScope.allCases) { scope in
+                        Button(action: { selectedScope = scope }) {
+                            Text(scope.rawValue)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(
+                                    selectedScope == scope
+                                        ? Color.accentColor.opacity(0.2)
+                                        : Color.secondary.opacity(0.1),
+                                    in: Capsule()
+                                )
+                                .foregroundStyle(selectedScope == scope ? .primary : .secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 6)
+            }
+
             Divider()
 
             // Results
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if query.isEmpty {
+                        // Recent searches
+                        let recents = searchService.recentSearches
+                        if !recents.isEmpty {
+                            CommandSection(title: "Recent Searches") {
+                                ForEach(recents, id: \.self) { recent in
+                                    CommandRow(icon: "clock", label: recent) {
+                                        query = recent
+                                    }
+                                }
+                                Button(action: {
+                                    searchService.clearRecentSearches()
+                                }) {
+                                    HStack {
+                                        Spacer()
+                                        Text("Clear Recent Searches")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
                         CommandSection(title: "Actions") {
                             CommandRow(icon: "plus", label: "New Note", shortcut: "\u{2318}N") {
                                 createNote()
@@ -51,16 +106,16 @@ struct CommandPaletteView: View {
                         }
                     } else {
                         if !searchResults.isEmpty {
-                            CommandSection(title: "Notes") {
-                                ForEach(searchResults, id: \.objectID) { note in
-                                    Button(action: { selectNote(note) }) {
+                            CommandSection(title: "Notes (\(searchResults.count))") {
+                                ForEach(searchResults) { result in
+                                    Button(action: { selectNote(result.note) }) {
                                         HStack {
                                             Image(systemName: "note.text")
                                                 .frame(width: 20)
                                             VStack(alignment: .leading) {
-                                                Text(note.title.isEmpty ? "Untitled" : note.title)
+                                                Text(result.note.title.isEmpty ? "Untitled" : result.note.title)
                                                     .lineLimit(1)
-                                                if let zettelId = note.zettelId {
+                                                if let zettelId = result.note.zettelId {
                                                     Text(zettelId)
                                                         .font(.caption)
                                                         .foregroundStyle(.tertiary)
@@ -68,7 +123,19 @@ struct CommandPaletteView: View {
                                                 }
                                             }
                                             Spacer()
-                                            PARABadge(category: note.paraCategory)
+                                            // Relevance indicator
+                                            HStack(spacing: 4) {
+                                                Image(systemName: result.matchType.icon)
+                                                    .font(.caption2)
+                                                Text(result.matchType.label)
+                                                    .font(.caption2)
+                                            }
+                                            .foregroundStyle(.secondary)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.secondary.opacity(0.1), in: Capsule())
+
+                                            PARABadge(category: result.note.paraCategory)
                                         }
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 6)
@@ -86,18 +153,19 @@ struct CommandPaletteView: View {
             }
             .frame(maxHeight: 400)
         }
-        .frame(width: 500)
+        .frame(width: 540)
         .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 12))
         .onChange(of: query) { performSearch() }
+        .onChange(of: selectedScope) { performSearch() }
     }
 
     private func performSearch() {
         guard !query.isEmpty else { searchResults = []; return }
-        let service = NoteService(context: context)
-        searchResults = service.searchNotes(query: query)
+        searchResults = searchService.search(query: query, scope: selectedScope)
     }
 
     private func selectNote(_ note: NoteEntity) {
+        searchService.addRecentSearch(query)
         appState.selectedNote = note
         dismiss()
     }
@@ -111,7 +179,7 @@ struct CommandPaletteView: View {
 
     private func executeFirst() {
         if let first = searchResults.first {
-            selectNote(first)
+            selectNote(first.note)
         }
     }
 }

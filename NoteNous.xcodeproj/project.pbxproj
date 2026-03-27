@@ -22,6 +22,8 @@
 		2C9927E7EF0A86F66B1FDB65 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0746925F2EAA65F038F46A1A /* Assets.xcassets */; };
 		2CE6FF19704C0DA25E81D2B1 /* DailyNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077728817C75A885B464B319 /* DailyNoteService.swift */; };
 		31C713CA8D1ABBE7AA961BD7 /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077A46733EB327E887814DBC /* ColorExtensions.swift */; };
+		3644B376543B29E9AEA15890 /* generate_icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B390255E970B6DD494776F /* generate_icon.swift */; };
+		374572228702A4546E188D12 /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466FA44A20F2389672E25C10 /* ObsidianImporter.swift */; };
 		3D7A01DDF716CB659EE90EB6 /* AtomicityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE72E7BC1A66B6E923C72589 /* AtomicityIndicator.swift */; };
 		40ADBF376E1490BA0254984F /* GraphToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B73187D10C168182D59A8E /* GraphToolbar.swift */; };
 		427ECB57CCFF57064800EE60 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57BA2AEBDF18D1499919AC70 /* AppState.swift */; };
@@ -32,6 +34,7 @@
 		54D7CB8D96AE95658A7A81D2 /* WikilinkAutocomplete.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFF0E74E555957EBB46BDD18 /* WikilinkAutocomplete.swift */; };
 		55ED0ECB98D95D76CA4F2248 /* DailyNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1536B0F8FC043A31818B4E2 /* DailyNoteButton.swift */; };
 		56E645349A45282D60FB9627 /* FleetingReviewQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3922D27D521718A3DCB78CFD /* FleetingReviewQueue.swift */; };
+		57546C48DC1D74919477B40A /* MarkdownExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A5D766C833DAA8FCA015B3 /* MarkdownExporter.swift */; };
 		5B3FC86849E83B686AFD26EA /* DeskColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B26CAB893ADC796CFFC384E /* DeskColorPicker.swift */; };
 		5BD5E4A3245E55CFE3521491 /* EnvLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFE7E2B55A53004901FB5CFB /* EnvLoader.swift */; };
 		5E37D66D64A7906387EE5F0C /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0472A8D40BD7205873984ED /* MarkdownTextView.swift */; };
@@ -72,11 +75,14 @@
 		D53C89A65A9E8E72BA64252B /* CanvasToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A47693FB1625EEDDE15B0E /* CanvasToolbar.swift */; };
 		D6DBBB47D7ED843FB7A8B770 /* DeskNoteCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B128C539AFD6F60AD1E5CBD /* DeskNoteCard.swift */; };
 		D76F24020E9B1FF2AE50DCBB /* TagService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F88B1A11ACF783118ED9DAA /* TagService.swift */; };
+		DAAABEF6662C2B8EE99E5D36 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2340F5C1C2170770276964C2 /* SearchService.swift */; };
 		DC2082F12A4D7BF00B472FE0 /* LinkType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B11B51A117D657419BF7752 /* LinkType.swift */; };
 		DDB8EFF3FB5462127CDECA27 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA65C4312503441C7FC73C67 /* SettingsView.swift */; };
+		E09FA2096EB06BDD42F63267 /* ImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE90C48B44E82EFDE6C251C3 /* ImportExportView.swift */; };
 		E4D23CDC28A872E033FB5E74 /* LinkCreationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A220AA543F16111C837D3C /* LinkCreationSheet.swift */; };
 		E640BB4CD9E2709A5204C6FB /* FolgezettelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFAA667A5D3DC580F966241 /* FolgezettelService.swift */; };
 		EABDEBFA438E67D352985923 /* SourceDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 687C1312064660D521A256CF /* SourceDetailSheet.swift */; };
+		EC37DC4DB7B36608E9198755 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF8567AD9B9942CE1D281FCD /* BackupService.swift */; };
 		F17BF0044B35A394F84A1D33 /* FolgezettelTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72CA477A1CF5361FA57C793 /* FolgezettelTreeView.swift */; };
 /* End PBXBuildFile section */
 
@@ -98,6 +104,7 @@
 		0AB1A5E0C6D692947D3CC994 /* ViewRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewRouter.swift; sourceTree = "<group>"; };
 		1D97B5F074D0907D1DAB21EE /* GraphLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphLegend.swift; sourceTree = "<group>"; };
 		20244F9564146EF8C841E26C /* PARABadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PARABadge.swift; sourceTree = "<group>"; };
+		2340F5C1C2170770276964C2 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		2B11B51A117D657419BF7752 /* LinkType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkType.swift; sourceTree = "<group>"; };
 		2BF1B1BCF1935F2C6BE1A537 /* WikilinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikilinkParser.swift; sourceTree = "<group>"; };
 		2CA9288A1EC82B1F6968F47B /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
@@ -107,11 +114,13 @@
 		3BF83F7BFC9447F5CD85DFF7 /* TagBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagBadge.swift; sourceTree = "<group>"; };
 		3DFF5684EA0C2EA246249C2C /* LinkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkService.swift; sourceTree = "<group>"; };
 		4057D68CBD6A33E00ADAB4F3 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
+		466FA44A20F2389672E25C10 /* ObsidianImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianImporter.swift; sourceTree = "<group>"; };
 		4795BEA27AE2FF8A107C778E /* DeskSectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSectionBuilder.swift; sourceTree = "<group>"; };
 		4B128C539AFD6F60AD1E5CBD /* DeskNoteCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskNoteCard.swift; sourceTree = "<group>"; };
 		4B26CAB893ADC796CFFC384E /* DeskColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskColorPicker.swift; sourceTree = "<group>"; };
 		4F4EB375210EB31F4086DCD7 /* NoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteService.swift; sourceTree = "<group>"; };
 		501204641D2683B02678114A /* NoteNous.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoteNous.entitlements; sourceTree = "<group>"; };
+		52A5D766C833DAA8FCA015B3 /* MarkdownExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownExporter.swift; sourceTree = "<group>"; };
 		538542BD840E9026709F19E4 /* AtomicNoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicNoteService.swift; sourceTree = "<group>"; };
 		54B73187D10C168182D59A8E /* GraphToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphToolbar.swift; sourceTree = "<group>"; };
 		57BA2AEBDF18D1499919AC70 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -142,6 +151,7 @@
 		A9BD040C506A14F3AAD261DD /* ClassificationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassificationEngine.swift; sourceTree = "<group>"; };
 		A9F1DFA42C9A87C434D6071D /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		AC6F9A9FC73C4B0F3E5C0704 /* LinkBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkBrowserView.swift; sourceTree = "<group>"; };
+		AE90C48B44E82EFDE6C251C3 /* ImportExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExportView.swift; sourceTree = "<group>"; };
 		B4E4779C45CAC42BDFAEAC9E /* ViewMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewMode.swift; sourceTree = "<group>"; };
 		B8023AF5C9B828D03FEA34B6 /* IndexService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexService.swift; sourceTree = "<group>"; };
 		B87E49FA05CE3B595067CAE1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -152,6 +162,7 @@
 		D413F1F045B791878338C7D6 /* NoteEntity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteEntity+Extensions.swift"; sourceTree = "<group>"; };
 		D532438DD1DCA6348FF92189 /* GraphMinimap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphMinimap.swift; sourceTree = "<group>"; };
 		D5A07ECBFC6D53EB35A4F6DE /* PromotionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionSheet.swift; sourceTree = "<group>"; };
+		D7B390255E970B6DD494776F /* generate_icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = generate_icon.swift; sourceTree = "<group>"; };
 		D7DF8F1A70E37D00EB7DE044 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		DA65C4312503441C7FC73C67 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		DB06DB5B0FD2ABA734EE254A /* NoteNousApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteNousApp.swift; sourceTree = "<group>"; };
@@ -164,6 +175,7 @@
 		F4BEE609AB16904025E5864A /* DeskCanvasState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskCanvasState.swift; sourceTree = "<group>"; };
 		FDEB7198A7A78A9B5C2D499A /* ZettelIDGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZettelIDGenerator.swift; sourceTree = "<group>"; };
 		FE49AF87ECC1CAB4110CCED9 /* NoteNous.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NoteNous.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF8567AD9B9942CE1D281FCD /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
 		FFF0E74E555957EBB46BDD18 /* WikilinkAutocomplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikilinkAutocomplete.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -207,6 +219,7 @@
 		177C9B59BDC6A2C6BC52C888 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				AE90C48B44E82EFDE6C251C3 /* ImportExportView.swift */,
 				DA65C4312503441C7FC73C67 /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -253,7 +266,10 @@
 				6BFAA667A5D3DC580F966241 /* FolgezettelService.swift */,
 				B8023AF5C9B828D03FEA34B6 /* IndexService.swift */,
 				3DFF5684EA0C2EA246249C2C /* LinkService.swift */,
+				52A5D766C833DAA8FCA015B3 /* MarkdownExporter.swift */,
 				4F4EB375210EB31F4086DCD7 /* NoteService.swift */,
+				466FA44A20F2389672E25C10 /* ObsidianImporter.swift */,
+				2340F5C1C2170770276964C2 /* SearchService.swift */,
 				99F3EC9596B341F60F7A44DC /* SourceService.swift */,
 				7F88B1A11ACF783118ED9DAA /* TagService.swift */,
 				2BF1B1BCF1935F2C6BE1A537 /* WikilinkParser.swift */,
@@ -284,6 +300,7 @@
 		8254CFF2AFB67EBC0E869154 /* Infrastructure */ = {
 			isa = PBXGroup;
 			children = (
+				FF8567AD9B9942CE1D281FCD /* BackupService.swift */,
 				DFE7E2B55A53004901FB5CFB /* EnvLoader.swift */,
 				2CA9288A1EC82B1F6968F47B /* KeychainManager.swift */,
 				5F0D724E51D0CB1A6BFD9D7F /* NetworkMonitor.swift */,
@@ -390,6 +407,7 @@
 			isa = PBXGroup;
 			children = (
 				0746925F2EAA65F038F46A1A /* Assets.xcassets */,
+				D7B390255E970B6DD494776F /* generate_icon.swift */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -553,6 +571,7 @@
 				C4997F1CD5442E70F5DF7576 /* AtomicNoteService.swift in Sources */,
 				3D7A01DDF716CB659EE90EB6 /* AtomicityIndicator.swift in Sources */,
 				212DB63ACA7EBA710B27D568 /* BacklinksPanel.swift in Sources */,
+				EC37DC4DB7B36608E9198755 /* BackupService.swift in Sources */,
 				997D6A72DA68C5B187FE3AAA /* CODEStage.swift in Sources */,
 				D22B2295B871B360EEBA23C8 /* CODEStageBadge.swift in Sources */,
 				D53C89A65A9E8E72BA64252B /* CanvasToolbar.swift in Sources */,
@@ -581,6 +600,7 @@
 				89D9A9CD9B13997E8E82A38D /* GraphMinimap.swift in Sources */,
 				40ADBF376E1490BA0254984F /* GraphToolbar.swift in Sources */,
 				BBDFB4866BA92AC7E5D195C1 /* GraphView.swift in Sources */,
+				E09FA2096EB06BDD42F63267 /* ImportExportView.swift in Sources */,
 				5EA074CBFE06A1D7A36D40E2 /* IndexBrowserView.swift in Sources */,
 				6CBFC9B45CD5D39DA2C2546F /* IndexService.swift in Sources */,
 				6075897579C2531B0E4C9955 /* KeychainManager.swift in Sources */,
@@ -590,6 +610,7 @@
 				DC2082F12A4D7BF00B472FE0 /* LinkType.swift in Sources */,
 				A01CA629FC2232743CCA1268 /* LocalGraphView.swift in Sources */,
 				05D4BD374378FFC399786010 /* MainWindowView.swift in Sources */,
+				57546C48DC1D74919477B40A /* MarkdownExporter.swift in Sources */,
 				5E37D66D64A7906387EE5F0C /* MarkdownTextView.swift in Sources */,
 				89CFD210714DD707C36A48D5 /* NetworkMonitor.swift in Sources */,
 				6660CE4258FD32CC450A4106 /* NoteEditorView.swift in Sources */,
@@ -598,11 +619,13 @@
 				27EF9FC46FCB28F247C70077 /* NoteService.swift in Sources */,
 				87160ADD4C6E4207350EF853 /* NoteType.swift in Sources */,
 				2221AED1703FAA1EF0F300E3 /* NoteTypeBadge.swift in Sources */,
+				374572228702A4546E188D12 /* ObsidianImporter.swift in Sources */,
 				D0F911823D57B7DA78EFB8CB /* OpenRouterClient.swift in Sources */,
 				7EA4148C5997D88B28F7BAFF /* PARABadge.swift in Sources */,
 				74743D5B02A4AC806DC54B36 /* PARACategory.swift in Sources */,
 				9256D4E7609F127CAE48C6B7 /* PromotionSheet.swift in Sources */,
 				6B25492CC91B8D754A139419 /* QuickCapturePanel.swift in Sources */,
+				DAAABEF6662C2B8EE99E5D36 /* SearchService.swift in Sources */,
 				9EE9E238F0DCF399AF54FA53 /* SequenceNavigator.swift in Sources */,
 				DDB8EFF3FB5462127CDECA27 /* SettingsView.swift in Sources */,
 				A4A5875A1570E275519DE6D9 /* SidebarView.swift in Sources */,
@@ -619,6 +642,7 @@
 				6ABEF907BBE152C11B60E8F5 /* WorkflowDashboard.swift in Sources */,
 				24D0D51DE48566466D2B1E92 /* WorkflowDataModel.swift in Sources */,
 				16F5FD8475DC5D0F5469A659 /* ZettelIDGenerator.swift in Sources */,
+				3644B376543B29E9AEA15890 /* generate_icon.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
