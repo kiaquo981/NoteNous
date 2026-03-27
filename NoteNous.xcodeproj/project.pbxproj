@@ -44,6 +44,7 @@
 		345CCBDFE87A9363F395B518 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAFC093C9BE8C686B728E0A6 /* MainTabView.swift */; };
 		361B59F28DAF7392F1FB88DB /* WorkflowDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86144BC7E2763A84BDB074EC /* WorkflowDataModel.swift */; };
 		3644B376543B29E9AEA15890 /* generate_icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B390255E970B6DD494776F /* generate_icon.swift */; };
+		36CA798AAAE7584B43D39BC9 /* CallListenerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 266DF68170286FA7D7A2E220 /* CallListenerService.swift */; };
 		374572228702A4546E188D12 /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466FA44A20F2389672E25C10 /* ObsidianImporter.swift */; };
 		3BA7D622BA759FB02BFC2BB0 /* EnvLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F1209D91087CEC20272B92 /* EnvLoaderTests.swift */; };
 		3D7A01DDF716CB659EE90EB6 /* AtomicityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE72E7BC1A66B6E923C72589 /* AtomicityIndicator.swift */; };
@@ -171,6 +172,7 @@
 		E626CE70075D1484E2CFA862 /* KeyboardCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A4421A26CD18691229ABB /* KeyboardCommands.swift */; };
 		E640BB4CD9E2709A5204C6FB /* FolgezettelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFAA667A5D3DC580F966241 /* FolgezettelService.swift */; };
 		EABDEBFA438E67D352985923 /* SourceDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 687C1312064660D521A256CF /* SourceDetailSheet.swift */; };
+		EB5B9B20DBE954FCCB907FC2 /* CallListenerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C4F8490B959398401F874B /* CallListenerPanel.swift */; };
 		EC37DC4DB7B36608E9198755 /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF8567AD9B9942CE1D281FCD /* BackupService.swift */; };
 		ECB867CF3AE5844476536E64 /* SpacedRepetitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907497444ACBB1EA0CC55F70 /* SpacedRepetitionTests.swift */; };
 		EDA73ACBC7628F483EA83659 /* PDFReaderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51CD852402867B28A50A34B5 /* PDFReaderService.swift */; };
@@ -207,6 +209,7 @@
 		11882B0C4F7FEB73C3F8BAFE /* LinkSuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestionsPanel.swift; sourceTree = "<group>"; };
 		165EACC34F47F36ABA0EEDD2 /* DailyNoteServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyNoteServiceTests.swift; sourceTree = "<group>"; };
 		16EDE9D47FAE24F7BBE9CA00 /* FolgezettelServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolgezettelServiceTests.swift; sourceTree = "<group>"; };
+		18C4F8490B959398401F874B /* CallListenerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallListenerPanel.swift; sourceTree = "<group>"; };
 		1B3C1E259DB1202917047748 /* AIChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatView.swift; sourceTree = "<group>"; };
 		1C0C06774090B32027248777 /* ZettelIDGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZettelIDGeneratorTests.swift; sourceTree = "<group>"; };
 		1D97B5F074D0907D1DAB21EE /* GraphLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphLegend.swift; sourceTree = "<group>"; };
@@ -215,6 +218,7 @@
 		2340F5C1C2170770276964C2 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		2490616F86BE40D8E82CFC89 /* VoiceInkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInkService.swift; sourceTree = "<group>"; };
 		24C31D11E4F541452D704A33 /* CallNoteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallNoteSheet.swift; sourceTree = "<group>"; };
+		266DF68170286FA7D7A2E220 /* CallListenerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallListenerService.swift; sourceTree = "<group>"; };
 		2B11B51A117D657419BF7752 /* LinkType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkType.swift; sourceTree = "<group>"; };
 		2BF1B1BCF1935F2C6BE1A537 /* WikilinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikilinkParser.swift; sourceTree = "<group>"; };
 		2CA9288A1EC82B1F6968F47B /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
@@ -410,6 +414,7 @@
 			isa = PBXGroup;
 			children = (
 				64CD74FB7550A6E421350952 /* CallExtractedView.swift */,
+				18C4F8490B959398401F874B /* CallListenerPanel.swift */,
 				2D80ABB1363A3C5D6C254D38 /* CallNoteContextBar.swift */,
 				6A7AB4505A0E05DA33765646 /* CallNoteListView.swift */,
 				24C31D11E4F541452D704A33 /* CallNoteSheet.swift */,
@@ -468,6 +473,7 @@
 		3D7BF542BEF29861CE54475B /* Integrations */ = {
 			isa = PBXGroup;
 			children = (
+				266DF68170286FA7D7A2E220 /* CallListenerService.swift */,
 				DD71D09A64875B9A9B72BC47 /* ReadwiseService.swift */,
 				912B4B34B79879DAB552FADD /* VoiceInkAutoSync.swift */,
 				2490616F86BE40D8E82CFC89 /* VoiceInkService.swift */,
@@ -1036,6 +1042,8 @@
 				997D6A72DA68C5B187FE3AAA /* CODEStage.swift in Sources */,
 				D22B2295B871B360EEBA23C8 /* CODEStageBadge.swift in Sources */,
 				885A4D45EA03CC0963650E01 /* CallExtractedView.swift in Sources */,
+				EB5B9B20DBE954FCCB907FC2 /* CallListenerPanel.swift in Sources */,
+				36CA798AAAE7584B43D39BC9 /* CallListenerService.swift in Sources */,
 				F2AA33679B9B5A8548B8492F /* CallNoteContextBar.swift in Sources */,
 				D2DA94077BD0433DF5C70910 /* CallNoteListView.swift in Sources */,
 				D363CA1CD34C517CF3595794 /* CallNoteService.swift in Sources */,
@@ -1223,6 +1231,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = NoteNous;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 NoteNous";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "NoteNous needs microphone access to listen and transcribe calls in real-time.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "NoteNous uses on-device speech recognition to transcribe calls in real-time.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -1375,6 +1385,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = NoteNous;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 NoteNous";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "NoteNous needs microphone access to listen and transcribe calls in real-time.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "NoteNous uses on-device speech recognition to transcribe calls in real-time.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

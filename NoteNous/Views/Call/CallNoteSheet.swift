@@ -19,6 +19,10 @@ struct CallNoteSheet: View {
     @State private var timerActive: Bool = false
     @State private var timerTask: Task<Void, Never>?
 
+    // Call Listener
+    @StateObject private var callListener = CallListenerService.shared
+    @State private var listenerPermissionError: String?
+
     // Extraction
     @State private var isExtracting: Bool = false
     @State private var extractionResult: CallNoteService.ExtractionResult?
@@ -38,6 +42,11 @@ struct CallNoteSheet: View {
 
             Divider().background(moros.border)
 
+            // Call Listener Panel (shown when listening)
+            if callListener.isListening || callListener.state == .paused {
+                CallListenerPanel(listener: callListener)
+            }
+
             // Content
             ScrollView {
                 VStack(alignment: .leading, spacing: Moros.spacing16) {
@@ -54,6 +63,21 @@ struct CallNoteSheet: View {
         .morosBackground(moros.limit01)
         .onAppear(perform: loadExisting)
         .onDisappear(perform: saveAndCleanup)
+        .onChange(of: callListener.isListening) { wasListening, nowListening in
+            // When listener stops (from panel stop button), auto-fill transcription
+            if wasListening && !nowListening {
+                let text = callListener.liveTranscription
+                if !text.isEmpty {
+                    if transcription.isEmpty {
+                        transcription = text
+                    } else {
+                        transcription += "\n\n--- Live Transcription ---\n" + text
+                    }
+                }
+                // Auto-switch to review mode
+                isLiveMode = false
+            }
+        }
     }
 
     // MARK: - Header
@@ -128,6 +152,30 @@ struct CallNoteSheet: View {
             }
             .padding(8)
             .background(moros.limit02, in: Rectangle())
+
+            // Listen button
+            if !callListener.isListening && callListener.state != .paused {
+                Button {
+                    Task { await startCallListener() }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "mic.fill")
+                        Text("Listen")
+                            .font(Moros.fontSubhead)
+                    }
+                    .foregroundStyle(Moros.signal)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Moros.signal.opacity(0.12), in: Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+
+            if let permError = listenerPermissionError {
+                Text(permError)
+                    .font(Moros.fontSmall)
+                    .foregroundStyle(Moros.signal)
+            }
 
             Divider().background(moros.border)
 
@@ -412,9 +460,36 @@ struct CallNoteSheet: View {
         }
     }
 
+    private func startCallListener() async {
+        let perms = await callListener.checkPermissions()
+        if !perms.microphone {
+            listenerPermissionError = "Microphone permission denied. Grant access in System Settings > Privacy & Security > Microphone."
+            return
+        }
+        if !perms.speechRecognition {
+            listenerPermissionError = "Speech recognition permission denied. Grant access in System Settings > Privacy & Security > Speech Recognition."
+            return
+        }
+        listenerPermissionError = nil
+        await callListener.startListening(language: "pt-BR")
+    }
+
     private func saveAndCleanup() {
         timerActive = false
         timerTask?.cancel()
+
+        // Stop listener and fill transcription if it was active
+        if callListener.isListening || callListener.state == .paused {
+            let listenerText = callListener.stopListening()
+            if !listenerText.isEmpty {
+                if transcription.isEmpty {
+                    transcription = listenerText
+                } else {
+                    transcription += "\n\n--- Live Transcription ---\n" + listenerText
+                }
+            }
+        }
+
         if !topic.isEmpty || !annotations.isEmpty {
             saveCurrentState()
         }
