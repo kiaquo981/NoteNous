@@ -18,8 +18,7 @@ struct SettingsView: View {
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
         .frame(width: 560, height: 500)
-        .preferredColorScheme(.dark)
-        .foregroundStyle(Color.white.opacity(0.92))
+        .morosTheme()
     }
 }
 
