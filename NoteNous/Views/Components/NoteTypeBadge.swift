@@ -6,12 +6,12 @@ struct NoteTypeBadge: View {
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: type.icon)
-            Text(type.label)
+            Text(type.label.uppercased())
         }
-        .font(.caption2)
+        .font(.system(size: 9, weight: .medium, design: .monospaced))
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(.teal.opacity(0.12), in: Capsule())
-        .foregroundStyle(.teal)
+        .background(Moros.verdit.opacity(0.12), in: Rectangle())
+        .foregroundStyle(Moros.verdit)
     }
 }

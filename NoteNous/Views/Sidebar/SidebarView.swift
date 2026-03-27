@@ -14,7 +14,10 @@ struct SidebarView: View {
         List {
             // Search
             TextField("Search...", text: $appState.searchQuery)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
+                .padding(6)
+                .background(Moros.limit02, in: Rectangle())
+                .foregroundStyle(Moros.textMain)
                 .padding(.bottom, 4)
 
             // Daily Note Button
@@ -24,12 +27,13 @@ struct SidebarView: View {
             // New Note Button
             Button(action: createNewNote) {
                 Label("New Note", systemImage: "plus.circle.fill")
+                    .foregroundStyle(Moros.oracle)
             }
             .buttonStyle(.plain)
             .padding(.bottom, 8)
 
             // PARA Section
-            Section("PARA") {
+            Section {
                 ForEach(PARACategory.allCases) { category in
                     SidebarPARARow(category: category, isSelected: appState.selectedPARAFilter == category)
                         .contentShape(Rectangle())
@@ -41,10 +45,15 @@ struct SidebarView: View {
                             }
                         }
                 }
+            } header: {
+                Text("PARA")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
             }
 
             // CODE Pipeline
-            Section("CODE Pipeline") {
+            Section {
                 ForEach(CODEStage.allCases) { stage in
                     SidebarCODERow(stage: stage, isSelected: appState.selectedCODEFilter == stage)
                         .contentShape(Rectangle())
@@ -56,39 +65,60 @@ struct SidebarView: View {
                             }
                         }
                 }
+            } header: {
+                Text("CODE PIPELINE")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
             }
 
             // Workflow
-            Section("Workflow") {
+            Section {
                 NavigationLink(destination: FleetingReviewQueue().environment(\.managedObjectContext, context)) {
                     Label("Fleeting Queue", systemImage: "tray.full")
+                        .foregroundStyle(Moros.textSub)
                 }
                 NavigationLink(destination: SourceBrowserView(sourceService: SourceService())) {
                     Label("Sources", systemImage: "books.vertical")
+                        .foregroundStyle(Moros.textSub)
                 }
                 NavigationLink(destination: IndexBrowserView(indexService: IndexService()).environment(\.managedObjectContext, context)) {
                     Label("Index", systemImage: "list.bullet.rectangle")
+                        .foregroundStyle(Moros.textSub)
                 }
                 NavigationLink(destination: WorkflowDashboard(sourceService: SourceService(), indexService: IndexService()).environment(\.managedObjectContext, context)) {
                     Label("Dashboard", systemImage: "chart.bar")
+                        .foregroundStyle(Moros.textSub)
                 }
+            } header: {
+                Text("WORKFLOW")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Moros.textDim)
             }
 
             // Tags
             if !tags.isEmpty {
-                Section("Tags") {
+                Section {
                     ForEach(tags.prefix(15), id: \.objectID) { tag in
                         if let name = tag.name {
                             Label(name, systemImage: "tag")
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
+                                .font(Moros.fontSmall)
+                                .foregroundStyle(Moros.textDim)
                         }
                     }
+                } header: {
+                    Text("TAGS")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Moros.textDim)
                 }
             }
         }
         .listStyle(.sidebar)
         .frame(minWidth: 200)
+        .scrollContentBackground(.hidden)
+        .morosBackground(Moros.limit01)
     }
 
     private func createNewNote() {
@@ -108,22 +138,22 @@ struct SidebarPARARow: View {
     var body: some View {
         HStack {
             Image(systemName: category.icon)
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? Moros.void : Moros.textSub)
                 .frame(width: 20)
             Text(category.label)
                 .fontWeight(isSelected ? .semibold : .regular)
             Spacer()
             Text("\(count)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontMonoSmall)
+                .foregroundStyle(Moros.textDim)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(.quaternary, in: Capsule())
+                .background(Moros.limit03, in: Rectangle())
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 6)
-        .background(isSelected ? Color.accentColor.opacity(0.8) : .clear, in: RoundedRectangle(cornerRadius: 6))
-        .foregroundStyle(isSelected ? .white : .primary)
+        .background(isSelected ? Moros.oracle : .clear, in: Rectangle())
+        .foregroundStyle(isSelected ? Moros.void : Moros.textMain)
     }
 
     private var count: Int {
@@ -140,22 +170,22 @@ struct SidebarCODERow: View {
     var body: some View {
         HStack {
             Image(systemName: stage.icon)
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? Moros.void : Moros.textSub)
                 .frame(width: 20)
             Text(stage.label)
                 .fontWeight(isSelected ? .semibold : .regular)
             Spacer()
             Text("\(count)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontMonoSmall)
+                .foregroundStyle(Moros.textDim)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(.quaternary, in: Capsule())
+                .background(Moros.limit03, in: Rectangle())
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 6)
-        .background(isSelected ? Color.accentColor.opacity(0.8) : .clear, in: RoundedRectangle(cornerRadius: 6))
-        .foregroundStyle(isSelected ? .white : .primary)
+        .background(isSelected ? Moros.oracle : .clear, in: Rectangle())
+        .foregroundStyle(isSelected ? Moros.void : Moros.textMain)
     }
 
     private var count: Int {

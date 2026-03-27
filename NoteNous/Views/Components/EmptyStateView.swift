@@ -9,14 +9,15 @@ struct EmptyStateView: View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 48))
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(Moros.ambient)
             Text(title)
-                .font(.title3)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontH3)
+                .foregroundStyle(Moros.textDim)
             Text(subtitle)
-                .font(.callout)
-                .foregroundStyle(.tertiary)
+                .font(Moros.fontBody)
+                .foregroundStyle(Moros.textDim)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .morosBackground()
     }
 }

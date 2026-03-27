@@ -36,9 +36,8 @@ struct NoteEditorView: View {
                 HStack {
                     if let zettelId = note.zettelId {
                         Text(zettelId)
-                            .font(.caption)
-                            .monospaced()
-                            .foregroundStyle(.tertiary)
+                            .font(Moros.fontMonoCaption)
+                            .foregroundStyle(Moros.textDim)
                             .textSelection(.enabled)
                     }
                     Spacer()
@@ -54,7 +53,7 @@ struct NoteEditorView: View {
                     }
                     .buttonStyle(.plain)
                     .font(.caption)
-                    .foregroundStyle(note.aiClassified ? .purple : .secondary)
+                    .foregroundStyle(note.aiClassified ? Moros.oracle : Moros.textDim)
                     .help(note.aiClassified ? "Re-classify with AI" : "Classify with AI")
                     .disabled(isClassifying)
 
@@ -66,18 +65,21 @@ struct NoteEditorView: View {
 
                 TextField("What is this note's claim?", text: $title)
                     .textFieldStyle(.plain)
-                    .font(.title2.weight(.bold))
+                    .font(.system(size: 24, weight: .light))
+                    .foregroundStyle(Moros.textMain)
                     .onSubmit { saveChanges() }
 
                 if let error = classificationError {
                     Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.signal)
                 }
             }
             .padding()
 
-            Divider()
+            Rectangle()
+                .fill(Moros.border)
+                .frame(height: 1)
 
             // Content Editor with wikilink autocomplete overlay
             ZStack(alignment: .topLeading) {
@@ -124,12 +126,14 @@ struct NoteEditorView: View {
                 }
             }
 
-            Divider()
+            Rectangle()
+                .fill(Moros.border)
+                .frame(height: 1)
 
             // Footer — Tags + Actions
             HStack {
                 Image(systemName: "tag")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Moros.textDim)
                 ForEach(note.tagsArray, id: \.objectID) { tag in
                     if let name = tag.name {
                         TagBadge(name: name)
@@ -142,18 +146,21 @@ struct NoteEditorView: View {
                 }
                 .buttonStyle(.plain)
                 .font(.caption)
+                .foregroundStyle(Moros.oracle)
 
                 Button(action: { showLinkBrowser.toggle() }) {
                     Label("\(note.totalLinkCount)", systemImage: "arrow.triangle.branch")
                 }
                 .buttonStyle(.plain)
                 .font(.caption)
+                .foregroundStyle(Moros.textSub)
 
                 Button(action: { showLocalGraph.toggle() }) {
                     Image(systemName: "point.3.connected.trianglepath.dotted")
                 }
                 .buttonStyle(.plain)
                 .font(.caption)
+                .foregroundStyle(Moros.textSub)
 
                 if note.aiClassified {
                     HStack(spacing: 4) {
@@ -161,7 +168,7 @@ struct NoteEditorView: View {
                         Text("\(Int(note.aiConfidence * 100))%")
                     }
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Moros.textDim)
                 }
             }
             .padding(.horizontal)
@@ -169,17 +176,22 @@ struct NoteEditorView: View {
 
             // Local Graph Panel (toggleable)
             if showLocalGraph {
-                Divider()
+                Rectangle()
+                    .fill(Moros.border)
+                    .frame(height: 1)
                 LocalGraphView(centerNote: note)
                     .frame(height: 260)
             }
 
             // Backlinks Panel
             if showBacklinks {
-                Divider()
+                Rectangle()
+                    .fill(Moros.border)
+                    .frame(height: 1)
                 BacklinksPanel(note: note)
             }
         }
+        .morosBackground(Moros.limit01)
         .onAppear {
             loadNote()
             wikilinkState.configure(context: context)
@@ -215,14 +227,10 @@ struct NoteEditorView: View {
     // MARK: - Wikilink Insertion
 
     private func insertWikilinkForSelectedNote(_ selectedNote: NoteEntity) {
-        // Insert via the MarkdownTextView coordinator is not directly accessible here,
-        // so we perform a text-level replacement: find the open `[[query` and replace with `[[Title]]`
         let selectedTitle = selectedNote.title
-        // Find the last unclosed [[ in content up to where the user was typing
         if let openRange = content.range(of: "[[", options: .backwards) {
             let afterOpen = content[openRange.upperBound...]
             if !afterOpen.contains("]]") {
-                // Replace from [[ to end of query with [[Title]]
                 content = String(content[content.startIndex..<openRange.lowerBound]) + "[[\(selectedTitle)]]" + ""
             }
         }
@@ -236,7 +244,7 @@ struct NoteEditorView: View {
     private func debouncedSyncLinks() {
         linkSyncTask?.cancel()
         linkSyncTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second debounce
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
             guard !Task.isCancelled else { return }
             let parser = WikilinkParser(context: context)
             parser.syncLinks(for: note)
@@ -256,7 +264,6 @@ struct NoteEditorView: View {
                 let tagService = TagService(context: context)
                 let noteService = NoteService(context: context)
 
-                // Gather context
                 let existingTags = tagService.topTags(limit: 30).compactMap { $0.name }
                 let recentNotes = noteService.fetchNotes(limit: 30).compactMap { n -> (zettelId: String, title: String)? in
                     guard let zid = n.zettelId else { return nil }
@@ -271,7 +278,6 @@ struct NoteEditorView: View {
                 )
 
                 await MainActor.run {
-                    // Apply classification results
                     note.paraCategory = result.paraCategory
                     note.codeStage = result.codeStage
                     note.noteType = result.noteType
@@ -279,7 +285,6 @@ struct NoteEditorView: View {
                     note.aiConfidence = Float(result.confidence)
                     note.updatedAt = Date()
 
-                    // Apply tags
                     for tagName in result.tags {
                         let tag = tagService.findOrCreate(name: tagName)
                         let currentTags = note.tagsArray.compactMap { $0.name }
@@ -288,7 +293,6 @@ struct NoteEditorView: View {
                         }
                     }
 
-                    // Apply suggested links
                     let linkService = LinkService(context: context)
                     for suggested in result.suggested_links {
                         if let targetNote = noteService.findByZettelId(suggested.zettel_id) {
@@ -312,7 +316,6 @@ struct NoteEditorView: View {
                         }
                     }
 
-                    // Save
                     try? context.save()
                     isClassifying = false
                 }
@@ -330,10 +333,9 @@ struct NoteEditorView: View {
     private func scheduleAutoClassify() {
         autoClassifyTask?.cancel()
         autoClassifyTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 second debounce
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled else { return }
 
-            // Only auto-classify if: >50 chars, not yet classified, not currently classifying
             let totalText = title + content
             if totalText.count > 50 && !note.aiClassified && !isClassifying {
                 classifyNote()

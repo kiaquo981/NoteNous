@@ -35,7 +35,7 @@ struct GraphMinimap: View {
                 var path = Path()
                 path.move(to: sp)
                 path.addLine(to: tp)
-                context.stroke(path, with: .color(.secondary.opacity(0.15)), lineWidth: 0.5)
+                context.stroke(path, with: .color(Moros.textGhost), lineWidth: 0.5)
             }
 
             // Draw nodes as tiny dots
@@ -60,20 +60,20 @@ struct GraphMinimap: View {
             )
             context.stroke(
                 Rectangle().path(in: viewportRect),
-                with: .color(.accentColor.opacity(0.8)),
+                with: .color(Moros.oracle.opacity(0.8)),
                 lineWidth: 1.5
             )
             context.fill(
                 Rectangle().path(in: viewportRect),
-                with: .color(.accentColor.opacity(0.08))
+                with: .color(Moros.oracle.opacity(0.08))
             )
         }
         .frame(width: minimapSize, height: minimapSize)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .background(Moros.limit02)
+        .clipShape(Rectangle())
         .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(.separator, lineWidth: 0.5)
+            Rectangle()
+                .stroke(Moros.borderLit, lineWidth: 1)
         )
         .gesture(
             DragGesture(minimumDistance: 0)
@@ -126,19 +126,15 @@ struct GraphMinimap: View {
         scale: CGFloat,
         canvasSize: CGSize
     ) -> CGRect {
-        // Approximate the main viewport size (using a reference 800x600)
         let mainViewW: CGFloat = 800
         let mainViewH: CGFloat = 600
 
-        // World-space center of the current viewport
         let worldCenterX = (mainViewW / 2 - viewportOffset.x) / viewportZoom
         let worldCenterY = (mainViewH / 2 - viewportOffset.y) / viewportZoom
 
-        // World-space size of the viewport
         let worldW = mainViewW / viewportZoom
         let worldH = mainViewH / viewportZoom
 
-        // Convert to minimap coords
         let cx = canvasSize.width / 2 + (worldCenterX - graphCenter.x) * scale
         let cy = canvasSize.height / 2 + (worldCenterY - graphCenter.y) * scale
         let w = worldW * scale
@@ -159,11 +155,9 @@ struct GraphMinimap: View {
             y: (bounds.minY + bounds.maxY) / 2
         )
 
-        // Convert minimap point back to world coordinates
         let worldX = graphCenter.x + (point.x - minimapSize / 2) / scale
         let worldY = graphCenter.y + (point.y - minimapSize / 2) / scale
 
-        // Set viewport offset so this world point is centered
         let mainViewW: CGFloat = 800
         let mainViewH: CGFloat = 600
         let newOffset = CGPoint(
@@ -184,27 +178,27 @@ struct GraphMinimap: View {
         switch colorMode {
         case .para:
             switch node.cachedPARA {
-            case .inbox: return .gray
-            case .project: return .blue
-            case .area: return .green
-            case .resource: return .orange
-            case .archive: return .secondary
+            case .inbox: return Moros.ambient
+            case .project: return Moros.oracle
+            case .area: return Moros.verdit
+            case .resource: return Moros.ambient.opacity(0.7)
+            case .archive: return Moros.textDim
             }
         case .noteType:
             switch node.cachedNoteType {
-            case .fleeting: return .yellow
-            case .literature: return .cyan
-            case .permanent: return .purple
+            case .fleeting: return Moros.ambient
+            case .literature: return Moros.oracle
+            case .permanent: return Moros.verdit
             }
         case .code:
             switch node.cachedCODEStage {
-            case .captured: return .red.opacity(0.8)
-            case .organized: return .orange
-            case .distilled: return .green
-            case .expressed: return .blue
+            case .captured: return Moros.signal
+            case .organized: return Moros.ambient
+            case .distilled: return Moros.verdit
+            case .expressed: return Moros.oracle
             }
         case .custom:
-            return .secondary
+            return Moros.textDim
         }
     }
 }

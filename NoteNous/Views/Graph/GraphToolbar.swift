@@ -28,28 +28,28 @@ struct GraphToolbar: View {
             // Graph mode toggle
             graphModeToggle
 
-            Divider().frame(height: 20)
+            Rectangle().fill(Moros.border).frame(width: 1, height: 20)
 
             // Color mode picker
             colorModePicker
 
-            Divider().frame(height: 20)
+            Rectangle().fill(Moros.border).frame(width: 1, height: 20)
 
             // Depth slider (local graph only)
             if isLocalGraph {
                 depthControl
-                Divider().frame(height: 20)
+                Rectangle().fill(Moros.border).frame(width: 1, height: 20)
             }
 
             // Filter menu
             filterMenu
 
-            Divider().frame(height: 20)
+            Rectangle().fill(Moros.border).frame(width: 1, height: 20)
 
             // Layout controls
             layoutControls
 
-            Divider().frame(height: 20)
+            Rectangle().fill(Moros.border).frame(width: 1, height: 20)
 
             // Search
             searchField
@@ -59,7 +59,7 @@ struct GraphToolbar: View {
             // Zoom controls
             zoomControls
 
-            Divider().frame(height: 20)
+            Rectangle().fill(Moros.border).frame(width: 1, height: 20)
 
             // Stats
             statsDisplay
@@ -69,7 +69,7 @@ struct GraphToolbar: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(.regularMaterial)
+        .background(Moros.limit01)
     }
 
     // MARK: - Components
@@ -97,7 +97,8 @@ struct GraphToolbar: View {
             }
         } label: {
             Label(colorMode.label, systemImage: "paintpalette")
-                .font(.caption)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textSub)
         }
         .menuStyle(.borderlessButton)
         .frame(width: 100)
@@ -107,14 +108,14 @@ struct GraphToolbar: View {
     private var depthControl: some View {
         HStack(spacing: 4) {
             Text("Depth:")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textDim)
             Stepper(
                 "\(localDepth)",
                 value: $localDepth,
                 in: 1...5
             )
-            .font(.caption)
+            .font(Moros.fontCaption)
             .frame(width: 80)
         }
         .help("Number of hops from center note")
@@ -182,7 +183,8 @@ struct GraphToolbar: View {
             }
         } label: {
             Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
-                .font(.caption)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textSub)
         }
         .menuStyle(.borderlessButton)
         .help("Filter visible nodes")
@@ -194,6 +196,7 @@ struct GraphToolbar: View {
                 onResetLayout()
             } label: {
                 Image(systemName: "arrow.counterclockwise")
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.borderless)
             .help("Reset layout")
@@ -202,7 +205,7 @@ struct GraphToolbar: View {
                 onTogglePhysics()
             } label: {
                 Image(systemName: physicsEnabled ? "pause.circle" : "play.circle")
-                    .foregroundStyle(isSimulationRunning ? .green : .secondary)
+                    .foregroundStyle(isSimulationRunning ? Moros.verdit : Moros.textDim)
             }
             .buttonStyle(.borderless)
             .help(physicsEnabled ? "Pause physics" : "Resume physics")
@@ -212,16 +215,17 @@ struct GraphToolbar: View {
     private var searchField: some View {
         HStack(spacing: 4) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-                .font(.caption)
+                .foregroundStyle(Moros.textDim)
+                .font(Moros.fontCaption)
             TextField("Search graph...", text: $graphSearchQuery)
                 .textFieldStyle(.plain)
-                .font(.caption)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textMain)
                 .frame(width: 120)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+        .background(Moros.limit02, in: Rectangle())
     }
 
     private var zoomControls: some View {
@@ -232,12 +236,13 @@ struct GraphToolbar: View {
                 }
             } label: {
                 Image(systemName: "minus.magnifyingglass")
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.borderless)
 
             Text("\(Int(zoom * 100))%")
-                .font(.caption)
-                .monospacedDigit()
+                .font(Moros.fontMonoSmall)
+                .foregroundStyle(Moros.textDim)
                 .frame(width: 40)
 
             Button {
@@ -246,6 +251,7 @@ struct GraphToolbar: View {
                 }
             } label: {
                 Image(systemName: "plus.magnifyingglass")
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.borderless)
 
@@ -253,6 +259,7 @@ struct GraphToolbar: View {
                 onFitAll()
             } label: {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.borderless)
             .help("Fit all nodes")
@@ -261,8 +268,8 @@ struct GraphToolbar: View {
 
     private var statsDisplay: some View {
         Text("\(nodeCount) nodes | \(edgeCount) edges")
-            .font(.caption2)
-            .foregroundStyle(.secondary)
+            .font(Moros.fontMonoSmall)
+            .foregroundStyle(Moros.textDim)
             .monospacedDigit()
     }
 
@@ -272,6 +279,7 @@ struct GraphToolbar: View {
                 showLegend.toggle()
             } label: {
                 Image(systemName: showLegend ? "list.bullet.rectangle.fill" : "list.bullet.rectangle")
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.borderless)
             .help("Toggle legend")
@@ -280,6 +288,7 @@ struct GraphToolbar: View {
                 showMinimap.toggle()
             } label: {
                 Image(systemName: showMinimap ? "map.fill" : "map")
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.borderless)
             .help("Toggle minimap")

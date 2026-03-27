@@ -6,12 +6,12 @@ struct CODEStageBadge: View {
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: stage.icon)
-            Text(stage.label)
+            Text(stage.label.uppercased())
         }
-        .font(.caption2)
+        .font(.system(size: 9, weight: .medium, design: .monospaced))
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(.purple.opacity(0.12), in: Capsule())
-        .foregroundStyle(.purple)
+        .background(Moros.oracle.opacity(0.12), in: Rectangle())
+        .foregroundStyle(Moros.oracle)
     }
 }

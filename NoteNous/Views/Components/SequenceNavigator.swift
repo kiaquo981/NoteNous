@@ -22,8 +22,9 @@ struct SequenceNavigator: View {
                 help: parentId.map { "Parent: \($0)" } ?? "No parent (root note)"
             )
 
-            Divider()
-                .frame(height: 16)
+            Rectangle()
+                .fill(Moros.border)
+                .frame(width: 1, height: 16)
                 .padding(.horizontal, 2)
 
             // Previous sibling
@@ -35,10 +36,11 @@ struct SequenceNavigator: View {
 
             // Current ID
             Text(zettelId)
-                .font(.caption.monospaced().weight(.semibold))
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Moros.textMain)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 4))
+                .background(Moros.limit03, in: Rectangle())
                 .help("Depth: \(depth)")
 
             // Next sibling
@@ -48,8 +50,9 @@ struct SequenceNavigator: View {
                 help: nextSibling.map { "Next: \($0)" } ?? "No next sibling"
             )
 
-            Divider()
-                .frame(height: 16)
+            Rectangle()
+                .fill(Moros.border)
+                .frame(width: 1, height: 16)
                 .padding(.horizontal, 2)
 
             // First child navigation
@@ -61,7 +64,7 @@ struct SequenceNavigator: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
+        .background(Moros.limit02, in: Rectangle())
         .onAppear { loadNavigation() }
         .onChange(of: zettelId) { loadNavigation() }
     }
@@ -77,7 +80,7 @@ struct SequenceNavigator: View {
             Image(systemName: icon)
                 .font(.caption)
                 .frame(width: 24, height: 24)
-                .foregroundStyle(targetId != nil ? .primary : .quaternary)
+                .foregroundStyle(targetId != nil ? Moros.oracle : Moros.textGhost)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

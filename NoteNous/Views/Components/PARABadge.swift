@@ -6,32 +6,32 @@ struct PARABadge: View {
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: category.icon)
-            Text(category.label)
+            Text(category.label.uppercased())
         }
-        .font(.caption2)
+        .font(.system(size: 9, weight: .medium, design: .monospaced))
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(backgroundColor, in: Capsule())
+        .background(backgroundColor, in: Rectangle())
         .foregroundStyle(foregroundColor)
     }
 
     private var backgroundColor: Color {
         switch category {
-        case .inbox: .gray.opacity(0.15)
-        case .project: .blue.opacity(0.15)
-        case .area: .green.opacity(0.15)
-        case .resource: .orange.opacity(0.15)
-        case .archive: .secondary.opacity(0.1)
+        case .inbox: Moros.ambient.opacity(0.12)
+        case .project: Moros.oracle.opacity(0.12)
+        case .area: Moros.verdit.opacity(0.12)
+        case .resource: Moros.ambient.opacity(0.12)
+        case .archive: Moros.textGhost.opacity(0.5)
         }
     }
 
     private var foregroundColor: Color {
         switch category {
-        case .inbox: .gray
-        case .project: .blue
-        case .area: .green
-        case .resource: .orange
-        case .archive: .secondary
+        case .inbox: Moros.ambient
+        case .project: Moros.oracle
+        case .area: Moros.verdit
+        case .resource: Moros.ambient
+        case .archive: Moros.textDim
         }
     }
 }

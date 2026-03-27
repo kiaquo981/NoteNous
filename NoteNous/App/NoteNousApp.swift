@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreSpotlight
 
 @main
 struct NoteNousApp: App {
@@ -18,38 +19,44 @@ struct NoteNousApp: App {
                         .environmentObject(appState)
                         .environment(\.managedObjectContext, appState.viewContext)
                 }
+                .onAppear {
+                    OnboardingService.runIfNeeded(context: appState.viewContext)
+                    SpotlightService.shared.indexAllNotes(context: appState.viewContext)
+                }
+                .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                    handleSpotlightActivity(activity)
+                }
         }
         .commands {
-            CommandGroup(replacing: .newItem) {
-                Button("New Note") {
-                    appState.selectedNote = nil // triggers new note in editor
-                }
-                .keyboardShortcut("n", modifiers: .command)
-
-                Button("Quick Capture") {
-                    appState.isQuickCaptureVisible = true
-                }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-            }
-
-            CommandMenu("View") {
-                Button("Desk") { appState.selectedView = .desk }
-                    .keyboardShortcut("1", modifiers: .command)
-                Button("Stack") { appState.selectedView = .stack }
-                    .keyboardShortcut("2", modifiers: .command)
-                Button("Graph") { appState.selectedView = .graph }
-                    .keyboardShortcut("3", modifiers: .command)
-
-                Divider()
-
-                Button("Command Palette") { appState.isCommandPaletteVisible.toggle() }
-                    .keyboardShortcut("k", modifiers: .command)
-            }
+            KeyboardCommands(appState: appState)
         }
 
         Settings {
             SettingsView()
                 .environmentObject(appState)
+        }
+
+        MenuBarExtra("NoteNous", systemImage: "note.text") {
+            MenuBarCaptureView()
+                .environmentObject(appState)
+                .environment(\.managedObjectContext, appState.viewContext)
+        }
+        .menuBarExtraStyle(.window)
+    }
+
+    // MARK: - Spotlight Handler
+
+    private func handleSpotlightActivity(_ activity: NSUserActivity) {
+        guard let noteIdString = SpotlightService.noteIdentifier(from: activity) else { return }
+        guard let noteId = UUID(uuidString: noteIdString) else { return }
+
+        let context = appState.viewContext
+        let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
+        request.predicate = NSPredicate(format: "id == %@", noteId as CVarArg)
+        request.fetchLimit = 1
+
+        if let note = try? context.fetch(request).first {
+            appState.selectedNote = note
         }
     }
 }

@@ -21,27 +21,28 @@ struct LinkCreationSheet: View {
             // Header
             HStack {
                 Text("Create Link")
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Moros.textDim)
             }
             .padding()
 
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Source Note (read-only)
                     sourceNoteSection
 
-                    Divider()
+                    Rectangle().fill(Moros.border).frame(height: 1)
 
                     // Target Note (searchable)
                     targetNoteSection
 
-                    Divider()
+                    Rectangle().fill(Moros.border).frame(height: 1)
 
                     // Link Type
                     linkTypeSection
@@ -55,14 +56,14 @@ struct LinkCreationSheet: View {
                 .padding()
             }
 
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
 
             // Footer
             HStack {
                 if showError {
                     Text(errorMessage)
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.signal)
                 }
 
                 Spacer()
@@ -78,6 +79,7 @@ struct LinkCreationSheet: View {
             .padding()
         }
         .frame(width: 480, height: 560)
+        .morosBackground(Moros.limit01)
     }
 
     // MARK: - Source Note Section
@@ -85,27 +87,27 @@ struct LinkCreationSheet: View {
     private var sourceNoteSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("FROM")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
             HStack(spacing: 8) {
                 Image(systemName: "doc.text")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(Moros.oracle)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sourceNote.title.isEmpty ? "Untitled" : sourceNote.title)
-                        .font(.callout.weight(.medium))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Moros.textMain)
                     if let zettelId = sourceNote.zettelId {
                         Text(zettelId)
-                            .font(.caption2)
-                            .monospaced()
-                            .foregroundStyle(.tertiary)
+                            .font(Moros.fontMonoSmall)
+                            .foregroundStyle(Moros.textDim)
                     }
                 }
                 Spacer()
                 NoteTypeBadge(type: sourceNote.noteType)
             }
             .padding(8)
-            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
+            .background(Moros.limit02, in: Rectangle())
         }
     }
 
@@ -114,39 +116,41 @@ struct LinkCreationSheet: View {
     private var targetNoteSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("TO")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
             // Search field
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Moros.textDim)
                 TextField("Search for a note...", text: $searchQuery)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(Moros.textMain)
                     .onChange(of: searchQuery) { performSearch() }
             }
             .padding(8)
-            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 6))
+            .background(Moros.limit02, in: Rectangle())
 
             // Selected target display
             if let target = selectedTarget {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Moros.verdit)
                     Text(target.title.isEmpty ? "Untitled" : target.title)
-                        .font(.callout)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textMain)
                     Spacer()
                     Button {
                         selectedTarget = nil
                         searchQuery = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Moros.textDim)
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(8)
-                .background(.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
+                .background(Moros.verdit.opacity(0.08), in: Rectangle())
             }
 
             // Search results
@@ -160,14 +164,14 @@ struct LinkCreationSheet: View {
                             HStack(spacing: 8) {
                                 NoteTypeBadge(type: note.noteType)
                                 Text(note.title.isEmpty ? "Untitled" : note.title)
-                                    .font(.callout)
+                                    .font(Moros.fontBody)
+                                    .foregroundStyle(Moros.textMain)
                                     .lineLimit(1)
                                 Spacer()
                                 if let zettelId = note.zettelId {
                                     Text(zettelId)
-                                        .font(.caption2)
-                                        .monospaced()
-                                        .foregroundStyle(.tertiary)
+                                        .font(Moros.fontMonoSmall)
+                                        .foregroundStyle(Moros.textDim)
                                 }
                             }
                             .padding(.horizontal, 8)
@@ -177,20 +181,20 @@ struct LinkCreationSheet: View {
                         .buttonStyle(.plain)
 
                         if note.objectID != searchResults.last?.objectID {
-                            Divider()
+                            Rectangle().fill(Moros.border).frame(height: 1)
                         }
                     }
                 }
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
+                .background(Moros.limit02, in: Rectangle())
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(.separator, lineWidth: 0.5)
+                    Rectangle()
+                        .stroke(Moros.borderLit, lineWidth: 1)
                 )
 
                 if searchResults.isEmpty {
                     Text("No matching notes found")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.textDim)
                         .padding(.vertical, 4)
                 }
             }
@@ -202,8 +206,8 @@ struct LinkCreationSheet: View {
     private var linkTypeSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("LINK TYPE")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
             Picker("Link Type", selection: $selectedLinkType) {
                 ForEach(LinkType.allCases) { type in
@@ -219,14 +223,15 @@ struct LinkCreationSheet: View {
     private var contextSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("CONTEXT")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
             TextField("Why does this link exist?", text: $linkContext, axis: .vertical)
                 .textFieldStyle(.plain)
+                .foregroundStyle(Moros.textMain)
                 .lineLimit(2...4)
                 .padding(8)
-                .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 6))
+                .background(Moros.limit02, in: Rectangle())
         }
     }
 
@@ -236,25 +241,24 @@ struct LinkCreationSheet: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("STRENGTH")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Moros.textDim)
                 Spacer()
                 Text("\(Int(strength * 100))%")
-                    .font(.caption)
-                    .monospaced()
-                    .foregroundStyle(.secondary)
+                    .font(Moros.fontMonoSmall)
+                    .foregroundStyle(Moros.textDim)
             }
 
             Slider(value: $strength, in: 0...1, step: 0.1)
 
             HStack {
                 Text("Weak")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
                 Spacer()
                 Text("Strong")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
             }
         }
     }

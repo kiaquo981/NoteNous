@@ -26,7 +26,7 @@ struct FleetingReviewQueue: View {
             // Stats bar
             statsBar
 
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
 
             if fleetingNotes.isEmpty {
                 emptyState
@@ -34,6 +34,7 @@ struct FleetingReviewQueue: View {
                 notesList
             }
         }
+        .morosBackground(Moros.limit01)
         .sheet(isPresented: $showPromotionSheet) {
             if let note = promotionTarget {
                 PromotionSheet(note: note)
@@ -57,32 +58,32 @@ struct FleetingReviewQueue: View {
     private var statsBar: some View {
         HStack(spacing: 16) {
             Label("\(fleetingNotes.count) fleeting", systemImage: "bolt.fill")
-                .font(.callout.weight(.medium))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Moros.textMain)
 
-            Divider()
-                .frame(height: 16)
+            Rectangle().fill(Moros.border).frame(width: 1, height: 16)
 
             if let avgAge = averageAge {
                 Label("Avg age: \(avgAge)", systemImage: "clock")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textSub)
             }
 
             if let oldest = oldestAge {
                 Label("Oldest: \(oldest)", systemImage: "exclamationmark.clock")
-                    .font(.caption)
+                    .font(Moros.fontCaption)
                     .foregroundStyle(oldestSeverityColor)
             }
 
             Spacer()
 
-            Text("Oldest first")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            Text("OLDEST FIRST")
+                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(.bar)
+        .background(Moros.limit01)
     }
 
     // MARK: - Notes List
@@ -102,9 +103,11 @@ struct FleetingReviewQueue: View {
                     appState.selectedNote = note
                 }
                 .tag(note)
+                .listRowBackground(Moros.limit01)
             }
         }
-        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .listStyle(.inset(alternatesRowBackgrounds: false))
+        .scrollContentBackground(.hidden)
     }
 
     // MARK: - Empty State
@@ -113,12 +116,13 @@ struct FleetingReviewQueue: View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle")
                 .font(.system(size: 48))
-                .foregroundStyle(.green)
+                .foregroundStyle(Moros.verdit)
             Text("Inbox Zero")
-                .font(.title2.weight(.semibold))
+                .font(Moros.fontH2)
+                .foregroundStyle(Moros.textMain)
             Text("No fleeting notes to process. Capture something new!")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontBody)
+                .foregroundStyle(Moros.textSub)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -167,11 +171,11 @@ struct FleetingReviewQueue: View {
     }
 
     private var oldestSeverityColor: Color {
-        guard let oldest = fleetingNotes.first?.createdAt else { return .secondary }
+        guard let oldest = fleetingNotes.first?.createdAt else { return Moros.textDim }
         let days = Calendar.current.dateComponents([.day], from: oldest, to: Date()).day ?? 0
-        if days > 7 { return .red }
-        if days > 1 { return .orange }
-        return .green
+        if days > 7 { return Moros.signal }
+        if days > 1 { return Moros.ambient }
+        return Moros.verdit
     }
 }
 
@@ -190,7 +194,8 @@ struct FleetingNoteCard: View {
             HStack {
                 ageBadge
                 Text(note.title.isEmpty ? "Untitled" : note.title)
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                     .lineLimit(1)
                 Spacer()
                 wordCountBadge
@@ -198,8 +203,8 @@ struct FleetingNoteCard: View {
 
             if !note.contentPlainText.isEmpty {
                 Text(note.contentPlainText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(Moros.fontSmall)
+                    .foregroundStyle(Moros.textSub)
                     .lineLimit(3)
             }
 
@@ -208,21 +213,22 @@ struct FleetingNoteCard: View {
                     onDevelop()
                 }
                 .buttonStyle(.borderless)
-                .font(.caption)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textSub)
 
                 Button("Promote", systemImage: "arrow.up.circle") {
                     onPromote()
                 }
                 .buttonStyle(.borderless)
-                .font(.caption)
-                .foregroundStyle(.green)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.verdit)
 
                 Button("Literature", systemImage: "book") {
                     onConvertToLiterature()
                 }
                 .buttonStyle(.borderless)
-                .font(.caption)
-                .foregroundStyle(.blue)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.oracle)
 
                 Spacer()
 
@@ -230,8 +236,8 @@ struct FleetingNoteCard: View {
                     onDiscard()
                 }
                 .buttonStyle(.borderless)
-                .font(.caption)
-                .foregroundStyle(.red)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.signal)
             }
         }
         .padding(.vertical, 4)
@@ -242,10 +248,10 @@ struct FleetingNoteCard: View {
         let text = ageText
 
         return Text(text)
-            .font(.caption2.weight(.semibold))
+            .font(.system(size: 9, weight: .semibold, design: .monospaced))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(color.opacity(0.15), in: Capsule())
+            .background(color.opacity(0.15), in: Rectangle())
             .foregroundStyle(color)
     }
 
@@ -256,16 +262,16 @@ struct FleetingNoteCard: View {
             .count
 
         return Text("\(words)w")
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
+            .font(Moros.fontMonoSmall)
+            .foregroundStyle(Moros.textDim)
     }
 
     private var ageColor: Color {
-        guard let created = note.createdAt else { return .gray }
+        guard let created = note.createdAt else { return Moros.ambient }
         let days = Calendar.current.dateComponents([.day], from: created, to: Date()).day ?? 0
-        if days > 7 { return .red }
-        if days >= 1 { return .orange }
-        return .green
+        if days > 7 { return Moros.signal }
+        if days >= 1 { return Moros.ambient }
+        return Moros.verdit
     }
 
     private var ageText: String {

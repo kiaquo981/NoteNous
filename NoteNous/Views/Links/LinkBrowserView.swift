@@ -31,11 +31,12 @@ struct LinkBrowserView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerView
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
             sectionPicker
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
             linksList
         }
+        .morosBackground(Moros.limit01)
         .onAppear { loadLinks() }
         .onChange(of: note.objectID) { loadLinks() }
         .sheet(isPresented: $showLinkCreation) {
@@ -57,10 +58,11 @@ struct LinkBrowserView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Links")
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                 Text(note.title.isEmpty ? "Untitled" : note.title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textDim)
                     .lineLimit(1)
             }
 
@@ -70,6 +72,7 @@ struct LinkBrowserView: View {
                 showLinkCreation = true
             } label: {
                 Label("New Link", systemImage: "plus")
+                    .foregroundStyle(Moros.oracle)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
@@ -85,7 +88,7 @@ struct LinkBrowserView: View {
                 let count = countFor(section)
 
                 Button {
-                    withAnimation(.easeInOut(duration: 0.15)) {
+                    withAnimation(.easeInOut(duration: Moros.animFast)) {
                         selectedSection = section
                     }
                 } label: {
@@ -94,17 +97,19 @@ struct LinkBrowserView: View {
                         Text(section.rawValue)
                         if count > 0 {
                             Text("\(count)")
-                                .font(.caption2.weight(.semibold))
+                                .font(.system(size: 9, weight: .semibold, design: .monospaced))
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 1)
-                                .background(.blue.opacity(0.15), in: Capsule())
+                                .background(Moros.oracle.opacity(0.15), in: Rectangle())
+                                .foregroundStyle(Moros.oracle)
                         }
                     }
-                    .font(.caption)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(selectedSection == section ? Moros.textMain : Moros.textDim)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
-                    .background(selectedSection == section ? Color.accentColor.opacity(0.1) : .clear)
+                    .background(selectedSection == section ? Moros.limit03 : .clear)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -135,7 +140,7 @@ struct LinkBrowserView: View {
                             onReject: { rejectLink(link) }
                         )
 
-                        Divider()
+                        Rectangle().fill(Moros.border).frame(height: 1)
                             .padding(.leading, 40)
                     }
                 }
@@ -148,10 +153,10 @@ struct LinkBrowserView: View {
         VStack(spacing: 8) {
             Image(systemName: selectedSection.icon)
                 .font(.title)
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(Moros.textGhost)
             Text("No \(selectedSection.rawValue.lowercased()) links")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontBody)
+                .foregroundStyle(Moros.textDim)
 
             if selectedSection == .outgoing {
                 Button("Create Link") {
@@ -251,27 +256,27 @@ struct LinkBrowserRow: View {
         HStack(spacing: 10) {
             // Direction indicator
             Image(systemName: isOutgoing ? "arrow.up.right.circle.fill" : "arrow.down.left.circle.fill")
-                .foregroundStyle(isOutgoing ? .blue : .green)
+                .foregroundStyle(isOutgoing ? Moros.oracle : Moros.verdit)
 
             // Note info
             Button(action: onNavigate) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(displayNote?.title.isEmpty == false ? displayNote!.title : "Untitled")
-                        .font(.callout.weight(.medium))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Moros.textMain)
                         .lineLimit(1)
 
                     HStack(spacing: 8) {
                         if let zettelId = displayNote?.zettelId {
                             Text(zettelId)
-                                .font(.caption2)
-                                .monospaced()
-                                .foregroundStyle(.tertiary)
+                                .font(Moros.fontMonoSmall)
+                                .foregroundStyle(Moros.textDim)
                         }
 
                         if let ctx = link.context, !ctx.isEmpty {
                             Text(ctx)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(Moros.fontMicro)
+                                .foregroundStyle(Moros.textSub)
                                 .lineLimit(1)
                         }
                     }
@@ -308,14 +313,14 @@ struct LinkBrowserRow: View {
                 HStack(spacing: 6) {
                     Button(action: onConfirm) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Moros.verdit)
                     }
                     .buttonStyle(.plain)
                     .help("Confirm link")
 
                     Button(action: onReject) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Moros.signal)
                     }
                     .buttonStyle(.plain)
                     .help("Reject link")
@@ -324,7 +329,7 @@ struct LinkBrowserRow: View {
                 Button(action: onDelete) {
                     Image(systemName: "trash")
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Moros.signal)
                 }
                 .buttonStyle(.plain)
                 .help("Delete link")
@@ -332,7 +337,7 @@ struct LinkBrowserRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(isHovered ? Color.primary.opacity(0.03) : .clear)
+        .background(isHovered ? Moros.limit03 : .clear)
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
     }

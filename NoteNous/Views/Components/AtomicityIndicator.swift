@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A visual indicator showing the atomicity health of a note.
-/// Shows as a colored dot: green (atomic), yellow (minor issues), red (needs work).
+/// Shows as a colored dot: VERDIT (atomic), ORACLE (minor issues), SIGNAL (needs work).
 struct AtomicityIndicator: View {
     let report: AtomicityReport
     var size: IndicatorSize = .small
@@ -21,9 +21,9 @@ struct AtomicityIndicator: View {
 
         var font: Font {
             switch self {
-            case .small: .caption2
-            case .medium: .caption
-            case .large: .callout
+            case .small: Moros.fontMicro
+            case .medium: Moros.fontCaption
+            case .large: Moros.fontBody
             }
         }
     }
@@ -61,11 +61,14 @@ struct AtomicityIndicator: View {
                     .fill(severityColor)
                     .frame(width: 12, height: 12)
                 Text(report.severity.label)
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                 Spacer()
             }
 
-            Divider()
+            Rectangle()
+                .fill(Moros.border)
+                .frame(height: 1)
 
             // Stats
             VStack(alignment: .leading, spacing: 6) {
@@ -78,49 +81,55 @@ struct AtomicityIndicator: View {
 
             // Issues
             if !report.issues.isEmpty {
-                Divider()
+                Rectangle()
+                    .fill(Moros.border)
+                    .frame(height: 1)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Issues")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                    Text("ISSUES")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Moros.textDim)
 
                     ForEach(Array(report.issues.enumerated()), id: \.offset) { _, issue in
                         HStack(alignment: .top, spacing: 6) {
                             Image(systemName: issue.icon)
-                                .foregroundStyle(issue.isCritical ? .red : .orange)
+                                .foregroundStyle(issue.isCritical ? Moros.signal : Moros.ambient)
                                 .font(.caption)
                                 .frame(width: 14)
                             Text(issue.description)
-                                .font(.caption)
-                                .foregroundStyle(issue.isCritical ? .primary : .secondary)
+                                .font(Moros.fontCaption)
+                                .foregroundStyle(issue.isCritical ? Moros.textMain : Moros.textSub)
                         }
                     }
                 }
             } else {
-                Divider()
+                Rectangle()
+                    .fill(Moros.border)
+                    .frame(height: 1)
 
                 Label("This note follows atomic note principles", systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.verdit)
             }
         }
         .padding(12)
         .frame(width: 300)
+        .morosBackground(Moros.limit02)
     }
 
     private func statRow(label: String, value: String, ideal: String) -> some View {
         HStack {
             Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textSub)
                 .frame(width: 100, alignment: .leading)
             Text(value)
-                .font(.caption.monospacedDigit().weight(.medium))
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textMain)
                 .frame(width: 40, alignment: .trailing)
             Text("(\(ideal))")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(Moros.fontMicro)
+                .foregroundStyle(Moros.textDim)
         }
     }
 
@@ -128,9 +137,9 @@ struct AtomicityIndicator: View {
 
     private var severityColor: Color {
         switch report.severity {
-        case .good: .green
-        case .warning: .orange
-        case .critical: .red
+        case .good: Moros.verdit
+        case .warning: Moros.oracle
+        case .critical: Moros.signal
         }
     }
 }

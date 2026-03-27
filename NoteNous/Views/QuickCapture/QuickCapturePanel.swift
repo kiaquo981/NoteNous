@@ -11,13 +11,14 @@ struct QuickCapturePanel: View {
             // Header
             HStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(Moros.oracle)
                 Text("Quick Capture")
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                 Spacer()
-                Button(action: dismiss) {
+                Button(action: dismissPanel) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Moros.textDim)
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.escape, modifiers: [])
@@ -25,25 +26,30 @@ struct QuickCapturePanel: View {
 
             // Title field
             TextField("Title (optional)", text: $title)
-                .textFieldStyle(.roundedBorder)
-                .font(.title3)
+                .textFieldStyle(.plain)
+                .font(Moros.fontH3)
+                .foregroundStyle(Moros.textMain)
+                .padding(8)
+                .background(Moros.limit02, in: Rectangle())
 
             // Content field
             TextEditor(text: $content)
-                .font(.body.monospaced())
+                .font(.system(size: 13, weight: .regular, design: .monospaced))
+                .foregroundStyle(Moros.textMain)
                 .scrollContentBackground(.hidden)
                 .padding(8)
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                .background(Moros.limit02, in: Rectangle())
                 .frame(minHeight: 120)
 
             // Actions
             HStack {
-                Text("Fleeting note in Inbox")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("FLEETING NOTE IN INBOX")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Moros.textDim)
                 Spacer()
-                Button("Cancel", action: dismiss)
+                Button("Cancel", action: dismissPanel)
                     .keyboardShortcut(.escape, modifiers: [])
+                    .foregroundStyle(Moros.textDim)
                 Button("Capture", action: capture)
                     .keyboardShortcut(.return, modifiers: .command)
                     .buttonStyle(.borderedProminent)
@@ -53,6 +59,8 @@ struct QuickCapturePanel: View {
         .padding(20)
         .frame(minWidth: 440, minHeight: 280)
         .fixedSize(horizontal: true, vertical: false)
+        .morosBackground(Moros.limit02)
+        .overlay(Rectangle().stroke(Moros.borderLit, lineWidth: 1))
     }
 
     private func capture() {
@@ -70,10 +78,10 @@ struct QuickCapturePanel: View {
         note.noteType = .fleeting
         try? context.save()
 
-        dismiss()
+        dismissPanel()
     }
 
-    private func dismiss() {
+    private func dismissPanel() {
         title = ""
         content = ""
         appState.isQuickCaptureVisible = false

@@ -37,17 +37,20 @@ struct StackView: View {
                 ForEach(filteredNotes, id: \.objectID) { note in
                     NoteCardRow(note: note)
                         .tag(note)
+                        .listRowBackground(Moros.limit01)
                 }
             }
         }
-        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .listStyle(.inset(alternatesRowBackgrounds: false))
+        .scrollContentBackground(.hidden)
+        .morosBackground(Moros.limit01)
         .searchable(text: $appState.searchQuery, prompt: "Search notes...")
         .toolbar {
             if !appState.searchQuery.isEmpty {
                 ToolbarItem(placement: .automatic) {
                     Text("\(searchMatchCount) match\(searchMatchCount == 1 ? "" : "es")")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontMonoSmall)
+                        .foregroundStyle(Moros.textDim)
                         .monospacedDigit()
                 }
             }
@@ -94,6 +97,7 @@ struct StackView: View {
 
 struct NoteCardRow: View {
     @ObservedObject var note: NoteEntity
+    @State private var isHovered = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -101,10 +105,11 @@ struct NoteCardRow: View {
                 if note.isPinned {
                     Image(systemName: "pin.fill")
                         .font(.caption2)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Moros.signal)
                 }
                 Text(note.title.isEmpty ? "Untitled" : note.title)
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                     .lineLimit(1)
                 Spacer()
                 PARABadge(category: note.paraCategory)
@@ -112,25 +117,24 @@ struct NoteCardRow: View {
 
             if !note.contentPlainText.isEmpty {
                 Text(note.contentPlainText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(Moros.fontSmall)
+                    .foregroundStyle(Moros.textSub)
                     .lineLimit(2)
             }
 
             HStack(spacing: 8) {
                 if let zettelId = note.zettelId {
                     Text(zettelId)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .monospaced()
+                        .font(Moros.fontMonoSmall)
+                        .foregroundStyle(Moros.textDim)
                 }
 
                 Spacer()
 
                 if let date = note.updatedAt {
                     Text(date, style: .relative)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(Moros.fontMonoSmall)
+                        .foregroundStyle(Moros.textDim)
                 }
 
                 if !note.tagsArray.isEmpty {
@@ -138,8 +142,8 @@ struct NoteCardRow: View {
                         ForEach(note.tagsArray.prefix(3), id: \.objectID) { tag in
                             if let name = tag.name {
                                 Text("#\(name)")
-                                    .font(.caption2)
-                                    .foregroundStyle(.blue)
+                                    .font(Moros.fontMonoSmall)
+                                    .foregroundStyle(Moros.oracle)
                             }
                         }
                     }
@@ -147,5 +151,9 @@ struct NoteCardRow: View {
             }
         }
         .padding(.vertical, 4)
+        .padding(.horizontal, 4)
+        .background(isHovered ? Moros.limit02 : .clear, in: Rectangle())
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: Moros.animFast), value: isHovered)
     }
 }

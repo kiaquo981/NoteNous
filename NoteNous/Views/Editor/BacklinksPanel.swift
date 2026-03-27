@@ -16,7 +16,7 @@ struct BacklinksPanel: View {
             headerView
 
             if isExpanded {
-                Divider()
+                Rectangle().fill(Moros.border).frame(height: 1)
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
@@ -41,8 +41,8 @@ struct BacklinksPanel: View {
                 .frame(maxHeight: 300)
             }
         }
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(Moros.limit01)
+        .clipShape(Rectangle())
         .onAppear { loadBacklinks() }
         .onChange(of: note.objectID) { loadBacklinks() }
     }
@@ -51,31 +51,32 @@ struct BacklinksPanel: View {
 
     private var headerView: some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(.easeInOut(duration: Moros.animFast)) {
                 isExpanded.toggle()
             }
         } label: {
             HStack {
                 Image(systemName: "link")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Moros.oracle)
                 Text("Backlinks")
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
 
                 let totalCount = confirmedLinks.count + suggestedLinks.count + unlinkedMentions.count
                 if totalCount > 0 {
                     Text("\(totalCount)")
-                        .font(.caption2.weight(.semibold))
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(.blue.opacity(0.15), in: Capsule())
-                        .foregroundStyle(.blue)
+                        .background(Moros.oracle.opacity(0.15), in: Rectangle())
+                        .foregroundStyle(Moros.oracle)
                 }
 
                 Spacer()
 
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Moros.textDim)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -88,7 +89,7 @@ struct BacklinksPanel: View {
 
     private var confirmedLinksSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Confirmed", count: confirmedLinks.count, icon: "checkmark.circle.fill", color: .green)
+            sectionHeader("Confirmed", count: confirmedLinks.count, icon: "checkmark.circle.fill", color: Moros.verdit)
 
             ForEach(confirmedLinks, id: \.objectID) { link in
                 BacklinkRow(
@@ -104,7 +105,7 @@ struct BacklinksPanel: View {
 
     private var suggestedLinksSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("AI Suggested", count: suggestedLinks.count, icon: "brain", color: .purple)
+            sectionHeader("AI Suggested", count: suggestedLinks.count, icon: "brain", color: Moros.oracle)
 
             ForEach(suggestedLinks, id: \.objectID) { link in
                 HStack {
@@ -120,7 +121,7 @@ struct BacklinksPanel: View {
                         confirmLink(link)
                     } label: {
                         Image(systemName: "checkmark.circle")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Moros.verdit)
                     }
                     .buttonStyle(.plain)
                     .help("Confirm this link")
@@ -129,7 +130,7 @@ struct BacklinksPanel: View {
                         rejectLink(link)
                     } label: {
                         Image(systemName: "xmark.circle")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Moros.signal)
                     }
                     .buttonStyle(.plain)
                     .help("Reject this link")
@@ -142,7 +143,7 @@ struct BacklinksPanel: View {
 
     private var unlinkedMentionsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Unlinked Mentions", count: unlinkedMentions.count, icon: "text.magnifyingglass", color: .orange)
+            sectionHeader("Unlinked Mentions", count: unlinkedMentions.count, icon: "text.magnifyingglass", color: Moros.ambient)
 
             ForEach(unlinkedMentions, id: \.objectID) { mentioningNote in
                 Button {
@@ -150,18 +151,18 @@ struct BacklinksPanel: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "doc.text")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Moros.ambient)
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(mentioningNote.title.isEmpty ? "Untitled" : mentioningNote.title)
-                                .font(.callout)
+                                .font(Moros.fontBody)
+                                .foregroundStyle(Moros.textMain)
                                 .lineLimit(1)
 
                             if let zettelId = mentioningNote.zettelId {
                                 Text(zettelId)
-                                    .font(.caption2)
-                                    .monospaced()
-                                    .foregroundStyle(.tertiary)
+                                    .font(Moros.fontMonoSmall)
+                                    .foregroundStyle(Moros.textDim)
                             }
                         }
 
@@ -169,7 +170,7 @@ struct BacklinksPanel: View {
 
                         Image(systemName: "arrow.right")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(Moros.textDim)
                     }
                     .padding(.vertical, 4)
                     .padding(.horizontal, 8)
@@ -186,13 +187,13 @@ struct BacklinksPanel: View {
         VStack(spacing: 6) {
             Image(systemName: "link.badge.plus")
                 .font(.title2)
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(Moros.textGhost)
             Text("No backlinks yet")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontBody)
+                .foregroundStyle(Moros.textDim)
             Text("Other notes linking to this note will appear here.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textDim)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -205,11 +206,12 @@ struct BacklinksPanel: View {
         HStack(spacing: 4) {
             Image(systemName: icon)
                 .foregroundStyle(color)
-            Text(title)
-                .font(.subheadline.weight(.medium))
+            Text(title.uppercased())
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
             Text("(\(count))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontMonoSmall)
+                .foregroundStyle(Moros.textDim)
         }
     }
 
@@ -258,13 +260,14 @@ struct BacklinkRow: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(displayNote?.title.isEmpty == false ? displayNote!.title : "Untitled")
-                        .font(.callout)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textMain)
                         .lineLimit(1)
 
                     if let ctx = link.context, !ctx.isEmpty {
                         Text(ctx)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(Moros.fontCaption)
+                            .foregroundStyle(Moros.textSub)
                             .lineLimit(1)
                     }
                 }
@@ -275,7 +278,7 @@ struct BacklinkRow: View {
 
                 Image(systemName: "arrow.right")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Moros.textDim)
             }
             .padding(.vertical, 4)
             .padding(.horizontal, 8)
@@ -291,31 +294,31 @@ struct LinkTypeBadge: View {
     let type: LinkType
 
     var body: some View {
-        Text(type.label)
-            .font(.caption2.weight(.medium))
+        Text(type.label.uppercased())
+            .font(.system(size: 9, weight: .medium, design: .monospaced))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(backgroundColor, in: Capsule())
+            .background(backgroundColor, in: Rectangle())
             .foregroundStyle(foregroundColor)
     }
 
     private var backgroundColor: Color {
         switch type {
-        case .reference: .gray.opacity(0.15)
-        case .supports: .green.opacity(0.15)
-        case .contradicts: .red.opacity(0.15)
-        case .extends: .blue.opacity(0.15)
-        case .example: .purple.opacity(0.15)
+        case .reference: Moros.ambient.opacity(0.12)
+        case .supports: Moros.verdit.opacity(0.12)
+        case .contradicts: Moros.signal.opacity(0.12)
+        case .extends: Moros.oracle.opacity(0.12)
+        case .example: Moros.oracle.opacity(0.08)
         }
     }
 
     private var foregroundColor: Color {
         switch type {
-        case .reference: .gray
-        case .supports: .green
-        case .contradicts: .red
-        case .extends: .blue
-        case .example: .purple
+        case .reference: Moros.ambient
+        case .supports: Moros.verdit
+        case .contradicts: Moros.signal
+        case .extends: Moros.oracle
+        case .example: Moros.oracle
         }
     }
 }
@@ -329,7 +332,7 @@ struct StrengthIndicator: View {
         HStack(spacing: 1) {
             ForEach(0..<5, id: \.self) { index in
                 Circle()
-                    .fill(index < filledDots ? .primary : .quaternary)
+                    .fill(index < filledDots ? Moros.textMain : Moros.textGhost)
                     .frame(width: 4, height: 4)
             }
         }

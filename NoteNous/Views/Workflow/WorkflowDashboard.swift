@@ -35,42 +35,42 @@ struct WorkflowDashboard: View {
             }
             .padding()
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .morosBackground()
     }
 
     // MARK: - Inbox Card
 
     private var inboxCard: some View {
-        DashboardCard(title: "Inbox", icon: "tray.full", color: .orange) {
+        DashboardCard(title: "Inbox", icon: "tray.full", color: Moros.ambient) {
             let fleetingCount = countNotes(type: .fleeting)
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(fleetingCount)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("fleeting notes")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textSub)
                 }
 
                 if fleetingCount > 0 {
-                    // Age histogram
                     let ages = fleetingNoteAges()
                     HStack(spacing: 8) {
-                        AgeBar(label: "<24h", count: ages.fresh, color: .green)
-                        AgeBar(label: "1-7d", count: ages.review, color: .orange)
-                        AgeBar(label: ">7d", count: ages.stale, color: .red)
+                        AgeBar(label: "<24h", count: ages.fresh, color: Moros.verdit)
+                        AgeBar(label: "1-7d", count: ages.review, color: Moros.ambient)
+                        AgeBar(label: ">7d", count: ages.stale, color: Moros.signal)
                     }
 
                     if let oldest = ages.oldestDays {
                         Text("Oldest: \(oldest) days")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .font(Moros.fontCaption)
+                            .foregroundStyle(Moros.textDim)
                     }
                 } else {
                     Label("Inbox zero", systemImage: "checkmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(.green)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.verdit)
                 }
             }
         }
@@ -81,25 +81,26 @@ struct WorkflowDashboard: View {
     private var sourcesCard: some View {
         let stats = sourceService.stats()
 
-        return DashboardCard(title: "Sources", icon: "books.vertical", color: .blue) {
+        return DashboardCard(title: "Sources", icon: "books.vertical", color: Moros.oracle) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(stats.totalSources)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("total sources")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textSub)
                 }
 
                 HStack(spacing: 16) {
-                    StatPill(label: "Waiting", value: stats.waitingCount, color: .yellow)
-                    StatPill(label: "Ready", value: stats.readyToCardCount, color: .green)
-                    StatPill(label: "Carded", value: stats.cardedCount, color: .blue)
+                    StatPill(label: "Waiting", value: stats.waitingCount, color: Moros.ambient)
+                    StatPill(label: "Ready", value: stats.readyToCardCount, color: Moros.verdit)
+                    StatPill(label: "Carded", value: stats.cardedCount, color: Moros.oracle)
                 }
 
                 Text("\(stats.totalCardsGenerated) cards generated")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textDim)
             }
         }
     }
@@ -115,24 +116,24 @@ struct WorkflowDashboard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(Int(percentage))%")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .light))
                         .foregroundStyle(atomicityColor(percentage))
                     Text("of permanent notes atomic")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textSub)
                 }
 
                 Text("\(permanentCount) permanent notes total")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontCaption)
+                    .foregroundStyle(Moros.textDim)
 
                 // Progress bar
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(.quaternary)
+                        Rectangle()
+                            .fill(Moros.limit03)
                             .frame(height: 6)
-                        RoundedRectangle(cornerRadius: 4)
+                        Rectangle()
                             .fill(atomicityColor(percentage))
                             .frame(width: geo.size.width * CGFloat(percentage / 100), height: 6)
                     }
@@ -149,24 +150,25 @@ struct WorkflowDashboard: View {
         let avgLinks = atomicService.averageLinkDensity()
         let orphans = atomicService.orphanNoteCount()
 
-        return DashboardCard(title: "Connections", icon: "link", color: .purple) {
+        return DashboardCard(title: "Connections", icon: "link", color: Moros.oracle) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(String(format: "%.1f", avgLinks))
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("avg links/note")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textSub)
                 }
 
                 if orphans > 0 {
                     Label("\(orphans) orphan notes", systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.ambient)
                 } else {
                     Label("No orphan notes", systemImage: "checkmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(.green)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.verdit)
                 }
             }
         }
@@ -179,37 +181,40 @@ struct WorkflowDashboard: View {
         let permanentCount = countNotes(type: .permanent)
         let coverage = permanentCount > 0 ? Double(stats.totalEntryNotes) / Double(permanentCount) * 100 : 0
 
-        return DashboardCard(title: "Index", icon: "text.book.closed", color: .indigo) {
+        return DashboardCard(title: "Index", icon: "text.book.closed", color: Moros.verdit) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(stats.totalKeywords)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("keywords")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontBody)
+                        .foregroundStyle(Moros.textSub)
                 }
 
                 HStack(spacing: 16) {
                     VStack(alignment: .leading) {
                         Text("\(stats.totalEntryNotes)")
-                            .font(.callout.weight(.semibold))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Moros.textMain)
                         Text("entry notes")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .font(Moros.fontMicro)
+                            .foregroundStyle(Moros.textDim)
                     }
                     VStack(alignment: .leading) {
                         Text(String(format: "%.0f%%", min(coverage, 100)))
-                            .font(.callout.weight(.semibold))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Moros.textMain)
                         Text("coverage")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .font(Moros.fontMicro)
+                            .foregroundStyle(Moros.textDim)
                     }
                 }
 
                 if stats.overloadedKeywords > 0 {
                     Label("\(stats.overloadedKeywords) keywords with >3 entries", systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.ambient)
                 }
             }
         }
@@ -218,19 +223,21 @@ struct WorkflowDashboard: View {
     // MARK: - CODE Pipeline Card
 
     private var codePipelineCard: some View {
-        DashboardCard(title: "CODE Pipeline", icon: "arrow.right.arrow.left", color: .teal) {
+        DashboardCard(title: "CODE Pipeline", icon: "arrow.right.arrow.left", color: Moros.oracle) {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(CODEStage.allCases) { stage in
                     let count = countNotesByStage(stage)
                     HStack {
                         Image(systemName: stage.icon)
                             .frame(width: 16)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Moros.textDim)
                         Text(stage.label)
-                            .font(.callout)
+                            .font(Moros.fontBody)
+                            .foregroundStyle(Moros.textSub)
                         Spacer()
                         Text("\(count)")
-                            .font(.callout.monospacedDigit().weight(.semibold))
+                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Moros.textMain)
                     }
                 }
             }
@@ -242,28 +249,31 @@ struct WorkflowDashboard: View {
     private var weeklyActivityCard: some View {
         let weekStats = weeklyStats()
 
-        return DashboardCard(title: "This Week", icon: "calendar", color: .mint) {
+        return DashboardCard(title: "This Week", icon: "calendar", color: Moros.verdit) {
             HStack(spacing: 24) {
                 VStack {
                     Text("\(weekStats.created)")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("Created")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.textDim)
                 }
                 VStack {
                     Text("\(weekStats.promoted)")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("Promoted")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.textDim)
                 }
                 VStack {
                     Text("\(weekStats.archived)")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundStyle(Moros.textMain)
                     Text("Archived")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Moros.fontCaption)
+                        .foregroundStyle(Moros.textDim)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -345,9 +355,9 @@ struct WorkflowDashboard: View {
     }
 
     private func atomicityColor(_ percentage: Double) -> Color {
-        if percentage >= 80 { return .green }
-        if percentage >= 50 { return .orange }
-        return .red
+        if percentage >= 80 { return Moros.verdit }
+        if percentage >= 50 { return Moros.ambient }
+        return Moros.signal
     }
 }
 
@@ -364,18 +374,19 @@ struct DashboardCard<Content: View>: View {
             HStack {
                 Image(systemName: icon)
                     .foregroundStyle(color)
-                Text(title)
-                    .font(.headline)
+                Text(title.uppercased())
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Moros.textDim)
                 Spacer()
             }
 
             content()
         }
         .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .background(Moros.limit02, in: Rectangle())
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(.quaternary, lineWidth: 1)
+            Rectangle()
+                .strokeBorder(Moros.border, lineWidth: 1)
         )
     }
 }
@@ -390,11 +401,12 @@ struct AgeBar: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(count)")
-                .font(.callout.weight(.semibold).monospacedDigit())
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Moros.textMain)
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            RoundedRectangle(cornerRadius: 2)
+                .font(Moros.fontMicro)
+                .foregroundStyle(Moros.textDim)
+            Rectangle()
                 .fill(color.opacity(0.6))
                 .frame(height: 4)
         }
@@ -412,10 +424,11 @@ struct StatPill: View {
                 .fill(color)
                 .frame(width: 6, height: 6)
             Text("\(value)")
-                .font(.caption.weight(.semibold).monospacedDigit())
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Moros.textMain)
             Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textDim)
         }
     }
 }

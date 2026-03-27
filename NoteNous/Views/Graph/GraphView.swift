@@ -137,7 +137,7 @@ struct GraphView: View {
                 }
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .morosBackground()
         .onAppear {
             reloadGraph()
             startSimulationTimer()
@@ -223,17 +223,17 @@ struct GraphView: View {
                 let isSelected = node.id == selectedNodeId
                 let isHovered = node.id == hoveredNodeId
 
-                // Shadow for selected
+                // Glow for selected
                 if isSelected {
-                    let shadowRect = rect.insetBy(dx: -3, dy: -3)
-                    canvasContext.fill(Circle().path(in: shadowRect), with: .color(.accentColor.opacity(0.3)))
+                    let glowRect = rect.insetBy(dx: -4, dy: -4)
+                    canvasContext.fill(Circle().path(in: glowRect), with: .color(Moros.oracle.opacity(0.3)))
                 }
 
                 // Node circle
                 canvasContext.fill(Circle().path(in: rect), with: .color(nodeColor))
 
                 // Border
-                let borderColor: Color = isSelected ? .accentColor : (isHovered ? .white.opacity(0.8) : .white.opacity(0.3))
+                let borderColor: Color = isSelected ? Moros.oracle : (isHovered ? Color.white.opacity(0.4) : Moros.borderLit)
                 let borderWidth: CGFloat = isSelected ? 2.5 : (isHovered ? 2.0 : 1.0)
                 canvasContext.stroke(Circle().path(in: rect), with: .color(borderColor), lineWidth: borderWidth)
 
@@ -246,7 +246,7 @@ struct GraphView: View {
                     canvasContext.draw(
                         Text(truncated)
                             .font(.system(size: max(9, 11 * zoom), weight: isSelected ? .semibold : .regular))
-                            .foregroundColor(.primary),
+                            .foregroundColor(Color(Moros.textSub)),
                         at: textPoint,
                         anchor: .top
                     )
@@ -303,38 +303,38 @@ struct GraphView: View {
 
     private func paraColor(_ category: PARACategory) -> Color {
         switch category {
-        case .inbox: return .gray
-        case .project: return .blue
-        case .area: return .green
-        case .resource: return .orange
-        case .archive: return .secondary
+        case .inbox: return Moros.ambient
+        case .project: return Moros.oracle
+        case .area: return Moros.verdit
+        case .resource: return Moros.ambient.opacity(0.7)
+        case .archive: return Moros.textDim
         }
     }
 
     private func noteTypeColor(_ type: NoteType) -> Color {
         switch type {
-        case .fleeting: return .yellow
-        case .literature: return .cyan
-        case .permanent: return .purple
+        case .fleeting: return Moros.ambient
+        case .literature: return Moros.oracle
+        case .permanent: return Moros.verdit
         }
     }
 
     private func codeStageColor(_ stage: CODEStage) -> Color {
         switch stage {
-        case .captured: return .red.opacity(0.8)
-        case .organized: return .orange
-        case .distilled: return .green
-        case .expressed: return .blue
+        case .captured: return Moros.signal
+        case .organized: return Moros.ambient
+        case .distilled: return Moros.verdit
+        case .expressed: return Moros.oracle
         }
     }
 
     private func colorForLinkType(_ type: LinkType) -> Color {
         switch type {
-        case .reference: return .gray
-        case .supports: return .green
-        case .contradicts: return .red
-        case .extends: return .blue
-        case .example: return .orange
+        case .reference: return Moros.ambient
+        case .supports: return Moros.verdit
+        case .contradicts: return Moros.signal
+        case .extends: return Moros.oracle
+        case .example: return Moros.ambient.opacity(0.7)
         }
     }
 
@@ -344,7 +344,6 @@ struct GraphView: View {
         DragGesture()
             .onChanged { value in
                 if draggingNodeId == nil && !isDraggingBackground {
-                    // Check if dragging a node
                     if let node = layout.nodeAt(point: value.startLocation, zoom: zoom, offset: offset) {
                         draggingNodeId = node.id
                         layout.pinNode(id: node.id, pinned: true)
@@ -436,27 +435,29 @@ struct GraphView: View {
 
         return VStack(alignment: .leading, spacing: 4) {
             Text(node.cachedTitle.isEmpty ? "Untitled" : node.cachedTitle)
-                .font(.headline)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Moros.textMain)
                 .lineLimit(1)
             HStack(spacing: 8) {
                 Label(node.cachedNoteType.label, systemImage: node.cachedNoteType.icon)
                 Label(node.cachedPARA.label, systemImage: node.cachedPARA.icon)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .font(Moros.fontCaption)
+            .foregroundStyle(Moros.textSub)
 
             if !node.cachedTags.isEmpty {
                 Text("Tags: " + node.cachedTags.prefix(3).joined(separator: ", "))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
             }
 
             Text("\(node.cachedLinkCount) links")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(Moros.fontMicro)
+                .foregroundStyle(Moros.textDim)
         }
         .padding(8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .background(Moros.limit02, in: Rectangle())
+        .overlay(Rectangle().stroke(Moros.borderLit, lineWidth: 1))
         .position(screenPos)
         .allowsHitTesting(false)
     }
@@ -475,7 +476,6 @@ struct GraphView: View {
         let graphWidth = maxX - minX + 100
         let graphHeight = maxY - minY + 100
 
-        // Assume a reasonable viewport (will be approximate)
         let viewWidth: CGFloat = 800
         let viewHeight: CGFloat = 600
 
@@ -486,7 +486,7 @@ struct GraphView: View {
         let centerX = (minX + maxX) / 2
         let centerY = (minY + maxY) / 2
 
-        withAnimation(.easeInOut(duration: 0.4)) {
+        withAnimation(.easeInOut(duration: Moros.animSlow)) {
             zoom = newZoom
             offset = CGPoint(
                 x: viewWidth / 2 - centerX * newZoom,

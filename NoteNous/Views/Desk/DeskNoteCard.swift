@@ -29,23 +29,19 @@ struct DeskNoteCard: View {
             cardContent
         }
         .frame(width: cardSize.width, height: cardSize.height)
-        .background(.background)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(Moros.limit02)
+        .clipShape(Rectangle())
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            Rectangle()
                 .strokeBorder(
-                    isSelected ? Color.accentColor : Color.clear,
-                    lineWidth: isSelected ? 2 : 0
+                    isSelected ? Moros.oracle : Moros.border,
+                    lineWidth: isSelected ? 2 : 1
                 )
         )
-        .shadow(
-            color: .black.opacity(isHovered ? 0.18 : 0.08),
-            radius: isHovered ? 8 : 3,
-            y: isHovered ? 4 : 1
-        )
+        .morosGlow(isSelected ? Moros.oracle : .clear, radius: isSelected ? 8 : 0)
         .scaleEffect(isSelected ? 1.03 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isSelected)
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .animation(.easeInOut(duration: Moros.animFast), value: isSelected)
+        .animation(.easeOut(duration: Moros.animFast), value: isHovered)
         .onHover { isHovered = $0 }
         .onTapGesture {
             let shiftHeld = NSEvent.modifierFlags.contains(.shift)
@@ -63,7 +59,7 @@ struct DeskNoteCard: View {
     private var colorStripe: some View {
         Rectangle()
             .fill(stripeColor)
-            .frame(height: 8)
+            .frame(height: 4)
     }
 
     @ViewBuilder
@@ -83,10 +79,11 @@ struct DeskNoteCard: View {
             if note.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.system(size: 9))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Moros.signal)
             }
             Text(note.title.isEmpty ? "Untitled" : note.title)
                 .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Moros.textMain)
                 .lineLimit(1)
             Spacer()
             noteTypeIcon
@@ -101,16 +98,17 @@ struct DeskNoteCard: View {
                 if note.isPinned {
                     Image(systemName: "pin.fill")
                         .font(.system(size: 9))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Moros.signal)
                 }
                 Text(note.title.isEmpty ? "Untitled" : note.title)
                     .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                     .lineLimit(2)
             }
 
             Text(previewText)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .font(Moros.fontSmall)
+                .foregroundStyle(Moros.textSub)
                 .lineLimit(3)
 
             Spacer(minLength: 0)
@@ -126,16 +124,17 @@ struct DeskNoteCard: View {
                 if note.isPinned {
                     Image(systemName: "pin.fill")
                         .font(.system(size: 9))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Moros.signal)
                 }
                 Text(note.title.isEmpty ? "Untitled" : note.title)
                     .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Moros.textMain)
                     .lineLimit(2)
             }
 
             Text(previewText)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .font(Moros.fontSmall)
+                .foregroundStyle(Moros.textSub)
                 .lineLimit(6)
 
             if !note.tagsArray.isEmpty {
@@ -157,8 +156,8 @@ struct DeskNoteCard: View {
         HStack(spacing: 6) {
             if let zettelId = note.zettelId {
                 Text(zettelId)
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMonoSmall)
+                    .foregroundStyle(Moros.textDim)
             }
             noteTypeIcon
             paraBadge
@@ -168,16 +167,16 @@ struct DeskNoteCard: View {
     private var noteTypeIcon: some View {
         Image(systemName: note.noteType.icon)
             .font(.system(size: 10))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Moros.textDim)
             .help(note.noteType.label)
     }
 
     private var paraBadge: some View {
-        Text(note.paraCategory.label)
-            .font(.system(size: 9, weight: .medium))
+        Text(note.paraCategory.label.uppercased())
+            .font(.system(size: 9, weight: .medium, design: .monospaced))
             .padding(.horizontal, 4)
             .padding(.vertical, 1)
-            .background(paraColor.opacity(0.15), in: Capsule())
+            .background(paraColor.opacity(0.15), in: Rectangle())
             .foregroundStyle(paraColor)
     }
 
@@ -186,11 +185,11 @@ struct DeskNoteCard: View {
             HStack(spacing: 4) {
                 ForEach(note.tagsArray.prefix(5), id: \.self) { tag in
                     Text("#\(tag.name ?? "")")
-                        .font(.system(size: 9))
+                        .font(Moros.fontMonoSmall)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
-                        .background(Color.accentColor.opacity(0.1), in: Capsule())
-                        .foregroundStyle(.secondary)
+                        .background(Moros.oracle.opacity(0.1), in: Rectangle())
+                        .foregroundStyle(Moros.textDim)
                 }
             }
         }
@@ -204,9 +203,9 @@ struct DeskNoteCard: View {
                     Image(systemName: "link")
                         .font(.system(size: 9))
                     Text("\(count)")
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Moros.textDim)
             }
         }
     }
@@ -227,11 +226,11 @@ struct DeskNoteCard: View {
 
     private var paraColor: Color {
         switch note.paraCategory {
-        case .inbox: .gray
-        case .project: .blue
-        case .area: .green
-        case .resource: .orange
-        case .archive: .secondary
+        case .inbox: Moros.ambient
+        case .project: Moros.oracle
+        case .area: Moros.verdit
+        case .resource: Moros.ambient.opacity(0.7)
+        case .archive: Moros.textDim
         }
     }
 }

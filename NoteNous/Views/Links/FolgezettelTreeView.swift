@@ -14,7 +14,7 @@ struct FolgezettelTreeView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerView
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
 
             if isLoading {
                 ProgressView()
@@ -39,6 +39,7 @@ struct FolgezettelTreeView: View {
                 }
             }
         }
+        .morosBackground(Moros.limit01)
         .onAppear { buildTree() }
         .onChange(of: rootZettelId) { buildTree() }
     }
@@ -48,9 +49,10 @@ struct FolgezettelTreeView: View {
     private var headerView: some View {
         HStack {
             Image(systemName: "list.triangle")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Moros.oracle)
             Text("Folgezettel Tree")
-                .font(.headline)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Moros.textMain)
             Spacer()
 
             Button {
@@ -58,6 +60,7 @@ struct FolgezettelTreeView: View {
             } label: {
                 Image(systemName: "arrow.down.right.and.arrow.up.left")
                     .font(.caption)
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.plain)
             .help("Expand all")
@@ -67,6 +70,7 @@ struct FolgezettelTreeView: View {
             } label: {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
                     .font(.caption)
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.plain)
             .help("Collapse all")
@@ -80,13 +84,13 @@ struct FolgezettelTreeView: View {
         VStack(spacing: 8) {
             Image(systemName: "list.triangle")
                 .font(.title)
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(Moros.textGhost)
             Text("No Folgezettel structure")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(Moros.fontBody)
+                .foregroundStyle(Moros.textDim)
             Text("Add continuations or branches to build the tree.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(Moros.fontCaption)
+                .foregroundStyle(Moros.textDim)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -100,13 +104,11 @@ struct FolgezettelTreeView: View {
 
         let service = FolgezettelService(context: context)
 
-        // Navigate up to the topmost ancestor
         var currentId = rootZettelId
         while let parent = service.parentId(of: currentId) {
             currentId = parent
         }
 
-        // Build tree from the root
         let sequence = service.sequenceFrom(id: currentId, in: context)
         treeNodes = sequence.map { zettelId in
             let note = service.findNote(byFolgezettelId: zettelId, in: context)
@@ -124,7 +126,6 @@ struct FolgezettelTreeView: View {
             )
         }
 
-        // Auto-expand the path to the current note
         var pathId = rootZettelId
         expandedNodes.insert(pathId)
         while let parent = service.parentId(of: pathId) {
@@ -246,9 +247,9 @@ struct FolgezettelTreeNodeView: View {
             if node.hasChildren {
                 Button(action: onToggleExpand) {
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.caption2)
+                        .font(Moros.fontMicro)
                         .frame(width: 16, height: 16)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Moros.textDim)
                 }
                 .buttonStyle(.plain)
             } else {
@@ -256,20 +257,20 @@ struct FolgezettelTreeNodeView: View {
                     .frame(width: 16, height: 16)
             }
 
-            // Depth indicator line
+            // Depth indicator dot
             depthIndicator
 
             // Zettel ID
             Text(node.zettelId)
-                .font(.caption.monospaced().weight(node.isCurrentNote ? .bold : .regular))
-                .foregroundStyle(node.isCurrentNote ? .primary : .secondary)
+                .font(.system(size: 10, weight: node.isCurrentNote ? .bold : .regular, design: .monospaced))
+                .foregroundStyle(node.isCurrentNote ? Moros.textMain : Moros.textDim)
 
             // Title
             Button(action: onNavigate) {
                 Text(node.title.isEmpty ? "Untitled" : node.title)
-                    .font(.callout)
+                    .font(Moros.fontBody)
                     .lineLimit(1)
-                    .foregroundStyle(node.isCurrentNote ? Color.primary : Color.primary.opacity(0.8))
+                    .foregroundStyle(node.isCurrentNote ? Moros.textMain : Moros.textSub)
             }
             .buttonStyle(.plain)
 
@@ -280,19 +281,19 @@ struct FolgezettelTreeNodeView: View {
                 HStack(spacing: 4) {
                     Button(action: onAddContinuation) {
                         Image(systemName: "arrow.right")
-                            .font(.caption2)
+                            .font(Moros.fontMicro)
                     }
                     .buttonStyle(.plain)
                     .help("Add continuation (sibling)")
 
                     Button(action: onAddBranch) {
                         Image(systemName: "arrow.turn.down.right")
-                            .font(.caption2)
+                            .font(Moros.fontMicro)
                     }
                     .buttonStyle(.plain)
                     .help("Add branch (child)")
                 }
-                .foregroundStyle(.blue)
+                .foregroundStyle(Moros.oracle)
             }
         }
         .padding(.leading, indentation)
@@ -300,8 +301,8 @@ struct FolgezettelTreeNodeView: View {
         .padding(.vertical, 5)
         .background(
             node.isCurrentNote
-                ? Color.accentColor.opacity(0.08)
-                : (isHovered ? Color.primary.opacity(0.03) : .clear)
+                ? Moros.oracle.opacity(0.08)
+                : (isHovered ? Moros.limit03 : .clear)
         )
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
@@ -309,7 +310,7 @@ struct FolgezettelTreeNodeView: View {
 
     @ViewBuilder
     private var depthIndicator: some View {
-        let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .teal]
+        let colors: [Color] = [Moros.oracle, Moros.verdit, Moros.ambient, Moros.signal, Moros.verdit.opacity(0.6), Moros.oracle.opacity(0.6)]
         let colorIndex = (node.depth - 1) % colors.count
 
         Circle()

@@ -7,18 +7,22 @@ struct TagBadge: View {
     var body: some View {
         HStack(spacing: 2) {
             Text("#\(name)")
-                .font(.caption)
+                .font(Moros.fontMonoSmall)
             if let onRemove {
                 Button(action: onRemove) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.caption2)
+                        .font(.system(size: 8))
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(.blue.opacity(0.1), in: Capsule())
-        .foregroundStyle(.blue)
+        .background(
+            Rectangle()
+                .fill(Color.clear)
+                .overlay(Rectangle().stroke(Moros.borderLit, lineWidth: 1))
+        )
+        .foregroundStyle(Moros.ambient)
     }
 }

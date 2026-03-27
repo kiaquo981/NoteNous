@@ -16,6 +16,7 @@ struct SettingsView: View {
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
         .frame(width: 520, height: 460)
+        .morosBackground(Moros.limit01)
     }
 }
 
@@ -103,7 +104,7 @@ struct AISettingsView: View {
                         Text("Classify Threshold")
                         Spacer()
                         Text(String(format: "%.0f%%", classifyThreshold * 100))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Moros.textDim)
                             .monospacedDigit()
                     }
                     Slider(value: $classifyThreshold, in: 0.3...1.0, step: 0.05)
@@ -129,8 +130,8 @@ struct AboutSettingsView: View {
 
             Section("Credits") {
                 Text("A Zettelkasten-inspired note-taking app with PARA organization, CODE workflow, and AI-assisted linking.")
-                    .foregroundStyle(.secondary)
-                    .font(.callout)
+                    .foregroundStyle(Moros.textSub)
+                    .font(Moros.fontBody)
             }
 
             Section("Links") {

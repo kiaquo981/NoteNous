@@ -18,16 +18,17 @@ struct CommandPaletteView: View {
             // Search field
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Moros.textDim)
                 TextField("Search notes, commands...", text: $query)
                     .textFieldStyle(.plain)
-                    .font(.title3)
+                    .font(Moros.fontH3)
+                    .foregroundStyle(Moros.textMain)
                     .onSubmit { executeFirst() }
 
                 if !query.isEmpty {
                     Button(action: { query = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Moros.textDim)
                     }
                     .buttonStyle(.plain)
                 }
@@ -40,16 +41,16 @@ struct CommandPaletteView: View {
                     ForEach(SearchScope.allCases) { scope in
                         Button(action: { selectedScope = scope }) {
                             Text(scope.rawValue)
-                                .font(.caption)
+                                .font(Moros.fontCaption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(
                                     selectedScope == scope
-                                        ? Color.accentColor.opacity(0.2)
-                                        : Color.secondary.opacity(0.1),
-                                    in: Capsule()
+                                        ? Moros.oracle.opacity(0.2)
+                                        : Moros.limit03,
+                                    in: Rectangle()
                                 )
-                                .foregroundStyle(selectedScope == scope ? .primary : .secondary)
+                                .foregroundStyle(selectedScope == scope ? Moros.textMain : Moros.textDim)
                         }
                         .buttonStyle(.plain)
                     }
@@ -59,7 +60,7 @@ struct CommandPaletteView: View {
                 .padding(.bottom, 6)
             }
 
-            Divider()
+            Rectangle().fill(Moros.border).frame(height: 1)
 
             // Results
             ScrollView {
@@ -68,7 +69,7 @@ struct CommandPaletteView: View {
                         // Recent searches
                         let recents = searchService.recentSearches
                         if !recents.isEmpty {
-                            CommandSection(title: "Recent Searches") {
+                            CommandSection(title: "RECENT SEARCHES") {
                                 ForEach(recents, id: \.self) { recent in
                                     CommandRow(icon: "clock", label: recent) {
                                         query = recent
@@ -80,8 +81,8 @@ struct CommandPaletteView: View {
                                     HStack {
                                         Spacer()
                                         Text("Clear Recent Searches")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .font(Moros.fontCaption)
+                                            .foregroundStyle(Moros.textDim)
                                         Spacer()
                                     }
                                     .padding(.vertical, 4)
@@ -90,7 +91,7 @@ struct CommandPaletteView: View {
                             }
                         }
 
-                        CommandSection(title: "Actions") {
+                        CommandSection(title: "ACTIONS") {
                             CommandRow(icon: "plus", label: "New Note", shortcut: "\u{2318}N") {
                                 createNote()
                             }
@@ -106,34 +107,35 @@ struct CommandPaletteView: View {
                         }
                     } else {
                         if !searchResults.isEmpty {
-                            CommandSection(title: "Notes (\(searchResults.count))") {
+                            CommandSection(title: "NOTES (\(searchResults.count))") {
                                 ForEach(searchResults) { result in
                                     Button(action: { selectNote(result.note) }) {
                                         HStack {
                                             Image(systemName: "note.text")
+                                                .foregroundStyle(Moros.textDim)
                                                 .frame(width: 20)
                                             VStack(alignment: .leading) {
                                                 Text(result.note.title.isEmpty ? "Untitled" : result.note.title)
+                                                    .foregroundStyle(Moros.textMain)
                                                     .lineLimit(1)
                                                 if let zettelId = result.note.zettelId {
                                                     Text(zettelId)
-                                                        .font(.caption)
-                                                        .foregroundStyle(.tertiary)
-                                                        .monospaced()
+                                                        .font(Moros.fontMonoSmall)
+                                                        .foregroundStyle(Moros.textDim)
                                                 }
                                             }
                                             Spacer()
                                             // Relevance indicator
                                             HStack(spacing: 4) {
                                                 Image(systemName: result.matchType.icon)
-                                                    .font(.caption2)
+                                                    .font(Moros.fontMicro)
                                                 Text(result.matchType.label)
-                                                    .font(.caption2)
+                                                    .font(Moros.fontMicro)
                                             }
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(Moros.textDim)
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
-                                            .background(Color.secondary.opacity(0.1), in: Capsule())
+                                            .background(Moros.limit03, in: Rectangle())
 
                                             PARABadge(category: result.note.paraCategory)
                                         }
@@ -145,7 +147,7 @@ struct CommandPaletteView: View {
                             }
                         } else {
                             Text("No results")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Moros.textDim)
                                 .padding()
                         }
                     }
@@ -154,7 +156,8 @@ struct CommandPaletteView: View {
             .frame(maxHeight: 400)
         }
         .frame(width: 540)
-        .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(Moros.limit01, in: Rectangle())
+        .overlay(Rectangle().stroke(Moros.borderLit, lineWidth: 1))
         .onChange(of: query) { performSearch() }
         .onChange(of: selectedScope) { performSearch() }
     }
@@ -193,8 +196,8 @@ struct CommandSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
@@ -213,13 +216,15 @@ struct CommandRow: View {
         Button(action: action) {
             HStack {
                 Image(systemName: icon)
+                    .foregroundStyle(Moros.textDim)
                     .frame(width: 20)
                 Text(label)
+                    .foregroundStyle(Moros.textMain)
                 Spacer()
                 if !shortcut.isEmpty {
                     Text(shortcut)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .font(Moros.fontMonoSmall)
+                        .foregroundStyle(Moros.textDim)
                 }
             }
             .padding(.horizontal, 12)

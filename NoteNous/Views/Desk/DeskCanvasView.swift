@@ -100,12 +100,11 @@ struct DeskCanvasView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if showSectionPanel {
-                    Divider()
+                    Rectangle().fill(Moros.border).frame(width: 1)
                     DeskSectionListPanel(
                         sectionStore: sectionStore,
                         notes: Array(allNotes),
                         onSelectSection: { section in
-                            // Pan to section
                             canvasState.viewportOffset = CGPoint(
                                 x: -section.origin.x * canvasState.zoomLevel + viewportSize.width / 2,
                                 y: -section.origin.y * canvasState.zoomLevel + viewportSize.height / 2
@@ -222,8 +221,8 @@ struct DeskCanvasView: View {
                     // Rubber-band selection rectangle
                     if canvasState.isRubberBandSelecting {
                         Rectangle()
-                            .strokeBorder(Color.accentColor, lineWidth: 1)
-                            .background(Color.accentColor.opacity(0.08))
+                            .strokeBorder(Moros.oracle, lineWidth: 1)
+                            .background(Moros.oracle.opacity(0.08))
                             .frame(
                                 width: canvasState.rubberBandRect.width,
                                 height: canvasState.rubberBandRect.height
@@ -268,7 +267,6 @@ struct DeskCanvasView: View {
             onDragChanged: { value in
                 if !canvasState.isDragging {
                     canvasState.isDragging = true
-                    // If dragging an unselected note, select only it
                     if !canvasState.selectedNoteIds.contains(noteId) {
                         canvasState.selectedNoteIds = [noteId]
                     }
@@ -277,7 +275,6 @@ struct DeskCanvasView: View {
                 canvasState.dragOffset = value.translation
             },
             onDragEnded: { value in
-                // Apply position change to all dragged notes
                 let dx = Double(value.translation.width / canvasState.zoomLevel)
                 let dy = Double(value.translation.height / canvasState.zoomLevel)
                 for draggedId in canvasState.draggedNoteIds {
@@ -290,7 +287,6 @@ struct DeskCanvasView: View {
                         draggedNote.positionX = Double(newPos.x)
                         draggedNote.positionY = Double(newPos.y)
 
-                        // Check if dropped into a section
                         for section in sectionStore.sections {
                             let sectionRect = CGRect(origin: section.origin, size: section.size)
                             if sectionRect.contains(newPos) {
@@ -360,7 +356,7 @@ struct DeskCanvasView: View {
     // MARK: - Background
 
     private var canvasBackground: some View {
-        Color(nsColor: .controlBackgroundColor)
+        Moros.void
             .ignoresSafeArea()
     }
 
@@ -369,14 +365,13 @@ struct DeskCanvasView: View {
     private func gridOverlay(size: CGSize) -> some View {
         Canvas { context, canvasSize in
             let gridSpacing = canvasState.gridSize * canvasState.zoomLevel
-            guard gridSpacing > 4 else { return } // Skip if too dense
+            guard gridSpacing > 4 else { return }
 
             let offsetX = canvasState.viewportOffset.x.truncatingRemainder(dividingBy: gridSpacing)
             let offsetY = canvasState.viewportOffset.y.truncatingRemainder(dividingBy: gridSpacing)
 
             var path = Path()
 
-            // Vertical lines
             var x = offsetX
             while x < canvasSize.width {
                 path.move(to: CGPoint(x: x, y: 0))
@@ -384,7 +379,6 @@ struct DeskCanvasView: View {
                 x += gridSpacing
             }
 
-            // Horizontal lines
             var y = offsetY
             while y < canvasSize.height {
                 path.move(to: CGPoint(x: 0, y: y))
@@ -392,7 +386,7 @@ struct DeskCanvasView: View {
                 y += gridSpacing
             }
 
-            context.stroke(path, with: .color(.gray.opacity(0.1)), lineWidth: 0.5)
+            context.stroke(path, with: .color(Moros.borderDim), lineWidth: 0.5)
         }
         .allowsHitTesting(false)
     }
@@ -453,13 +447,11 @@ struct DeskCanvasView: View {
         guard !hasPerformedInitialLayout else { return }
         hasPerformedInitialLayout = true
 
-        // Auto-layout notes that still have the default (0,0) position
         let unpositioned = allNotes.filter { $0.positionX == 0 && $0.positionY == 0 }
         if !unpositioned.isEmpty {
             canvasState.layoutGrid(notes: Array(unpositioned), context: viewContext)
         }
 
-        // Fit all into view after a short delay to allow geometry reader
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             if viewportSize.width > 0 {
                 canvasState.zoomToFit(notes: Array(allNotes), in: viewportSize)

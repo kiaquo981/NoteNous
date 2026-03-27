@@ -26,9 +26,9 @@ struct MainWindowView: View {
         .frame(minWidth: 900, minHeight: 600)
         .overlay {
             if isDropTargeted {
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Color.accentColor, lineWidth: 3)
-                    .background(Color.accentColor.opacity(0.05))
+                Rectangle()
+                    .strokeBorder(Moros.oracle, lineWidth: 3)
+                    .background(Moros.oracle.opacity(0.05))
                     .allowsHitTesting(false)
             }
         }
@@ -41,6 +41,7 @@ struct MainWindowView: View {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, context)
         }
+        .morosBackground()
     }
 
     // MARK: - Drop Handling

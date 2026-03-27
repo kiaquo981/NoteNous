@@ -38,9 +38,9 @@ struct CanvasToolbar: View {
             // Left group: add + filter
             Group {
                 addNoteButton
-                Divider().frame(height: 20)
+                Rectangle().fill(Moros.border).frame(width: 1, height: 20)
                 filterControls
-                Divider().frame(height: 20)
+                Rectangle().fill(Moros.border).frame(width: 1, height: 20)
                 displayModeControl
             }
 
@@ -58,15 +58,15 @@ struct CanvasToolbar: View {
             // Right group: connections + layout + zoom
             Group {
                 connectionsToggle
-                Divider().frame(height: 20)
+                Rectangle().fill(Moros.border).frame(width: 1, height: 20)
                 layoutControls
-                Divider().frame(height: 20)
+                Rectangle().fill(Moros.border).frame(width: 1, height: 20)
                 zoomControls
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+        .background(Moros.limit01)
     }
 
     // MARK: - Add note
@@ -75,6 +75,7 @@ struct CanvasToolbar: View {
         Button(action: onAddNote) {
             Label("Add Note", systemImage: "plus.rectangle")
                 .font(.system(size: 12))
+                .foregroundStyle(Moros.oracle)
         }
         .buttonStyle(.plain)
         .help("Add a new note at the center of the viewport")
@@ -98,6 +99,7 @@ struct CanvasToolbar: View {
                 } label: {
                     Image(systemName: "paintpalette")
                         .font(.system(size: 12))
+                        .foregroundStyle(Moros.textSub)
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showColorPopover) {
@@ -127,14 +129,15 @@ struct CanvasToolbar: View {
     private var selectionActions: some View {
         HStack(spacing: 8) {
             Text("\(selectedCount) selected")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textSub)
 
             Button {
                 showBulkColorPopover.toggle()
             } label: {
                 Image(systemName: "paintpalette")
                     .font(.system(size: 11))
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showBulkColorPopover) {
@@ -156,6 +159,7 @@ struct CanvasToolbar: View {
             } label: {
                 Image(systemName: "folder")
                     .font(.system(size: 11))
+                    .foregroundStyle(Moros.textSub)
             }
             .menuStyle(.borderlessButton)
             .frame(width: 24)
@@ -164,7 +168,7 @@ struct CanvasToolbar: View {
             Button(action: onBulkDelete) {
                 Image(systemName: "trash")
                     .font(.system(size: 11))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Moros.signal)
             }
             .buttonStyle(.plain)
             .help("Delete selected cards")
@@ -182,10 +186,11 @@ struct CanvasToolbar: View {
                     .font(.system(size: 11))
                 if !sectionStore.sections.isEmpty {
                     Text("(\(sectionStore.sections.count))")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
+                        .font(Moros.fontMonoSmall)
+                        .foregroundStyle(Moros.textDim)
                 }
             }
+            .foregroundStyle(Moros.textSub)
         }
         .buttonStyle(.plain)
     }
@@ -216,6 +221,7 @@ struct CanvasToolbar: View {
             } label: {
                 Image(systemName: "square.grid.3x3")
                     .font(.system(size: 11))
+                    .foregroundStyle(Moros.textSub)
             }
             .menuStyle(.borderlessButton)
             .frame(width: 24)
@@ -239,25 +245,28 @@ struct CanvasToolbar: View {
             } label: {
                 Image(systemName: "minus.magnifyingglass")
                     .font(.system(size: 11))
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.plain)
 
             Text("\(Int(canvasState.zoomLevel * 100))%")
-                .font(.system(size: 11, design: .monospaced))
+                .font(Moros.fontMonoSmall)
+                .foregroundStyle(Moros.textDim)
                 .frame(width: 42)
-                .foregroundStyle(.secondary)
 
             Button {
                 canvasState.zoom(by: 1.25, anchor: .zero)
             } label: {
                 Image(systemName: "plus.magnifyingglass")
                     .font(.system(size: 11))
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.plain)
 
             Button(action: onZoomToFit) {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
                     .font(.system(size: 11))
+                    .foregroundStyle(Moros.textSub)
             }
             .buttonStyle(.plain)
             .help("Fit all cards in view")

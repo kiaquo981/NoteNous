@@ -11,21 +11,21 @@ struct GraphLegend: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header with collapse toggle
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.easeInOut(duration: Moros.animFast)) {
                     isExpanded.toggle()
                 }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "list.bullet.rectangle")
-                        .font(.caption)
-                    Text("Legend")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                        .font(Moros.fontCaption)
+                    Text("LEGEND")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(Moros.fontMicro)
+                        .foregroundStyle(Moros.textDim)
                 }
+                .foregroundStyle(Moros.textSub)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -33,18 +33,18 @@ struct GraphLegend: View {
             .padding(.vertical, 6)
 
             if isExpanded {
-                Divider()
+                Rectangle().fill(Moros.border).frame(height: 1)
 
                 VStack(alignment: .leading, spacing: 10) {
                     // Node colors section
                     nodeColorLegend
 
-                    Divider()
+                    Rectangle().fill(Moros.border).frame(height: 1)
 
                     // Edge types section
                     edgeTypeLegend
 
-                    Divider()
+                    Rectangle().fill(Moros.border).frame(height: 1)
 
                     // Size meaning
                     sizeLegend
@@ -53,11 +53,11 @@ struct GraphLegend: View {
             }
         }
         .frame(width: 200)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(Moros.limit02)
+        .clipShape(Rectangle())
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(.separator, lineWidth: 0.5)
+            Rectangle()
+                .stroke(Moros.borderLit, lineWidth: 1)
         )
     }
 
@@ -66,34 +66,33 @@ struct GraphLegend: View {
     @ViewBuilder
     private var nodeColorLegend: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Node Colors (\(colorMode.label))")
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
+            Text("NODE COLORS (\(colorMode.label.uppercased()))")
+                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
             switch colorMode {
             case .para:
-                legendRow(color: .gray, label: "Inbox")
-                legendRow(color: .blue, label: "Projects")
-                legendRow(color: .green, label: "Areas")
-                legendRow(color: .orange, label: "Resources")
-                legendRow(color: .secondary, label: "Archive")
+                legendRow(color: Moros.ambient, label: "Inbox")
+                legendRow(color: Moros.oracle, label: "Projects")
+                legendRow(color: Moros.verdit, label: "Areas")
+                legendRow(color: Moros.ambient.opacity(0.7), label: "Resources")
+                legendRow(color: Moros.textDim, label: "Archive")
 
             case .noteType:
-                legendRow(color: .yellow, label: "Fleeting")
-                legendRow(color: .cyan, label: "Literature")
-                legendRow(color: .purple, label: "Permanent")
+                legendRow(color: Moros.ambient, label: "Fleeting")
+                legendRow(color: Moros.oracle, label: "Literature")
+                legendRow(color: Moros.verdit, label: "Permanent")
 
             case .code:
-                legendRow(color: .red.opacity(0.8), label: "Captured")
-                legendRow(color: .orange, label: "Organized")
-                legendRow(color: .green, label: "Distilled")
-                legendRow(color: .blue, label: "Expressed")
+                legendRow(color: Moros.signal, label: "Captured")
+                legendRow(color: Moros.ambient, label: "Organized")
+                legendRow(color: Moros.verdit, label: "Distilled")
+                legendRow(color: Moros.oracle, label: "Expressed")
 
             case .custom:
                 Text("Using note custom colors")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
                     .italic()
             }
         }
@@ -103,23 +102,22 @@ struct GraphLegend: View {
 
     private var edgeTypeLegend: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Edge Types")
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
+            Text("EDGE TYPES")
+                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
-            edgeLegendRow(color: .gray, label: "Reference", dashed: false)
-            edgeLegendRow(color: .green, label: "Supports", dashed: false)
-            edgeLegendRow(color: .red, label: "Contradicts", dashed: false)
-            edgeLegendRow(color: .blue, label: "Extends", dashed: false)
-            edgeLegendRow(color: .orange, label: "Example", dashed: false)
+            edgeLegendRow(color: Moros.ambient, label: "Reference", dashed: false)
+            edgeLegendRow(color: Moros.verdit, label: "Supports", dashed: false)
+            edgeLegendRow(color: Moros.signal, label: "Contradicts", dashed: false)
+            edgeLegendRow(color: Moros.oracle, label: "Extends", dashed: false)
+            edgeLegendRow(color: Moros.ambient.opacity(0.7), label: "Example", dashed: false)
 
             HStack(spacing: 6) {
-                dashedLine(color: .secondary)
+                dashedLine(color: Moros.textDim)
                     .frame(width: 12, height: 1)
                 Text("Unconfirmed / AI-suggested")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
             }
         }
     }
@@ -128,27 +126,26 @@ struct GraphLegend: View {
 
     private var sizeLegend: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Node Size")
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
+            Text("NODE SIZE")
+                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                .foregroundStyle(Moros.textDim)
 
             HStack(spacing: 8) {
                 Circle()
-                    .fill(.secondary.opacity(0.5))
+                    .fill(Moros.textDim)
                     .frame(width: 10, height: 10)
                 Text("Few links")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
 
                 Spacer()
 
                 Circle()
-                    .fill(.secondary.opacity(0.5))
+                    .fill(Moros.textDim)
                     .frame(width: 22, height: 22)
                 Text("Many links")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(Moros.fontMicro)
+                    .foregroundStyle(Moros.textDim)
             }
         }
     }
@@ -161,8 +158,8 @@ struct GraphLegend: View {
                 .fill(color)
                 .frame(width: 8, height: 8)
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.primary)
+                .font(Moros.fontMicro)
+                .foregroundStyle(Moros.textSub)
         }
     }
 
@@ -175,11 +172,10 @@ struct GraphLegend: View {
                 Rectangle()
                     .fill(color)
                     .frame(width: 12, height: 2)
-                    .clipShape(Capsule())
             }
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.primary)
+                .font(Moros.fontMicro)
+                .foregroundStyle(Moros.textSub)
         }
     }
 
