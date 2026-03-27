@@ -1,0 +1,279 @@
+import SwiftUI
+import CoreData
+
+/// A dedicated view for processing fleeting notes into permanent notes.
+/// This is the CORE workflow: capture fast -> review later -> develop or discard.
+struct FleetingReviewQueue: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.managedObjectContext) private var context
+
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \NoteEntity.createdAt, ascending: true)],
+        predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [
+            NSPredicate(format: "noteTypeRaw == %d", NoteType.fleeting.rawValue),
+            NSPredicate(format: "isArchived == NO")
+        ]),
+        animation: .default
+    ) private var fleetingNotes: FetchedResults<NoteEntity>
+
+    @State private var selectedFleetingNote: NoteEntity?
+    @State private var showPromotionSheet = false
+    @State private var showDiscardAlert = false
+    @State private var promotionTarget: NoteEntity?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Stats bar
+            statsBar
+
+            Divider()
+
+            if fleetingNotes.isEmpty {
+                emptyState
+            } else {
+                notesList
+            }
+        }
+        .sheet(isPresented: $showPromotionSheet) {
+            if let note = promotionTarget {
+                PromotionSheet(note: note)
+                    .environmentObject(appState)
+            }
+        }
+        .alert("Discard Note", isPresented: $showDiscardAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Archive", role: .destructive) {
+                if let note = selectedFleetingNote {
+                    discardNote(note)
+                }
+            }
+        } message: {
+            Text("This will archive the note. You can find it later in the Archive.")
+        }
+    }
+
+    // MARK: - Stats Bar
+
+    private var statsBar: some View {
+        HStack(spacing: 16) {
+            Label("\(fleetingNotes.count) fleeting", systemImage: "bolt.fill")
+                .font(.callout.weight(.medium))
+
+            Divider()
+                .frame(height: 16)
+
+            if let avgAge = averageAge {
+                Label("Avg age: \(avgAge)", systemImage: "clock")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let oldest = oldestAge {
+                Label("Oldest: \(oldest)", systemImage: "exclamationmark.clock")
+                    .font(.caption)
+                    .foregroundStyle(oldestSeverityColor)
+            }
+
+            Spacer()
+
+            Text("Oldest first")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
+
+    // MARK: - Notes List
+
+    private var notesList: some View {
+        List(selection: $selectedFleetingNote) {
+            ForEach(fleetingNotes, id: \.objectID) { note in
+                FleetingNoteCard(note: note) {
+                    promotionTarget = note
+                    showPromotionSheet = true
+                } onConvertToLiterature: {
+                    convertToLiterature(note)
+                } onDiscard: {
+                    selectedFleetingNote = note
+                    showDiscardAlert = true
+                } onDevelop: {
+                    appState.selectedNote = note
+                }
+                .tag(note)
+            }
+        }
+        .listStyle(.inset(alternatesRowBackgrounds: true))
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: 48))
+                .foregroundStyle(.green)
+            Text("Inbox Zero")
+                .font(.title2.weight(.semibold))
+            Text("No fleeting notes to process. Capture something new!")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Actions
+
+    private func discardNote(_ note: NoteEntity) {
+        let service = NoteService(context: context)
+        service.archiveNote(note)
+        selectedFleetingNote = nil
+    }
+
+    private func convertToLiterature(_ note: NoteEntity) {
+        note.noteTypeRaw = NoteType.literature.rawValue
+        note.updatedAt = Date()
+        try? context.save()
+
+        promotionTarget = note
+        showPromotionSheet = true
+    }
+
+    // MARK: - Computed
+
+    private var averageAge: String? {
+        guard !fleetingNotes.isEmpty else { return nil }
+        let now = Date()
+        let totalHours = fleetingNotes.compactMap { $0.createdAt }
+            .reduce(0.0) { $0 + now.timeIntervalSince($1) / 3600 }
+        let avgHours = totalHours / Double(fleetingNotes.count)
+
+        if avgHours < 24 {
+            return "\(Int(avgHours))h"
+        } else {
+            return "\(Int(avgHours / 24))d"
+        }
+    }
+
+    private var oldestAge: String? {
+        guard let oldest = fleetingNotes.first?.createdAt else { return nil }
+        let hours = Date().timeIntervalSince(oldest) / 3600
+        if hours < 24 {
+            return "\(Int(hours))h"
+        } else {
+            return "\(Int(hours / 24))d"
+        }
+    }
+
+    private var oldestSeverityColor: Color {
+        guard let oldest = fleetingNotes.first?.createdAt else { return .secondary }
+        let days = Calendar.current.dateComponents([.day], from: oldest, to: Date()).day ?? 0
+        if days > 7 { return .red }
+        if days > 1 { return .orange }
+        return .green
+    }
+}
+
+// MARK: - Fleeting Note Card
+
+struct FleetingNoteCard: View {
+    @ObservedObject var note: NoteEntity
+
+    let onPromote: () -> Void
+    let onConvertToLiterature: () -> Void
+    let onDiscard: () -> Void
+    let onDevelop: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                ageBadge
+                Text(note.title.isEmpty ? "Untitled" : note.title)
+                    .font(.headline)
+                    .lineLimit(1)
+                Spacer()
+                wordCountBadge
+            }
+
+            if !note.contentPlainText.isEmpty {
+                Text(note.contentPlainText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+            }
+
+            HStack(spacing: 8) {
+                Button("Develop", systemImage: "pencil") {
+                    onDevelop()
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+
+                Button("Promote", systemImage: "arrow.up.circle") {
+                    onPromote()
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                .foregroundStyle(.green)
+
+                Button("Literature", systemImage: "book") {
+                    onConvertToLiterature()
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                .foregroundStyle(.blue)
+
+                Spacer()
+
+                Button("Discard", systemImage: "archivebox") {
+                    onDiscard()
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                .foregroundStyle(.red)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var ageBadge: some View {
+        let color = ageColor
+        let text = ageText
+
+        return Text(text)
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.15), in: Capsule())
+            .foregroundStyle(color)
+    }
+
+    private var wordCountBadge: some View {
+        let words = note.contentPlainText
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .count
+
+        return Text("\(words)w")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+    }
+
+    private var ageColor: Color {
+        guard let created = note.createdAt else { return .gray }
+        let days = Calendar.current.dateComponents([.day], from: created, to: Date()).day ?? 0
+        if days > 7 { return .red }
+        if days >= 1 { return .orange }
+        return .green
+    }
+
+    private var ageText: String {
+        guard let created = note.createdAt else { return "?" }
+        let hours = Int(Date().timeIntervalSince(created) / 3600)
+        if hours < 1 { return "now" }
+        if hours < 24 { return "\(hours)h" }
+        let days = hours / 24
+        return "\(days)d"
+    }
+}
