@@ -14,19 +14,19 @@ struct NoteNousApp: App {
             MainWindowView()
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, appState.viewContext)
-                .preferredColorScheme(.dark)
+                .morosTheme()
                 .tint(Color(red: 0.267, green: 0.467, blue: 0.800)) // ORACLE blue
                 .sheet(isPresented: $appState.isQuickCaptureVisible) {
                     QuickCapturePanel()
                         .environmentObject(appState)
                         .environment(\.managedObjectContext, appState.viewContext)
-                        .preferredColorScheme(.dark)
+                        .morosTheme()
                 }
                 .sheet(isPresented: $appState.isSemanticSearchVisible) {
                     SemanticSearchView(embeddingService: EmbeddingService.shared)
                         .environmentObject(appState)
                         .environment(\.managedObjectContext, appState.viewContext)
-                        .preferredColorScheme(.dark)
+                        .morosTheme()
                         .frame(minWidth: 600, minHeight: 500)
                 }
                 .onAppear {
@@ -34,6 +34,10 @@ struct NoteNousApp: App {
                     NSApp.appearance = NSAppearance(named: .darkAqua)
                     OnboardingService.runIfNeeded(context: appState.viewContext)
                     SpotlightService.shared.indexAllNotes(context: appState.viewContext)
+                    ClipServer.shared.start()
+                }
+                .onDisappear {
+                    ClipServer.shared.stop()
                 }
                 .onContinueUserActivity(CSSearchableItemActionType) { activity in
                     handleSpotlightActivity(activity)

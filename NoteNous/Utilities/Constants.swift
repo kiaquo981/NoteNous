@@ -13,6 +13,15 @@ enum Constants {
         static let suggestLinkThreshold: Float = 0.7
     }
 
+    enum LocalAI {
+        static let maxLocalConfidence: Double = 0.6
+        static let nlEmbeddingDimension = 512
+        static let maxTagsPerNote = 5
+        static let maxConceptsPerNote = 3
+        static let maxLinkSuggestions = 5
+        static let summarySentenceCount = 3
+    }
+
     enum Search {
         static let maxResults = 50
         static let debounceInterval: TimeInterval = 0.3

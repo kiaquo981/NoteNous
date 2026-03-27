@@ -9,6 +9,15 @@ struct NoteEmbedding: Codable {
     var vector: [Float]
     var updatedAt: Date
     var textHash: Int
+    var isLocal: Bool
+
+    init(noteId: UUID, vector: [Float], updatedAt: Date, textHash: Int, isLocal: Bool = false) {
+        self.noteId = noteId
+        self.vector = vector
+        self.updatedAt = updatedAt
+        self.textHash = textHash
+        self.isLocal = isLocal
+    }
 }
 
 // MARK: - Embedding Service
@@ -232,11 +241,11 @@ final class EmbeddingService: ObservableObject {
             totalCount = notes.count
         }
 
-        // Build vocabulary for local embeddings
+        // Build vocabulary for local TF-IDF embeddings (fallback)
         buildVocabulary(from: notes)
 
-        // Check API availability
-        let hasAPI = EnvLoader.apiKey != nil || UserDefaults.standard.string(forKey: "openRouterAPIKey") != nil
+        // Determine provider for embeddings
+        let provider = AIProviderRouter.provider(for: .embedding)
 
         var indexed = 0
         for note in notes {
@@ -252,33 +261,50 @@ final class EmbeddingService: ObservableObject {
                 continue
             }
 
-            // Generate embedding
+            // Generate embedding based on router decision
             var vector: [Float]
-            if hasAPI {
+            var isLocal = false
+
+            switch provider {
+            case .local:
+                // Try NLEmbedding first, then TF-IDF fallback
+                if let nlVector = LocalAIService.shared.generateEmbedding(text: text) {
+                    vector = nlVector
+                    isLocal = true
+                } else {
+                    vector = generateLocalEmbedding(text: text)
+                    isLocal = true
+                    if vector.isEmpty { continue }
+                }
+            case .api:
                 do {
                     vector = try await generateEmbedding(text: text)
                 } catch {
                     // Fallback to local
-                    vector = generateLocalEmbedding(text: text)
-                    if vector.isEmpty { continue }
+                    if let nlVector = LocalAIService.shared.generateEmbedding(text: text) {
+                        vector = nlVector
+                        isLocal = true
+                    } else {
+                        vector = generateLocalEmbedding(text: text)
+                        isLocal = true
+                        if vector.isEmpty { continue }
+                    }
                 }
-            } else {
-                vector = generateLocalEmbedding(text: text)
-                if vector.isEmpty { continue }
             }
 
             embeddings[noteId.uuidString] = NoteEmbedding(
                 noteId: noteId,
                 vector: vector,
                 updatedAt: Date(),
-                textHash: hash
+                textHash: hash,
+                isLocal: isLocal
             )
 
             indexed += 1
             await MainActor.run { indexedCount = indexed }
 
-            // Rate limiting for API calls
-            if hasAPI {
+            // Rate limiting for API calls only
+            if provider == .api && !isLocal {
                 try? await Task.sleep(nanoseconds: 100_000_000) // 100ms between API calls
             }
         }
@@ -306,25 +332,40 @@ final class EmbeddingService: ObservableObject {
         }
 
         var vector: [Float]
-        let hasAPI = EnvLoader.apiKey != nil || UserDefaults.standard.string(forKey: "openRouterAPIKey") != nil
+        var isLocal = false
+        let provider = AIProviderRouter.provider(for: .embedding)
 
-        if hasAPI {
+        switch provider {
+        case .local:
+            if let nlVector = LocalAIService.shared.generateEmbedding(text: text) {
+                vector = nlVector
+                isLocal = true
+            } else {
+                vector = generateLocalEmbedding(text: text)
+                isLocal = true
+                if vector.isEmpty { return }
+            }
+        case .api:
             do {
                 vector = try await generateEmbedding(text: text)
             } catch {
-                vector = generateLocalEmbedding(text: text)
-                if vector.isEmpty { return }
+                if let nlVector = LocalAIService.shared.generateEmbedding(text: text) {
+                    vector = nlVector
+                    isLocal = true
+                } else {
+                    vector = generateLocalEmbedding(text: text)
+                    isLocal = true
+                    if vector.isEmpty { return }
+                }
             }
-        } else {
-            vector = generateLocalEmbedding(text: text)
-            if vector.isEmpty { return }
         }
 
         embeddings[noteId.uuidString] = NoteEmbedding(
             noteId: noteId,
             vector: vector,
             updatedAt: Date(),
-            textHash: hash
+            textHash: hash,
+            isLocal: isLocal
         )
 
         await MainActor.run {
@@ -374,20 +415,29 @@ final class EmbeddingService: ObservableObject {
     func semanticSearch(query: String, context: NSManagedObjectContext, limit: Int = 20) async -> [(note: NoteEntity, similarity: Float)] {
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return [] }
 
-        // Generate embedding for query
+        // Generate embedding for query using router
         var queryVector: [Float]
-        let hasAPI = EnvLoader.apiKey != nil || UserDefaults.standard.string(forKey: "openRouterAPIKey") != nil
+        let provider = AIProviderRouter.provider(for: .embedding)
 
-        if hasAPI {
-            do {
-                queryVector = try await generateEmbedding(text: query)
-            } catch {
+        switch provider {
+        case .local:
+            if let nlVector = LocalAIService.shared.generateEmbedding(text: query) {
+                queryVector = nlVector
+            } else {
                 queryVector = generateLocalEmbedding(text: query)
                 if queryVector.isEmpty { return [] }
             }
-        } else {
-            queryVector = generateLocalEmbedding(text: query)
-            if queryVector.isEmpty { return [] }
+        case .api:
+            do {
+                queryVector = try await generateEmbedding(text: query)
+            } catch {
+                if let nlVector = LocalAIService.shared.generateEmbedding(text: query) {
+                    queryVector = nlVector
+                } else {
+                    queryVector = generateLocalEmbedding(text: query)
+                    if queryVector.isEmpty { return [] }
+                }
+            }
         }
 
         // Compare against all embeddings

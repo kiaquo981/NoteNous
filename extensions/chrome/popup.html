@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteNous Clipper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="clipper-root">
+    <!-- Header -->
+    <div class="clipper-header">
+      <span class="clipper-logo">NOTENOUS</span>
+      <span class="clipper-badge">CLIPPER</span>
+    </div>
+
+    <!-- Form -->
+    <div id="clip-form">
+      <!-- Title -->
+      <div class="field-group">
+        <label class="field-label">TITLE</label>
+        <input type="text" id="clip-title" class="field-input" placeholder="Page title">
+      </div>
+
+      <!-- URL (read-only) -->
+      <div class="field-group">
+        <label class="field-label">URL</label>
+        <div id="clip-url" class="field-url"></div>
+      </div>
+
+      <!-- Selected text preview -->
+      <div class="field-group" id="selection-group" style="display: none;">
+        <label class="field-label">SELECTION</label>
+        <div id="clip-selection" class="field-selection"></div>
+      </div>
+
+      <!-- Note Type -->
+      <div class="field-group">
+        <label class="field-label">TYPE</label>
+        <div class="type-picker">
+          <button class="type-btn active" data-type="0" title="Fleeting">&#9889;</button>
+          <button class="type-btn" data-type="1" title="Literature">&#128214;</button>
+          <button class="type-btn" data-type="2" title="Permanent">&#128142;</button>
+        </div>
+      </div>
+
+      <!-- Context -->
+      <div class="field-group">
+        <label class="field-label">CONTEXT</label>
+        <textarea id="clip-context" class="field-textarea" placeholder="Why are you saving this?" rows="2"></textarea>
+      </div>
+
+      <!-- Tags -->
+      <div class="field-group">
+        <label class="field-label">TAGS</label>
+        <input type="text" id="clip-tags" class="field-input" placeholder="comma, separated, tags">
+      </div>
+
+      <!-- Clip Button -->
+      <button id="clip-btn" class="clip-button">CLIP</button>
+
+      <!-- Connection status -->
+      <div id="connection-status" class="connection-status"></div>
+    </div>
+
+    <!-- Success State -->
+    <div id="clip-success" class="success-state" style="display: none;">
+      <div class="success-icon">&#10003;</div>
+      <div class="success-text">Clipped to NoteNous</div>
+    </div>
+
+    <!-- Error State -->
+    <div id="clip-error" class="error-state" style="display: none;">
+      <div class="error-text"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

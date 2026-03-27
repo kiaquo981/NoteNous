@@ -40,6 +40,49 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.files.user-selected.read-write: true
 
+  NoteNousIOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: NoteNousIOS
+      - path: NoteNous/Models
+        excludes:
+          - "Enums"
+      - path: NoteNous/Models/Enums
+      - path: NoteNous/Services/Domain/NoteService.swift
+      - path: NoteNous/Services/Domain/TagService.swift
+      - path: NoteNous/Services/Domain/DailyNoteService.swift
+      - path: NoteNous/Services/Domain/SpacedRepetitionService.swift
+      - path: NoteNous/Services/Domain/ZettelIDGenerator.swift
+      - path: NoteNous/Utilities/Constants.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.notenous.ios
+        INFOPLIST_KEY_CFBundleDisplayName: NoteNous
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "NoteNous needs microphone access for voice capture"
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "NoteNous uses speech recognition to transcribe voice notes"
+
+  NoteNousClipper:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: NoteNousClipper
+        excludes:
+          - "Resources/**"
+    resources:
+      - path: NoteNousClipper/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.notenous.app.clipper
+        INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.Safari.web-extension
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+
   NoteNousTests:
     type: bundle.unit-test
     platform: macOS

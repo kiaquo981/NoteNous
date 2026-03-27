@@ -1,9 +1,116 @@
 import SwiftUI
 
+// MARK: - Theme Mode
+
+enum MorosThemeMode: String, CaseIterable, Identifiable {
+    case auto = "Auto"
+    case dark = "Dark"
+    case light = "Light"
+
+    var id: String { rawValue }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .auto: return nil  // follows system
+        case .dark: return .dark
+        case .light: return .light
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .auto: return "circle.lefthalf.filled"
+        case .dark: return "moon.fill"
+        case .light: return "sun.max.fill"
+        }
+    }
+
+    static var current: MorosThemeMode {
+        let raw = UserDefaults.standard.string(forKey: "morosThemeMode") ?? "auto"
+        return MorosThemeMode(rawValue: raw) ?? .auto
+    }
+
+    static func setCurrent(_ mode: MorosThemeMode) {
+        UserDefaults.standard.set(mode.rawValue, forKey: "morosThemeMode")
+    }
+}
+
+// MARK: - Adaptive Colors
+
+/// Resolves MOROS colors based on current color scheme (dark or light)
+struct MorosAdaptive {
+    let colorScheme: ColorScheme
+
+    // Backgrounds
+    var void: Color { colorScheme == .dark ? Moros.void : Color(red: 0.98, green: 0.98, blue: 0.99) }
+    var limit01: Color { colorScheme == .dark ? Moros.limit01 : Color(red: 0.95, green: 0.95, blue: 0.96) }
+    var limit02: Color { colorScheme == .dark ? Moros.limit02 : Color(red: 0.92, green: 0.92, blue: 0.93) }
+    var limit03: Color { colorScheme == .dark ? Moros.limit03 : Color(red: 0.88, green: 0.88, blue: 0.90) }
+    var limit04: Color { colorScheme == .dark ? Moros.limit04 : Color(red: 0.85, green: 0.85, blue: 0.87) }
+
+    // Text
+    var textMain: Color { colorScheme == .dark ? Moros.textMain : Color.black.opacity(0.88) }
+    var textSub: Color { colorScheme == .dark ? Moros.textSub : Color.black.opacity(0.65) }
+    var textDim: Color { colorScheme == .dark ? Moros.textDim : Color.black.opacity(0.42) }
+    var textGhost: Color { colorScheme == .dark ? Moros.textGhost : Color.black.opacity(0.12) }
+
+    // Borders
+    var border: Color { colorScheme == .dark ? Moros.border : Color.black.opacity(0.08) }
+    var borderLit: Color { colorScheme == .dark ? Moros.borderLit : Color.black.opacity(0.14) }
+
+    // Accent colors stay the same in both modes
+    var oracle: Color { Moros.oracle }
+    var signal: Color { Moros.signal }
+    var verdit: Color { colorScheme == .dark ? Moros.verdit : Color(red: 0.15, green: 0.25, blue: 0.55) }
+    var ambient: Color { colorScheme == .dark ? Moros.ambient : Color(red: 0.35, green: 0.40, blue: 0.50) }
+}
+
+// MARK: - Environment Key
+
+private struct MorosAdaptiveKey: EnvironmentKey {
+    static let defaultValue = MorosAdaptive(colorScheme: .dark)
+}
+
+extension EnvironmentValues {
+    var moros: MorosAdaptive {
+        get { self[MorosAdaptiveKey.self] }
+        set { self[MorosAdaptiveKey.self] = newValue }
+    }
+}
+
+// MARK: - Theme Modifier
+
+struct MorosThemeModifier: ViewModifier {
+    @Environment(\.colorScheme) private var systemColorScheme
+    @AppStorage("morosThemeMode") private var themeMode: String = "auto"
+
+    private var effectiveScheme: ColorScheme {
+        let mode = MorosThemeMode(rawValue: themeMode) ?? .auto
+        switch mode {
+        case .auto: return systemColorScheme
+        case .dark: return .dark
+        case .light: return .light
+        }
+    }
+
+    func body(content: Content) -> some View {
+        let mode = MorosThemeMode(rawValue: themeMode) ?? .auto
+        content
+            .environment(\.moros, MorosAdaptive(colorScheme: effectiveScheme))
+            .preferredColorScheme(mode.colorScheme)
+    }
+}
+
+extension View {
+    func morosTheme() -> some View {
+        modifier(MorosThemeModifier())
+    }
+}
+
 // MARK: - MOROS Design System
 
-/// The MOROS Design System — a dark-only, sharp-cornered, glow-based visual language.
-/// All colors, typography, spacing, and animation constants for NoteNous.
+/// The MOROS Design System — dark-first, sharp-cornered, glow-based visual language.
+/// Static colors for direct use. For adaptive (light/dark), use @Environment(\.moros).
 enum Moros {
 
     // MARK: - Color Primitives (9)

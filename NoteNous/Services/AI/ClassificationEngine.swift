@@ -62,7 +62,66 @@ final class ClassificationEngine {
     Respond ONLY with valid JSON. No explanation, no markdown fences.
     """
 
+    /// Classify using the AI provider router — local or API based on settings.
     func classify(
+        title: String,
+        content: String,
+        contextNote: String? = nil,
+        existingTags: [String] = [],
+        recentNotes: [(zettelId: String, title: String)] = [],
+        sourceURL: String? = nil,
+        linkCount: Int = 0
+    ) async throws -> ClassificationResult {
+        let provider = AIProviderRouter.provider(for: .classification)
+
+        switch provider {
+        case .local:
+            return classifyLocally(
+                title: title,
+                content: content,
+                sourceURL: sourceURL,
+                linkCount: linkCount
+            )
+        case .api:
+            do {
+                return try await classifyWithAPI(
+                    title: title,
+                    content: content,
+                    contextNote: contextNote,
+                    existingTags: existingTags,
+                    recentNotes: recentNotes
+                )
+            } catch {
+                // Fallback to local classification on API failure
+                logger.warning("API classification failed, falling back to local: \(error.localizedDescription)")
+                return classifyLocally(
+                    title: title,
+                    content: content,
+                    sourceURL: sourceURL,
+                    linkCount: linkCount
+                )
+            }
+        }
+    }
+
+    /// Local classification using LocalAIService (NLTagger + heuristics).
+    /// Confidence capped at 0.6.
+    func classifyLocally(
+        title: String,
+        content: String,
+        sourceURL: String? = nil,
+        linkCount: Int = 0
+    ) -> ClassificationResult {
+        return LocalAIService.shared.classifyLocally(
+            title: title,
+            content: content,
+            sourceURL: sourceURL,
+            linkCount: linkCount
+        )
+    }
+
+    /// API-based classification using OpenRouter.
+    private func classifyWithAPI(
         title: String,
         content: String,
         contextNote: String? = nil,

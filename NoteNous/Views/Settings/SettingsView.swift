@@ -9,13 +9,15 @@ struct SettingsView: View {
                 .tabItem { Label("General", systemImage: "gear") }
             AISettingsView()
                 .tabItem { Label("AI", systemImage: "brain") }
+            LocalAISettingsView()
+                .tabItem { Label("Local AI", systemImage: "cpu") }
             ImportExportView()
                 .environmentObject(appState)
                 .tabItem { Label("Import/Export", systemImage: "square.and.arrow.up.on.square") }
             AboutSettingsView()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 520, height: 460)
+        .frame(width: 560, height: 500)
         .morosBackground(Moros.limit01)
     }
 }
@@ -25,7 +27,7 @@ struct SettingsView: View {
 struct GeneralSettingsView: View {
     @AppStorage("defaultPARACategory") private var defaultPARACategory: Int = 0
     @AppStorage("defaultViewMode") private var defaultViewMode: Int = 2
-    @AppStorage("appTheme") private var appTheme: String = "system"
+    @AppStorage("morosThemeMode") private var themeMode: String = "auto"
 
     var body: some View {
         Form {
@@ -44,12 +46,15 @@ struct GeneralSettingsView: View {
             }
 
             Section("Appearance") {
-                Picker("Theme", selection: $appTheme) {
-                    Text("System").tag("system")
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
+                Picker("Theme", selection: $themeMode) {
+                    ForEach(MorosThemeMode.allCases) { mode in
+                        Label(mode.rawValue, systemImage: mode.icon).tag(mode.rawValue)
+                    }
                 }
                 .pickerStyle(.segmented)
+                Text("Auto follows your Mac's appearance (System Settings → Appearance)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding()

@@ -1,0 +1,7 @@
+/* NoteNous Clipper — Content highlight overlay */
+
+.notenous-highlight {
+  background: rgba(68, 119, 204, 0.15);
+  outline: 1px solid rgba(68, 119, 204, 0.4);
+  outline-offset: 1px;
+}

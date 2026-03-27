@@ -1,0 +1,241 @@
+/* MOROS Design System — NoteNous Clipper (Chrome) */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  background: #000000;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  border-radius: 0;
+}
+
+#clipper-root {
+  padding: 16px;
+}
+
+/* Header */
+.clipper-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.clipper-logo {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.clipper-badge {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #4477cc;
+  border: 1px solid rgba(68, 119, 204, 0.3);
+  padding: 2px 6px;
+}
+
+/* Field Groups */
+.field-group {
+  margin-bottom: 12px;
+}
+
+.field-label {
+  display: block;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.field-input {
+  width: 100%;
+  background: #06060a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-size: 13px;
+  padding: 8px;
+  outline: none;
+  border-radius: 0;
+}
+
+.field-input:focus {
+  border-color: #4477cc;
+}
+
+.field-input::placeholder {
+  color: rgba(255, 255, 255, 0.14);
+}
+
+.field-textarea {
+  width: 100%;
+  background: #06060a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-size: 13px;
+  padding: 8px;
+  outline: none;
+  resize: vertical;
+  border-radius: 0;
+}
+
+.field-textarea:focus {
+  border-color: #4477cc;
+}
+
+.field-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.14);
+}
+
+.field-url {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 8px;
+  background: #06060a;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.field-selection {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.68);
+  padding: 8px;
+  background: #0b0b11;
+  border-left: 2px solid #4477cc;
+  max-height: 80px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+/* Type Picker */
+.type-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.type-btn {
+  flex: 1;
+  background: #06060a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 16px;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 0;
+}
+
+.type-btn:hover {
+  background: #121219;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.type-btn.active {
+  background: #191921;
+  border-color: #4477cc;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 8px rgba(68, 119, 204, 0.4);
+}
+
+/* Clip Button */
+.clip-button {
+  width: 100%;
+  background: #4477cc;
+  border: none;
+  color: #000000;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 4px;
+  border-radius: 0;
+}
+
+.clip-button:hover {
+  background: #5588dd;
+  box-shadow: 0 0 12px rgba(68, 119, 204, 0.5);
+}
+
+.clip-button:active {
+  background: #3366bb;
+}
+
+.clip-button:disabled {
+  background: #191921;
+  color: rgba(255, 255, 255, 0.14);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Connection Status */
+.connection-status {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 9px;
+  text-align: center;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.connection-status.connected {
+  color: #c8d4f0;
+}
+
+.connection-status.disconnected {
+  color: #cc2233;
+}
+
+/* Success State */
+.success-state {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.success-icon {
+  font-size: 32px;
+  color: #c8d4f0;
+  margin-bottom: 12px;
+  text-shadow: 0 0 12px rgba(200, 212, 240, 0.5);
+}
+
+.success-text {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.error-text {
+  font-size: 12px;
+  color: #cc2233;
+}
