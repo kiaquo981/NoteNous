@@ -29,11 +29,16 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.isRichText = false
         textView.usesFontPanel = false
         textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-        textView.textColor = NSColor.labelColor
+        textView.textColor = NSColor(white: 1.0, alpha: 0.92) // Moros textMain
         textView.backgroundColor = .clear
         textView.drawsBackground = false
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
+        textView.insertionPointColor = NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 1.0) // ORACLE blue cursor
+        textView.selectedTextAttributes = [
+            .backgroundColor: NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 0.3),
+            .foregroundColor: NSColor.white
+        ]
         textView.textContainerInset = NSSize(width: 16, height: 12)
         textView.autoresizingMask = [.width]
         textView.textContainer?.widthTracksTextView = true
@@ -175,7 +180,7 @@ struct MarkdownTextView: NSViewRepresentable {
 
             let storage = textView.textStorage!
             let baseFont = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-            let baseColor = NSColor.labelColor
+            let baseColor = NSColor(white: 1.0, alpha: 0.92) // Moros textMain
 
             storage.beginEditing()
 
@@ -200,21 +205,21 @@ struct MarkdownTextView: NSViewRepresentable {
                 .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular).withTraits(.italic)
             ])
 
-            // Wikilinks: [[text]]
+            // Wikilinks: [[text]] — ORACLE blue
             applyPattern(#"\[\[([^\[\]]+?)\]\]"#, to: storage, in: text, attributes: [
-                .foregroundColor: NSColor.systemBlue,
+                .foregroundColor: NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 1.0), // #4477cc
                 .underlineStyle: NSUnderlineStyle.single.rawValue
             ])
 
-            // Tags: #word
+            // Tags: #word — AMBIENT
             applyPattern(#"(?<!\w)#[a-zA-Z][a-zA-Z0-9_-]*"#, to: storage, in: text, attributes: [
-                .foregroundColor: NSColor.systemOrange
+                .foregroundColor: NSColor(red: 0.533, green: 0.600, blue: 0.733, alpha: 1.0) // #8899bb
             ])
 
-            // Inline code: `text`
+            // Inline code: `text` — VERDIT on dark bg
             applyPattern(#"`[^`]+`"#, to: storage, in: text, attributes: [
-                .foregroundColor: NSColor.systemPink,
-                .backgroundColor: NSColor.quaternaryLabelColor
+                .foregroundColor: NSColor(red: 0.784, green: 0.831, blue: 0.941, alpha: 1.0), // #c8d4f0
+                .backgroundColor: NSColor(white: 1.0, alpha: 0.06) // border opacity
             ])
 
             storage.endEditing()
