@@ -123,6 +123,12 @@ struct SidebarView: View {
                         Text("AI Chat").foregroundStyle(Moros.textSub)
                     }
                 }
+                NavigationLink(destination: VoiceInkDashboard().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "mic.fill").foregroundStyle(Moros.oracle)
+                        Text("VoiceInk").foregroundStyle(Moros.textSub)
+                    }
+                }
             } header: {
                 Text("TOOLS")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))

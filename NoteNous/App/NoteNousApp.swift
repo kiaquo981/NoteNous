@@ -35,6 +35,11 @@ struct NoteNousApp: App {
                     OnboardingService.runIfNeeded(context: appState.viewContext)
                     SpotlightService.shared.indexAllNotes(context: appState.viewContext)
                     ClipServer.shared.start()
+
+                    // Start VoiceInk auto-sync if enabled
+                    if VoiceInkAutoSync.shared.isEnabled {
+                        VoiceInkAutoSync.shared.startAutoSync(context: appState.viewContext)
+                    }
                 }
                 .onDisappear {
                     ClipServer.shared.stop()

@@ -28,6 +28,7 @@ final class AppState: ObservableObject {
     @Published var isSemanticSearchVisible: Bool = false
     @Published var isAIChatVisible: Bool = false
     @Published var isAgentDashboardVisible: Bool = false
+    @Published var isVoiceInkDashboardVisible: Bool = false
 
     let coreData = CoreDataStack.shared
 
