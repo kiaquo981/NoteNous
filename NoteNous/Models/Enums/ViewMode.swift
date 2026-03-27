@@ -3,6 +3,7 @@ import Foundation
 enum ViewMode: Int, CaseIterable, Identifiable {
     case desk = 1
     case stack = 2
+    case cards = 4
     case graph = 3
 
     var id: Int { rawValue }
@@ -11,6 +12,7 @@ enum ViewMode: Int, CaseIterable, Identifiable {
         switch self {
         case .desk: "Desk"
         case .stack: "Stack"
+        case .cards: "Cards"
         case .graph: "Graph"
         }
     }
@@ -19,6 +21,7 @@ enum ViewMode: Int, CaseIterable, Identifiable {
         switch self {
         case .desk: "rectangle.on.rectangle"
         case .stack: "square.stack"
+        case .cards: "rectangle.grid.2x2"
         case .graph: "point.3.connected.trianglepath.dotted"
         }
     }
@@ -27,7 +30,8 @@ enum ViewMode: Int, CaseIterable, Identifiable {
         switch self {
         case .desk: "⌘1"
         case .stack: "⌘2"
-        case .graph: "⌘3"
+        case .cards: "⌘3"
+        case .graph: "⌘4"
         }
     }
 }

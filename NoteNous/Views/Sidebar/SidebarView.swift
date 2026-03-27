@@ -4,6 +4,7 @@ import CoreData
 struct SidebarView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.managedObjectContext) private var context
+    @StateObject private var sidebarSourceService = SourceService()
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \TagEntity.usageCount, ascending: false)],
@@ -100,12 +101,29 @@ struct SidebarView: View {
 
             // NOTECARDS (Greene/Holiday)
             Section {
-                NavigationLink(destination: SourceBrowserView(sourceService: SourceService())) {
+                NavigationLink(destination: SourceBrowserView(sourceService: sidebarSourceService)) {
                     HStack(spacing: 8) {
                         Image(systemName: "books.vertical").foregroundStyle(Moros.ambient)
                         Text("Sources").foregroundStyle(Moros.textSub)
                     }
                 }
+
+                NavigationLink(destination: SourcesDuePanel(sourceService: sidebarSourceService).environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "book.closed.circle.fill").foregroundStyle(Moros.oracle)
+                        Text("Ready to Card").foregroundStyle(Moros.textSub)
+                        Spacer()
+                        ReadyToCardBadge(sourceService: sidebarSourceService)
+                    }
+                }
+
+                Button(action: { appState.selectedView = .cards }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "rectangle.grid.2x2").foregroundStyle(Moros.oracle)
+                        Text("Card View").foregroundStyle(Moros.textSub)
+                    }
+                }
+                .buttonStyle(.plain)
             } header: {
                 Text("NOTECARDS")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))

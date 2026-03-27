@@ -10,6 +10,8 @@ struct ViewRouter: View {
                 DeskCanvasView()
             case .stack:
                 StackView()
+            case .cards:
+                NoteCardGrid()
             case .graph:
                 GraphView()
             }

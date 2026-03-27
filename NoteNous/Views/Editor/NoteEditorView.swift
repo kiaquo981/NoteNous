@@ -29,6 +29,11 @@ struct NoteEditorView: View {
     @State private var contextNote: String = ""
     @State private var isContextExpanded: Bool = false
 
+    // Atomicity
+    @State private var showSplitSheet: Bool = false
+    @State private var atomicityReport: AtomicityReport?
+    @State private var atomicityCheckTask: Task<Void, Never>?
+
     var body: some View {
         VStack(spacing: 0) {
             // Sequence Navigator
@@ -86,6 +91,19 @@ struct NoteEditorView: View {
 
             // Methodology Context Bar
             noteTypeContextBar
+
+            // Atomic Warning Bar (permanent/literature notes only)
+            if let report = atomicityReport,
+               (note.noteType == .permanent || note.noteType == .literature) {
+                AtomicWarningBar(
+                    report: report,
+                    onSplit: { showSplitSheet = true },
+                    onRefineTitle: {
+                        // Focus title field — clear it to prompt rewrite
+                        // (user will see the placeholder "What is this note's claim?")
+                    }
+                )
+            }
 
             Rectangle()
                 .fill(Moros.border)
@@ -244,8 +262,8 @@ struct NoteEditorView: View {
             wikilinkState.configure(context: context)
         }
         .onChange(of: note.objectID) { loadNote() }
-        .onChange(of: title) { saveChanges() }
-        .onChange(of: content) { saveChanges() }
+        .onChange(of: title) { saveChanges(); debouncedAtomicityCheck() }
+        .onChange(of: content) { saveChanges(); debouncedAtomicityCheck() }
         .sheet(isPresented: $showLinkCreation) {
             LinkCreationSheet(sourceNote: note)
                 .environment(\.managedObjectContext, context)
@@ -258,6 +276,11 @@ struct NoteEditorView: View {
         }
         .sheet(isPresented: $showPromotionSheet) {
             PromotionSheet(note: note)
+                .environment(\.managedObjectContext, context)
+                .environmentObject(appState)
+        }
+        .sheet(isPresented: $showSplitSheet) {
+            SplitNoteSheet(note: note)
                 .environment(\.managedObjectContext, context)
                 .environmentObject(appState)
         }
@@ -425,6 +448,8 @@ struct NoteEditorView: View {
         showSimilarNotes = false
         showLinkSuggestions = false
         showLocalGraph = false
+        // Check atomicity
+        recalculateAtomicity()
     }
 
     private func saveChanges() {
@@ -560,6 +585,26 @@ struct NoteEditorView: View {
                     isClassifying = false
                 }
             }
+        }
+    }
+
+    // MARK: - Atomicity Check (debounced)
+
+    private func recalculateAtomicity() {
+        guard note.noteType == .permanent || note.noteType == .literature else {
+            atomicityReport = nil
+            return
+        }
+        let service = AtomicNoteService(context: context)
+        atomicityReport = service.analyze(note: note)
+    }
+
+    private func debouncedAtomicityCheck() {
+        atomicityCheckTask?.cancel()
+        atomicityCheckTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard !Task.isCancelled else { return }
+            recalculateAtomicity()
         }
     }
 
