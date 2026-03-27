@@ -40,10 +40,14 @@ struct CallListenerPanel: View {
 
             Spacer()
 
-            // Language indicator
-            Text("Listening...")
-                .font(Moros.fontSmall)
-                .foregroundStyle(moros.textDim)
+            // Capture mode indicator
+            HStack(spacing: 4) {
+                Image(systemName: listener.captureMode == .bothSides ? "person.2.fill" : "person.fill")
+                    .font(.system(size: 9))
+                Text(listener.captureMode == .bothSides ? "Both Sides" : "Mic Only")
+            }
+            .font(Moros.fontMicro)
+            .foregroundStyle(listener.captureMode == .bothSides ? Moros.verdit : moros.textDim)
 
             // Expand/collapse
             Button {

@@ -1,15 +1,12 @@
 import ScreenCaptureKit
 import Speech
 import AVFoundation
+import CoreAudio
 import os.log
 
-/// Captures microphone audio during calls and transcribes in real-time using on-device Speech framework.
-///
-/// NOTE: Basic mic capture only records YOUR voice. To capture both sides of a call (system audio + mic),
-/// the user needs to route system audio through the mic input using a virtual audio device like BlackHole
-/// (https://github.com/ExistentialAudio/BlackHole), or use a multi-output aggregate device in Audio MIDI Setup.
-/// A future enhancement could use ScreenCaptureKit's `SCStreamConfiguration.capturesAudio` to capture
-/// system audio directly, but that requires screen recording permission and additional mixing logic.
+/// Captures audio during calls and transcribes in real-time using on-device Speech framework.
+/// Auto-detects BlackHole virtual audio driver for capturing BOTH sides of the call.
+/// Falls back to mic-only if BlackHole is not installed.
 final class CallListenerService: ObservableObject {
     static let shared = CallListenerService()
 
@@ -33,11 +30,18 @@ final class CallListenerService: ObservableObject {
         }
     }
 
+    enum CaptureMode: String {
+        case micOnly = "Mic Only (your voice)"
+        case bothSides = "Both Sides (mic + system audio via BlackHole)"
+    }
+
     @Published var state: ListenerState = .idle
     @Published var isListening: Bool = false
     @Published var liveTranscription: String = ""
     @Published var duration: TimeInterval = 0
-    @Published var audioLevel: Float = 0  // 0.0-1.0 for UI visualization
+    @Published var audioLevel: Float = 0
+    @Published var captureMode: CaptureMode = .micOnly
+    @Published var blackHoleAvailable: Bool = false
 
     private let logger = Logger(subsystem: "com.notenous.app", category: "CallListener")
     private var speechRecognizer: SFSpeechRecognizer?
@@ -46,8 +50,176 @@ final class CallListenerService: ObservableObject {
     private var audioEngine: AVAudioEngine?
     private var timer: Timer?
     private var startTime: Date?
+    private var createdAggregateDeviceID: AudioDeviceID = 0
 
-    private init() {}
+    private init() {
+        blackHoleAvailable = findBlackHoleDeviceID() != nil
+        if blackHoleAvailable {
+            captureMode = .bothSides
+            logger.info("BlackHole detected — both-sides capture available")
+        }
+    }
+
+    // MARK: - BlackHole Detection & Aggregate Device
+
+    /// Find the BlackHole 2ch audio device ID
+    private func findBlackHoleDeviceID() -> AudioDeviceID? {
+        var propertySize: UInt32 = 0
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize)
+        let deviceCount = Int(propertySize) / MemoryLayout<AudioDeviceID>.size
+        var devices = [AudioDeviceID](repeating: 0, count: deviceCount)
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &devices)
+
+        for device in devices {
+            if let name = getDeviceName(device), name.lowercased().contains("blackhole") {
+                return device
+            }
+        }
+        return nil
+    }
+
+    /// Find the built-in microphone device ID
+    private func findBuiltInMicDeviceID() -> AudioDeviceID? {
+        var propertySize: UInt32 = 0
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize)
+        let deviceCount = Int(propertySize) / MemoryLayout<AudioDeviceID>.size
+        var devices = [AudioDeviceID](repeating: 0, count: deviceCount)
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &devices)
+
+        for device in devices {
+            if let name = getDeviceName(device),
+               (name.lowercased().contains("built-in") || name.lowercased().contains("macbook")) &&
+               deviceHasInputChannels(device) {
+                return device
+            }
+        }
+        // Fallback: return default input device
+        var defaultInput = AudioDeviceID(0)
+        var defaultSize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var defaultAddr = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &defaultAddr, 0, nil, &defaultSize, &defaultInput)
+        return defaultInput != 0 ? defaultInput : nil
+    }
+
+    private func getDeviceName(_ deviceID: AudioDeviceID) -> String? {
+        var name: CFString = "" as CFString
+        var size = UInt32(MemoryLayout<CFString>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceNameCFString,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &name)
+        return status == noErr ? name as String : nil
+    }
+
+    private func deviceHasInputChannels(_ deviceID: AudioDeviceID) -> Bool {
+        var size: UInt32 = 0
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyStreamConfiguration,
+            mScope: kAudioDevicePropertyScopeInput,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        AudioObjectGetPropertyDataSize(deviceID, &address, 0, nil, &size)
+        guard size > 0 else { return false }
+        let bufferList = UnsafeMutablePointer<AudioBufferList>.allocate(capacity: 1)
+        defer { bufferList.deallocate() }
+        AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, bufferList)
+        let buffers = UnsafeMutableAudioBufferListPointer(bufferList)
+        return buffers.reduce(0) { $0 + Int($1.mNumberChannels) } > 0
+    }
+
+    /// Create an aggregate device combining mic + BlackHole for both-sides capture
+    private func createAggregateDevice() -> AudioDeviceID? {
+        guard let blackHoleID = findBlackHoleDeviceID(),
+              let micID = findBuiltInMicDeviceID() else {
+            logger.warning("Cannot create aggregate: BlackHole or mic not found")
+            return nil
+        }
+
+        let blackHoleUID = getDeviceUID(blackHoleID)
+        let micUID = getDeviceUID(micID)
+
+        guard let bhUID = blackHoleUID, let mUID = micUID else {
+            logger.warning("Cannot get device UIDs")
+            return nil
+        }
+
+        let aggregateDesc: [String: Any] = [
+            kAudioAggregateDeviceNameKey as String: "NoteNous Call Capture",
+            kAudioAggregateDeviceUIDKey as String: "com.notenous.aggregate.\(UUID().uuidString.prefix(8))",
+            kAudioAggregateDeviceIsPrivateKey as String: true,
+            kAudioAggregateDeviceSubDeviceListKey as String: [
+                [kAudioSubDeviceUIDKey as String: mUID],
+                [kAudioSubDeviceUIDKey as String: bhUID]
+            ]
+        ]
+
+        var aggregateID: AudioDeviceID = 0
+        let status = AudioHardwareCreateAggregateDevice(aggregateDesc as CFDictionary, &aggregateID)
+
+        if status == noErr {
+            logger.info("Created aggregate device: \(aggregateID) (mic + BlackHole)")
+            return aggregateID
+        } else {
+            logger.error("Failed to create aggregate device: \(status)")
+            return nil
+        }
+    }
+
+    private func getDeviceUID(_ deviceID: AudioDeviceID) -> String? {
+        var uid: CFString = "" as CFString
+        var size = UInt32(MemoryLayout<CFString>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceUID,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &uid)
+        return status == noErr ? uid as String : nil
+    }
+
+    /// Destroy the aggregate device on cleanup
+    private func destroyAggregateDevice() {
+        guard createdAggregateDeviceID != 0 else { return }
+        AudioHardwareDestroyAggregateDevice(createdAggregateDeviceID)
+        logger.info("Destroyed aggregate device: \(self.createdAggregateDeviceID)")
+        createdAggregateDeviceID = 0
+    }
+
+    /// Set the audio engine's input to a specific device
+    private func setAudioEngineInputDevice(_ deviceID: AudioDeviceID) {
+        guard let audioEngine else { return }
+        let inputNode = audioEngine.inputNode
+        let audioUnit = inputNode.audioUnit!
+
+        var deviceIDVar = deviceID
+        AudioUnitSetProperty(
+            audioUnit,
+            kAudioOutputUnitProperty_CurrentDevice,
+            kAudioUnitScope_Global,
+            0,
+            &deviceIDVar,
+            UInt32(MemoryLayout<AudioDeviceID>.size)
+        )
+        logger.info("Set audio engine input to device: \(deviceID)")
+    }
 
     // MARK: - Permissions
 
@@ -128,12 +300,25 @@ final class CallListenerService: ObservableObject {
             }
         }
 
-        // Setup audio capture via AVAudioEngine (microphone input)
+        // Setup audio capture via AVAudioEngine
         audioEngine = AVAudioEngine()
         guard let audioEngine else {
             await MainActor.run { state = .error("Failed to create audio engine") }
             return
         }
+
+        // If BlackHole available and both-sides mode, create aggregate device
+        if captureMode == .bothSides, blackHoleAvailable {
+            if let aggregateID = createAggregateDevice() {
+                createdAggregateDeviceID = aggregateID
+                setAudioEngineInputDevice(aggregateID)
+                logger.info("Using aggregate device (mic + BlackHole) for both-sides capture")
+            } else {
+                logger.warning("Falling back to mic-only")
+                await MainActor.run { captureMode = .micOnly }
+            }
+        }
+
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
 
@@ -197,13 +382,16 @@ final class CallListenerService: ObservableObject {
         recognitionTask = nil
         audioEngine = nil
 
+        // Cleanup aggregate device
+        destroyAggregateDevice()
+
         let finalTranscription = liveTranscription
 
         state = .idle
         isListening = false
         audioLevel = 0
 
-        logger.info("Call listener stopped. Transcribed \(finalTranscription.count) chars")
+        logger.info("Call listener stopped. Mode: \(self.captureMode.rawValue). Transcribed \(finalTranscription.count) chars")
         return finalTranscription
     }
 
