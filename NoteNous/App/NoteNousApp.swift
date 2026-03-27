@@ -63,6 +63,7 @@ struct NoteNousApp: App {
         Settings {
             SettingsView()
                 .environmentObject(appState)
+                .morosTheme()
         }
 
         MenuBarExtra("NoteNous", systemImage: "note.text") {
