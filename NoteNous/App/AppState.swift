@@ -30,6 +30,8 @@ final class AppState: ObservableObject {
     @Published var isAIChatVisible: Bool = false
     @Published var isAgentDashboardVisible: Bool = false
     @Published var isVoiceInkDashboardVisible: Bool = false
+    @Published var isCallNoteVisible: Bool = false
+    @Published var activeCallNote: UUID?
 
     let coreData = CoreDataStack.shared
 

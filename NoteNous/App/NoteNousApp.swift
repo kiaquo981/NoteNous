@@ -22,6 +22,16 @@ struct NoteNousApp: App {
                         .environment(\.managedObjectContext, appState.viewContext)
                         .morosTheme()
                 }
+                .sheet(isPresented: $appState.isCallNoteVisible) {
+                    CallNoteSheet(
+                        callNoteService: CallNoteService(),
+                        callNoteId: appState.activeCallNote
+                    )
+                    .environmentObject(appState)
+                    .environment(\.managedObjectContext, appState.viewContext)
+                    .morosTheme()
+                    .frame(minWidth: 600, minHeight: 500)
+                }
                 .sheet(isPresented: $appState.isSemanticSearchVisible) {
                     SemanticSearchView(embeddingService: EmbeddingService.shared)
                         .environmentObject(appState)

@@ -77,6 +77,12 @@ struct KeyboardCommands: Commands {
 
             Button("Export All Notes") { appState.isExportVisible = true }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
+
+            Button("New Call Note") {
+                appState.activeCallNote = nil
+                appState.isCallNoteVisible = true
+            }
+            .keyboardShortcut("c", modifiers: [.command, .shift])
         }
 
         // Navigate menu

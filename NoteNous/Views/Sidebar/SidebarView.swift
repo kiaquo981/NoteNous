@@ -157,6 +157,12 @@ struct SidebarView: View {
                         Text("VoiceInk").foregroundStyle(Moros.textSub)
                     }
                 }
+                NavigationLink(destination: CallNoteListView(callNoteService: CallNoteService()).environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "phone.fill").foregroundStyle(Moros.oracle)
+                        Text("Call Notes").foregroundStyle(Moros.textSub)
+                    }
+                }
             } header: {
                 Text("TOOLS")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
