@@ -7,8 +7,6 @@ struct NoteNousApp: App {
 
     init() {
         EnvLoader.loadIfNeeded()
-        // Force dark appearance globally — MOROS is dark-only
-        NSApp.appearance = NSAppearance(named: .darkAqua)
     }
 
     var body: some Scene {
@@ -25,6 +23,8 @@ struct NoteNousApp: App {
                         .preferredColorScheme(.dark)
                 }
                 .onAppear {
+                    // Force dark mode after NSApp is ready
+                    NSApp.appearance = NSAppearance(named: .darkAqua)
                     OnboardingService.runIfNeeded(context: appState.viewContext)
                     SpotlightService.shared.indexAllNotes(context: appState.viewContext)
                 }

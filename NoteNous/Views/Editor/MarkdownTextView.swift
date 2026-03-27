@@ -1,6 +1,23 @@
 import SwiftUI
 import AppKit
 
+// MARK: - MOROS Color Constants for NSColor
+
+private enum MorosNS {
+    static let textMain = NSColor(white: 1.0, alpha: 0.92)
+    static let textSub = NSColor(white: 1.0, alpha: 0.68)
+    static let textDim = NSColor(white: 1.0, alpha: 0.45)
+    static let textGhost = NSColor(white: 1.0, alpha: 0.14)
+    static let oracle = NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 1.0)
+    static let signal = NSColor(red: 0.800, green: 0.133, blue: 0.200, alpha: 1.0)
+    static let verdit = NSColor(red: 0.784, green: 0.831, blue: 0.941, alpha: 1.0)
+    static let ambient = NSColor(red: 0.533, green: 0.600, blue: 0.733, alpha: 1.0)
+    static let codeBg = NSColor(white: 1.0, alpha: 0.06)
+    static let blockquoteBg = NSColor(white: 1.0, alpha: 0.03)
+    static let hrColor = NSColor(white: 1.0, alpha: 0.11)
+    static let checkboxDone = NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 0.6)
+}
+
 // MARK: - MarkdownTextView
 
 struct MarkdownTextView: NSViewRepresentable {
@@ -28,15 +45,15 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.allowsUndo = true
         textView.isRichText = false
         textView.usesFontPanel = false
-        textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-        textView.textColor = NSColor(white: 1.0, alpha: 0.92) // Moros textMain
+        textView.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
+        textView.textColor = MorosNS.textMain
         textView.backgroundColor = .clear
         textView.drawsBackground = false
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
-        textView.insertionPointColor = NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 1.0) // ORACLE blue cursor
+        textView.insertionPointColor = MorosNS.oracle
         textView.selectedTextAttributes = [
-            .backgroundColor: NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 0.3),
+            .backgroundColor: MorosNS.oracle.withAlphaComponent(0.3),
             .foregroundColor: NSColor.white
         ]
         textView.textContainerInset = NSSize(width: 16, height: 12)
@@ -44,13 +61,19 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.textContainer?.widthTracksTextView = true
         textView.textContainer?.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
 
+        // Enable rich paragraph styling
+        textView.defaultParagraphStyle = {
+            let p = NSMutableParagraphStyle()
+            p.lineSpacing = 4
+            return p
+        }()
+
         textView.delegate = context.coordinator
         textView.string = text
         context.coordinator.textView = textView
 
         scrollView.documentView = textView
 
-        // Apply initial highlighting
         DispatchQueue.main.async {
             context.coordinator.applyMarkdownHighlighting()
         }
@@ -99,7 +122,6 @@ struct MarkdownTextView: NSViewRepresentable {
             let position = textView.selectedRange().location
             parent.onCursorPositionChange?(position)
 
-            // Check if we're still inside a wikilink trigger
             if wikilinkTrackingRange != nil {
                 detectWikilinkTrigger()
             }
@@ -120,15 +142,12 @@ struct MarkdownTextView: NSViewRepresentable {
             let nsText = text as NSString
             let textBeforeCursor = nsText.substring(to: cursorLocation)
 
-            // Find the last `[[` that doesn't have a closing `]]`
             if let openRange = textBeforeCursor.range(of: "[[", options: .backwards) {
                 let afterOpen = textBeforeCursor[openRange.upperBound...]
-                // If there's a `]]` after the `[[`, we're not in a wikilink
                 if afterOpen.contains("]]") {
                     dismissWikilink()
                     return
                 }
-                // We're inside an open wikilink
                 let query = String(afterOpen)
                 wikilinkTrackingRange = NSRange(openRange, in: textBeforeCursor)
                 parent.onWikilinkTrigger?(query)
@@ -144,7 +163,6 @@ struct MarkdownTextView: NSViewRepresentable {
             }
         }
 
-        /// Inserts a completed wikilink at the current trigger position.
         func insertWikilink(title: String) {
             guard let textView = textView else { return }
             let text = textView.string
@@ -162,7 +180,6 @@ struct MarkdownTextView: NSViewRepresentable {
             if textView.shouldChangeText(in: replaceRange, replacementString: replacement) {
                 textView.replaceCharacters(in: replaceRange, with: replacement)
                 textView.didChangeText()
-
                 let newCursorPos = startIndex + replacement.count
                 textView.setSelectedRange(NSRange(location: newCursorPos, length: 0))
             }
@@ -170,7 +187,7 @@ struct MarkdownTextView: NSViewRepresentable {
             wikilinkTrackingRange = nil
         }
 
-        // MARK: - Markdown Highlighting
+        // MARK: - Full Markdown Highlighting
 
         func applyMarkdownHighlighting() {
             guard let textView = textView else { return }
@@ -179,65 +196,251 @@ struct MarkdownTextView: NSViewRepresentable {
             guard fullRange.length > 0 else { return }
 
             let storage = textView.textStorage!
-            let baseFont = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-            let baseColor = NSColor(white: 1.0, alpha: 0.92) // Moros textMain
+            let bodyFont = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
 
             storage.beginEditing()
 
             // Reset to base style
+            let baseParagraph = NSMutableParagraphStyle()
+            baseParagraph.lineSpacing = 4
+
             storage.addAttributes([
-                .font: baseFont,
-                .foregroundColor: baseColor
+                .font: bodyFont,
+                .foregroundColor: MorosNS.textMain,
+                .paragraphStyle: baseParagraph
             ], range: fullRange)
 
-            // Headers: lines starting with #
-            applyPattern(#"^#{1,6}\s+.+$"#, to: storage, in: text, attributes: [
-                .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .bold)
-            ])
+            // --- HEADERS: # H1 through ###### H6 with real sizes ---
+            highlightHeaders(storage: storage, text: text)
 
-            // Bold: **text**
+            // --- BOLD: **text** ---
             applyPattern(#"\*\*(.+?)\*\*"#, to: storage, in: text, attributes: [
-                .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .bold)
+                .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .bold),
+                .foregroundColor: MorosNS.textMain
             ])
 
-            // Italic: *text*  (but not **)
+            // --- ITALIC: *text* (not **) ---
             applyPattern(#"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)"#, to: storage, in: text, attributes: [
-                .font: NSFont.monospacedSystemFont(ofSize: 14, weight: .regular).withTraits(.italic)
+                .font: bodyFont.withTraits(.italic),
+                .foregroundColor: MorosNS.textMain
             ])
 
-            // Wikilinks: [[text]] — ORACLE blue
+            // --- STRIKETHROUGH: ~~text~~ ---
+            applyPattern(#"~~(.+?)~~"#, to: storage, in: text, attributes: [
+                .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                .foregroundColor: MorosNS.textDim
+            ])
+
+            // --- CODE BLOCKS: ```...``` (multiline) ---
+            highlightCodeBlocks(storage: storage, text: text)
+
+            // --- INLINE CODE: `text` ---
+            applyPattern(#"(?<!`)`(?!`)([^`]+)`(?!`)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.verdit,
+                .backgroundColor: MorosNS.codeBg,
+                .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .medium)
+            ])
+
+            // --- BLOCKQUOTES: > text ---
+            applyLinePattern(#"^>\s+.+$"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.ambient,
+                .backgroundColor: MorosNS.blockquoteBg
+            ])
+
+            // --- HORIZONTAL RULES: --- or *** or ___ ---
+            applyLinePattern(#"^(---|\*\*\*|___)$"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.hrColor,
+                .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                .strikethroughColor: MorosNS.hrColor
+            ])
+
+            // --- CHECKLISTS: - [ ] unchecked, - [x] checked ---
+            highlightChecklists(storage: storage, text: text)
+
+            // --- BULLET LISTS: - item or * item ---
+            applyPattern(#"^[\t ]*[-*]\s(?!\[)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.oracle
+            ], options: [.anchorsMatchLines])
+
+            // --- NUMBERED LISTS: 1. item ---
+            applyPattern(#"^[\t ]*\d+\.\s"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.oracle
+            ], options: [.anchorsMatchLines])
+
+            // --- WIKILINKS: [[text]] ---
             applyPattern(#"\[\[([^\[\]]+?)\]\]"#, to: storage, in: text, attributes: [
-                .foregroundColor: NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 1.0), // #4477cc
+                .foregroundColor: MorosNS.oracle,
                 .underlineStyle: NSUnderlineStyle.single.rawValue
             ])
 
-            // Tags: #word — AMBIENT
+            // --- TAGS: #word ---
             applyPattern(#"(?<!\w)#[a-zA-Z][a-zA-Z0-9_-]*"#, to: storage, in: text, attributes: [
-                .foregroundColor: NSColor(red: 0.533, green: 0.600, blue: 0.733, alpha: 1.0) // #8899bb
+                .foregroundColor: MorosNS.ambient
             ])
 
-            // Inline code: `text` — VERDIT on dark bg
-            applyPattern(#"`[^`]+`"#, to: storage, in: text, attributes: [
-                .foregroundColor: NSColor(red: 0.784, green: 0.831, blue: 0.941, alpha: 1.0), // #c8d4f0
-                .backgroundColor: NSColor(white: 1.0, alpha: 0.06) // border opacity
+            // --- LINKS: [text](url) ---
+            applyPattern(#"\[([^\]]+)\]\(([^)]+)\)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.oracle,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
             ])
+
+            // --- IMAGES: ![alt](url) ---
+            applyPattern(#"!\[([^\]]*)\]\(([^)]+)\)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.ambient,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
+            ])
+
+            // --- Hide/dim markdown syntax characters ---
+            dimSyntaxCharacters(storage: storage, text: text)
 
             storage.endEditing()
         }
+
+        // MARK: - Header Highlighting with Real Sizes
+
+        private func highlightHeaders(storage: NSTextStorage, text: String) {
+            let headerConfigs: [(pattern: String, fontSize: CGFloat, weight: NSFont.Weight, color: NSColor)] = [
+                (#"^#\s+(.+)$"#, 28, .bold, MorosNS.textMain),       // H1
+                (#"^##\s+(.+)$"#, 24, .bold, MorosNS.textMain),      // H2
+                (#"^###\s+(.+)$"#, 20, .semibold, MorosNS.textMain), // H3
+                (#"^####\s+(.+)$"#, 17, .semibold, MorosNS.textSub), // H4
+                (#"^#####\s+(.+)$"#, 15, .medium, MorosNS.textSub),  // H5
+                (#"^######\s+(.+)$"#, 14, .medium, MorosNS.textDim), // H6
+            ]
+
+            for config in headerConfigs {
+                guard let regex = try? NSRegularExpression(pattern: config.pattern, options: [.anchorsMatchLines]) else { continue }
+                let nsRange = NSRange(location: 0, length: (text as NSString).length)
+
+                for match in regex.matches(in: text, range: nsRange) {
+                    // Style the entire line
+                    let headerParagraph = NSMutableParagraphStyle()
+                    headerParagraph.lineSpacing = 6
+                    headerParagraph.paragraphSpacingBefore = 8
+
+                    storage.addAttributes([
+                        .font: NSFont.systemFont(ofSize: config.fontSize, weight: config.weight),
+                        .foregroundColor: config.color,
+                        .paragraphStyle: headerParagraph
+                    ], range: match.range)
+
+                    // Dim the # prefix
+                    let lineText = (text as NSString).substring(with: match.range)
+                    if let hashEnd = lineText.firstIndex(of: " ") {
+                        let hashLength = lineText.distance(from: lineText.startIndex, to: hashEnd)
+                        let hashRange = NSRange(location: match.range.location, length: hashLength)
+                        storage.addAttributes([
+                            .foregroundColor: MorosNS.textGhost,
+                            .font: NSFont.systemFont(ofSize: config.fontSize * 0.6, weight: .light)
+                        ], range: hashRange)
+                    }
+                }
+            }
+        }
+
+        // MARK: - Checklist Highlighting
+
+        private func highlightChecklists(storage: NSTextStorage, text: String) {
+            // Unchecked: - [ ] text — show empty checkbox
+            if let regex = try? NSRegularExpression(pattern: #"^[\t ]*-\s\[\s\]\s"#, options: [.anchorsMatchLines]) {
+                let nsRange = NSRange(location: 0, length: (text as NSString).length)
+                for match in regex.matches(in: text, range: nsRange) {
+                    storage.addAttributes([
+                        .foregroundColor: MorosNS.textDim
+                    ], range: match.range)
+                }
+            }
+
+            // Checked: - [x] text — show filled checkbox + dim text
+            if let regex = try? NSRegularExpression(pattern: #"^([\t ]*-\s\[[xX]\]\s)(.+)$"#, options: [.anchorsMatchLines]) {
+                let nsRange = NSRange(location: 0, length: (text as NSString).length)
+                for match in regex.matches(in: text, range: nsRange) {
+                    // The checkbox part
+                    if match.numberOfRanges > 1 {
+                        storage.addAttributes([
+                            .foregroundColor: MorosNS.checkboxDone
+                        ], range: match.range(at: 1))
+                    }
+                    // The text part — strikethrough + dim
+                    if match.numberOfRanges > 2 {
+                        storage.addAttributes([
+                            .foregroundColor: MorosNS.textDim,
+                            .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                            .strikethroughColor: MorosNS.textDim
+                        ], range: match.range(at: 2))
+                    }
+                }
+            }
+        }
+
+        // MARK: - Code Block Highlighting
+
+        private func highlightCodeBlocks(storage: NSTextStorage, text: String) {
+            guard let regex = try? NSRegularExpression(pattern: #"```[\s\S]*?```"#, options: []) else { return }
+            let nsRange = NSRange(location: 0, length: (text as NSString).length)
+
+            for match in regex.matches(in: text, range: nsRange) {
+                storage.addAttributes([
+                    .foregroundColor: MorosNS.verdit,
+                    .backgroundColor: MorosNS.codeBg,
+                    .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+                ], range: match.range)
+            }
+        }
+
+        // MARK: - Dim Syntax Characters
+
+        private func dimSyntaxCharacters(storage: NSTextStorage, text: String) {
+            // Dim ** around bold text
+            applyPattern(#"(\*\*)(?=.+?\*\*)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.textGhost
+            ])
+            applyPattern(#"(?<=\S)(\*\*)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.textGhost
+            ])
+
+            // Dim [[ and ]] around wikilinks
+            applyPattern(#"\[\["#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.oracle.withAlphaComponent(0.4)
+            ])
+            applyPattern(#"\]\]"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.oracle.withAlphaComponent(0.4)
+            ])
+
+            // Dim ` around inline code
+            applyPattern(#"(?<!`)`(?!`)"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.textGhost
+            ])
+
+            // Dim > in blockquotes
+            applyPattern(#"^>"#, to: storage, in: text, attributes: [
+                .foregroundColor: MorosNS.oracle.withAlphaComponent(0.4)
+            ], options: [.anchorsMatchLines])
+        }
+
+        // MARK: - Pattern Helpers
 
         private func applyPattern(
             _ pattern: String,
             to storage: NSTextStorage,
             in text: String,
-            attributes: [NSAttributedString.Key: Any]
+            attributes: [NSAttributedString.Key: Any],
+            options: NSRegularExpression.Options = [.anchorsMatchLines]
         ) {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) else { return }
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else { return }
             let nsRange = NSRange(location: 0, length: (text as NSString).length)
-            let matches = regex.matches(in: text, options: [], range: nsRange)
-
-            for match in matches {
+            for match in regex.matches(in: text, range: nsRange) {
                 storage.addAttributes(attributes, range: match.range)
             }
+        }
+
+        private func applyLinePattern(
+            _ pattern: String,
+            to storage: NSTextStorage,
+            in text: String,
+            attributes: [NSAttributedString.Key: Any]
+        ) {
+            applyPattern(pattern, to: storage, in: text, attributes: attributes, options: [.anchorsMatchLines])
         }
     }
 }
@@ -245,7 +448,7 @@ struct MarkdownTextView: NSViewRepresentable {
 // MARK: - MarkdownNSTextView
 
 final class MarkdownNSTextView: NSTextView {
-    // Custom NSTextView subclass for future extensions
+    // Custom NSTextView subclass for future extensions (e.g. click on wikilinks)
 }
 
 // MARK: - NSFont Extension
