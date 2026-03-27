@@ -53,6 +53,14 @@ struct GraphView: View {
     // Timer for physics simulation
     @State private var simulationTimer: Timer?
 
+    // Background particles for depth effect
+    @State private var particles: [BackgroundParticle] = []
+
+    // Smooth camera animation
+    @State private var cameraTarget: CGPoint?
+    @State private var pulsingNodeIds: Set<UUID> = []
+    @State private var pulsePhase: CGFloat = 0
+
     var body: some View {
         ZStack {
             // Canvas rendering
@@ -140,6 +148,7 @@ struct GraphView: View {
         .morosBackground()
         .onAppear {
             reloadGraph()
+            generateParticles()
             startSimulationTimer()
         }
         .onDisappear {
@@ -187,7 +196,41 @@ struct GraphView: View {
             let transform = CGAffineTransform(translationX: offset.x, y: offset.y)
                 .scaledBy(x: zoom, y: zoom)
 
-            // Draw edges as organic curves (not straight lines)
+            let viewportCenter = CGPoint(x: size.width / 2, y: size.height / 2)
+            let maxViewportDist = sqrt(size.width * size.width + size.height * size.height) / 2
+
+            // --- Background particles (subtle depth effect) ---
+            for particle in particles {
+                let particleRect = CGRect(
+                    x: particle.position.x - particle.size / 2,
+                    y: particle.position.y - particle.size / 2,
+                    width: particle.size,
+                    height: particle.size
+                )
+                canvasContext.fill(
+                    Circle().path(in: particleRect),
+                    with: .color(Moros.ambient.opacity(particle.opacity))
+                )
+            }
+
+            // --- Cluster glow: ambient nebula around dense areas ---
+            for node in filteredNodes where node.cachedLinkCount >= 4 {
+                let screenPos = node.position.applying(transform)
+                let nebulaRadius = CGFloat(node.cachedLinkCount) * 6 * zoom
+                let nebulaRect = CGRect(
+                    x: screenPos.x - nebulaRadius,
+                    y: screenPos.y - nebulaRadius,
+                    width: nebulaRadius * 2,
+                    height: nebulaRadius * 2
+                )
+                let nodeColor = colorForNode(node)
+                canvasContext.fill(
+                    Circle().path(in: nebulaRect),
+                    with: .color(nodeColor.opacity(0.025))
+                )
+            }
+
+            // --- Edges: organic bezier curves, no arrowheads ---
             for edge in filteredEdges {
                 guard let si = layout.nodeIndex(for: edge.sourceId),
                       let ti = layout.nodeIndex(for: edge.targetId) else { continue }
@@ -196,33 +239,37 @@ struct GraphView: View {
                 let target = layout.nodes[ti].position.applying(transform)
 
                 let edgeColor = colorForLinkType(edge.linkType)
-                let lineWidth = 0.8 + CGFloat(edge.strength) * 2.0
+                let lineWidth: CGFloat = 0.5 + CGFloat(edge.strength) * 1.5
 
-                // Compute curved path — offset control point perpendicular to the line
+                // Bezier curve with perpendicular control offset
                 let midX = (source.x + target.x) / 2
                 let midY = (source.y + target.y) / 2
                 let dx = target.x - source.x
                 let dy = target.y - source.y
                 let dist = sqrt(dx * dx + dy * dy)
-                let curvature: CGFloat = min(dist * 0.15, 30) // proportional curve
-                // Perpendicular offset
+                let curvature: CGFloat = min(dist * 0.12, 25)
                 let nx = -dy / max(dist, 1) * curvature
                 let ny = dx / max(dist, 1) * curvature
                 let controlPoint = CGPoint(x: midX + nx, y: midY + ny)
+
+                // Edge opacity fades at viewport edges for depth illusion
+                let edgeMid = CGPoint(x: midX, y: midY)
+                let distToCenter = sqrt(pow(edgeMid.x - viewportCenter.x, 2) + pow(edgeMid.y - viewportCenter.y, 2))
+                let depthFade = max(0.15, 1.0 - (distToCenter / maxViewportDist) * 0.6)
 
                 var path = Path()
                 path.move(to: source)
                 path.addQuadCurve(to: target, control: controlPoint)
 
                 if !edge.isConfirmed || edge.isAISuggested {
-                    let style = StrokeStyle(lineWidth: lineWidth, dash: [5, 3])
-                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.4)), style: style)
+                    let style = StrokeStyle(lineWidth: lineWidth, dash: [4, 3])
+                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.3 * depthFade)), style: style)
                 } else {
-                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.5)), lineWidth: lineWidth)
+                    canvasContext.stroke(path, with: .color(edgeColor.opacity(0.35 * depthFade)), lineWidth: lineWidth)
                 }
             }
 
-            // Draw nodes
+            // --- Nodes: soft neuron glow rendering ---
             for node in filteredNodes {
                 let screenPos = node.position.applying(transform)
                 let r = node.radius * zoom
@@ -232,21 +279,31 @@ struct GraphView: View {
                 let isSelected = node.id == selectedNodeId
                 let isHovered = node.id == hoveredNodeId
 
-                // Ambient glow halo — makes nodes look like neurons
-                let glowRadius: CGFloat = isSelected ? 12 : (isHovered ? 8 : 4)
-                let glowOpacity: Double = isSelected ? 0.35 : (isHovered ? 0.2 : 0.08)
-                let haloRect = rect.insetBy(dx: -glowRadius, dy: -glowRadius)
-                canvasContext.fill(Circle().path(in: haloRect), with: .color(nodeColor.opacity(glowOpacity)))
+                // Pulsing factor for selected node
+                let pulseFactor: CGFloat = isSelected ? 1.0 + sin(pulsePhase) * 0.15 : 1.0
 
-                // Inner halo
-                let innerHalo = rect.insetBy(dx: -2, dy: -2)
-                canvasContext.fill(Circle().path(in: innerHalo), with: .color(nodeColor.opacity(0.15)))
+                // Outer glow (large radius, low opacity) — soft neuron halo
+                let outerGlowRadius: CGFloat = (isSelected ? 20 : (isHovered ? 14 : 6)) * pulseFactor
+                let outerGlowOpacity: Double = isSelected ? 0.3 * Double(pulseFactor) : (isHovered ? 0.18 : 0.06)
+                let outerGlowRect = rect.insetBy(dx: -outerGlowRadius, dy: -outerGlowRadius)
+                canvasContext.fill(Circle().path(in: outerGlowRect), with: .color(nodeColor.opacity(outerGlowOpacity)))
 
-                // Node circle (solid core)
-                canvasContext.fill(Circle().path(in: rect), with: .color(nodeColor.opacity(0.85)))
+                // Middle glow
+                let midGlowRect = rect.insetBy(dx: -3 * pulseFactor, dy: -3 * pulseFactor)
+                canvasContext.fill(Circle().path(in: midGlowRect), with: .color(nodeColor.opacity(0.12)))
+
+                // Node circle (main body, slightly transparent)
+                let nodeScale: CGFloat = isHovered ? 1.08 : 1.0
+                let scaledRect = CGRect(
+                    x: screenPos.x - r * nodeScale,
+                    y: screenPos.y - r * nodeScale,
+                    width: r * 2 * nodeScale,
+                    height: r * 2 * nodeScale
+                )
+                canvasContext.fill(Circle().path(in: scaledRect), with: .color(nodeColor.opacity(0.75)))
 
                 // Bright center dot (neuron soma)
-                let coreSize = max(r * 0.4, 3)
+                let coreSize = max(r * 0.35, 2.5)
                 let coreRect = CGRect(
                     x: screenPos.x - coreSize,
                     y: screenPos.y - coreSize,
@@ -255,20 +312,24 @@ struct GraphView: View {
                 )
                 canvasContext.fill(Circle().path(in: coreRect), with: .color(nodeColor.opacity(1.0)))
 
-                // Subtle ring border
-                let borderColor: Color = isSelected ? Moros.oracle : (isHovered ? nodeColor.opacity(0.6) : nodeColor.opacity(0.2))
-                canvasContext.stroke(Circle().path(in: rect), with: .color(borderColor), lineWidth: isSelected ? 2 : 0.5)
+                // Subtle ring (very thin)
+                if isSelected {
+                    canvasContext.stroke(Circle().path(in: scaledRect), with: .color(Moros.oracle.opacity(0.7)), lineWidth: 1.5)
+                } else if isHovered {
+                    canvasContext.stroke(Circle().path(in: scaledRect), with: .color(nodeColor.opacity(0.4)), lineWidth: 0.8)
+                }
 
-                // Label (only if zoomed in enough)
-                if zoom > 0.4 {
+                // Label: fade based on zoom, selected always visible
+                let labelOpacity: Double = isSelected ? 1.0 : (zoom > 0.5 ? min(1.0, Double((zoom - 0.5) * 4)) : 0)
+                if labelOpacity > 0.01 {
                     let title = node.cachedTitle.isEmpty ? "Untitled" : node.cachedTitle
-                    let truncated = title.count > 20 ? String(title.prefix(18)) + "..." : title
-                    let textPoint = CGPoint(x: screenPos.x, y: screenPos.y + r + 8 * zoom)
+                    let truncated = title.count > 22 ? String(title.prefix(20)) + ".." : title
+                    let textPoint = CGPoint(x: screenPos.x, y: screenPos.y + r * nodeScale + 6 * zoom)
 
                     canvasContext.draw(
                         Text(truncated)
-                            .font(.system(size: max(9, 11 * zoom), weight: isSelected ? .semibold : .regular))
-                            .foregroundColor(Color(Moros.textSub)),
+                            .font(.system(size: max(8, 10 * zoom), weight: isSelected ? .semibold : .regular))
+                            .foregroundColor(Moros.textSub.opacity(labelOpacity)),
                         at: textPoint,
                         anchor: .top
                     )
@@ -382,8 +443,8 @@ struct GraphView: View {
                         y: (value.location.y - offset.y) / zoom
                     )
                     layout.moveNode(id: nodeId, to: worldPos)
-                    if physicsEnabled && !layout.isRunning {
-                        layout.startSimulation()
+                    if physicsEnabled {
+                        layout.warmStart()
                     }
                 } else if isDraggingBackground {
                     offset = CGPoint(
@@ -418,6 +479,13 @@ struct GraphView: View {
 
     private func handleDoubleTap(at location: CGPoint) {
         if let node = layout.nodeAt(point: location, zoom: zoom, offset: offset) {
+            // Smooth camera to center on the tapped node
+            withAnimation(.easeInOut(duration: 0.5)) {
+                offset = CGPoint(
+                    x: -node.position.x * zoom + 400,
+                    y: -node.position.y * zoom + 300
+                )
+            }
             appState.selectedNote = node.note
         }
     }
@@ -522,8 +590,25 @@ struct GraphView: View {
 
     private func startSimulationTimer() {
         simulationTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
-            if layout.isRunning && physicsEnabled {
+            if physicsEnabled {
+                // Always step — the layout switches to idle breathing mode when settled
+                if !layout.isRunning { layout.startSimulation() }
                 layout.step(dt: 1.0 / 60.0)
+            }
+
+            // Animate pulse phase for selected node glow
+            pulsePhase += 0.03
+            if pulsePhase > .pi * 2 { pulsePhase -= .pi * 2 }
+
+            // Drift background particles
+            for i in 0..<particles.count {
+                particles[i].position.x += particles[i].velocity.x
+                particles[i].position.y += particles[i].velocity.y
+                // Wrap around
+                if particles[i].position.x < -50 { particles[i].position.x = 850 }
+                if particles[i].position.x > 850 { particles[i].position.x = -50 }
+                if particles[i].position.y < -50 { particles[i].position.y = 650 }
+                if particles[i].position.y > 650 { particles[i].position.y = -50 }
             }
         }
     }
@@ -531,6 +616,25 @@ struct GraphView: View {
     private func stopSimulationTimer() {
         simulationTimer?.invalidate()
         simulationTimer = nil
+    }
+
+    // MARK: - Background Particles
+
+    private func generateParticles() {
+        particles = (0..<25).map { _ in
+            BackgroundParticle(
+                position: CGPoint(
+                    x: CGFloat.random(in: 0...800),
+                    y: CGFloat.random(in: 0...600)
+                ),
+                velocity: CGPoint(
+                    x: CGFloat.random(in: -0.15...0.15),
+                    y: CGFloat.random(in: -0.15...0.15)
+                ),
+                size: CGFloat.random(in: 1.0...2.5),
+                opacity: Double.random(in: 0.02...0.04)
+            )
+        }
     }
 
     // MARK: - Reload
@@ -541,6 +645,15 @@ struct GraphView: View {
         layout.loadFromContext(context, centerNote: center, depth: depth)
         layout.centerPoint = CGPoint(x: 400, y: 300)
     }
+}
+
+// MARK: - Background Particle
+
+struct BackgroundParticle {
+    var position: CGPoint
+    var velocity: CGPoint
+    var size: CGFloat
+    var opacity: Double
 }
 
 // Color(hex:) is defined in Utilities/ColorExtensions.swift

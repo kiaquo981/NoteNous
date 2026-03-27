@@ -54,6 +54,7 @@ final class ForceDirectedLayout {
     var nodes: [Node] = []
     var edges: [Edge] = []
     var isRunning: Bool = false
+    var isSettled: Bool = false
     var centerPoint: CGPoint = CGPoint(x: 400, y: 300)
 
     /// Lookup for O(1) node index access
@@ -130,9 +131,15 @@ final class ForceDirectedLayout {
             forces[i].x += dx * gravityScale
             forces[i].y += dy * gravityScale
 
-            // Subtle jitter for organic "breathing" feel
-            forces[i].x += CGFloat.random(in: -jitter...jitter)
-            forces[i].y += CGFloat.random(in: -jitter...jitter)
+            if isSettled {
+                // Idle breathing: very subtle random drift to keep the graph alive
+                forces[i].x += CGFloat.random(in: -0.08...0.08)
+                forces[i].y += CGFloat.random(in: -0.08...0.08)
+            } else {
+                // Active jitter for organic feel during settling
+                forces[i].x += CGFloat.random(in: -jitter...jitter)
+                forces[i].y += CGFloat.random(in: -jitter...jitter)
+            }
         }
 
         // 4. Apply forces, velocity, damping, collision
@@ -185,21 +192,33 @@ final class ForceDirectedLayout {
             }
         }
 
-        // 6. Stop simulation when energy is low
+        // 6. Switch to idle breathing when energy is low (never fully stop)
         if totalKE < kineticEnergyThreshold {
-            stopSimulation()
+            isSettled = true
+        } else {
+            isSettled = false
         }
     }
 
     // MARK: - Simulation Control
 
     func startSimulation() {
-        guard !isRunning else { return }
         isRunning = true
+        isSettled = false
     }
 
     func stopSimulation() {
         isRunning = false
+    }
+
+    /// Warm start: inject energy to wake the simulation from idle/settled state
+    func warmStart() {
+        isSettled = false
+        for i in 0..<nodes.count where !nodes[i].isFixed {
+            nodes[i].velocity.x += CGFloat.random(in: -2...2)
+            nodes[i].velocity.y += CGFloat.random(in: -2...2)
+        }
+        if !isRunning { startSimulation() }
     }
 
     func toggleSimulation() {

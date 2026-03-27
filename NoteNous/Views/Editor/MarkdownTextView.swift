@@ -26,6 +26,7 @@ struct MarkdownTextView: NSViewRepresentable {
     var onWikilinkDismiss: (() -> Void)?
     var onContentChange: ((_ newText: String) -> Void)?
     var onCursorPositionChange: ((_ position: Int) -> Void)?
+    var onWikilinkClick: ((_ title: String) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -70,6 +71,9 @@ struct MarkdownTextView: NSViewRepresentable {
 
         textView.delegate = context.coordinator
         textView.string = text
+        textView.onWikilinkClick = { title in
+            context.coordinator.handleWikilinkClick(title: title)
+        }
         context.coordinator.textView = textView
 
         scrollView.documentView = textView
@@ -161,6 +165,10 @@ struct MarkdownTextView: NSViewRepresentable {
                 wikilinkTrackingRange = nil
                 parent.onWikilinkDismiss?()
             }
+        }
+
+        func handleWikilinkClick(title: String) {
+            parent.onWikilinkClick?(title)
         }
 
         func insertWikilink(title: String) {
@@ -448,7 +456,57 @@ struct MarkdownTextView: NSViewRepresentable {
 // MARK: - MarkdownNSTextView
 
 final class MarkdownNSTextView: NSTextView {
-    // Custom NSTextView subclass for future extensions (e.g. click on wikilinks)
+    var onWikilinkClick: ((String) -> Void)?
+
+    private static let wikilinkRegex = try! NSRegularExpression(
+        pattern: #"\[\[([^\[\]]+?)\]\]"#,
+        options: []
+    )
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let charIndex = characterIndexForInsertion(at: point)
+
+        if let title = extractWikilinkAt(charIndex: charIndex) {
+            onWikilinkClick?(title)
+            return
+        }
+
+        super.mouseDown(with: event)
+    }
+
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        guard let lm = layoutManager, let tc = textContainer else { return }
+
+        let text = string
+        let nsRange = NSRange(location: 0, length: (text as NSString).length)
+
+        for match in Self.wikilinkRegex.matches(in: text, range: nsRange) {
+            let glyphRange = lm.glyphRange(forCharacterRange: match.range, actualCharacterRange: nil)
+            let rect = lm.boundingRect(forGlyphRange: glyphRange, in: tc)
+            let adjustedRect = rect.offsetBy(dx: textContainerInset.width, dy: textContainerInset.height)
+            addCursorRect(adjustedRect, cursor: .pointingHand)
+        }
+    }
+
+    private func extractWikilinkAt(charIndex: Int) -> String? {
+        let text = string
+        let nsText = text as NSString
+        let length = nsText.length
+        guard charIndex >= 0, charIndex < length else { return nil }
+
+        let nsRange = NSRange(location: 0, length: length)
+        for match in Self.wikilinkRegex.matches(in: text, range: nsRange) {
+            if NSLocationInRange(charIndex, match.range) {
+                let innerRange = match.range(at: 1)
+                let inner = nsText.substring(with: innerRange)
+                let components = inner.split(separator: "|", maxSplits: 1)
+                return components[0].trimmingCharacters(in: .whitespaces)
+            }
+        }
+        return nil
+    }
 }
 
 // MARK: - NSFont Extension

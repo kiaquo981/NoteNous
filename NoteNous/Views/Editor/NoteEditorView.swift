@@ -113,7 +113,10 @@ struct NoteEditorView: View {
                         scheduleAutoClassify()
                         debouncedSyncLinks()
                     },
-                    onCursorPositionChange: { _ in }
+                    onCursorPositionChange: { _ in },
+                    onWikilinkClick: { title in
+                        handleWikilinkNavigation(title: title)
+                    }
                 )
 
                 // Wikilink autocomplete popup
@@ -440,6 +443,27 @@ struct NoteEditorView: View {
             }
         }
         wikilinkState.dismiss()
+    }
+
+    // MARK: - Wikilink Navigation
+
+    private func handleWikilinkNavigation(title: String) {
+        let noteService = NoteService(context: context)
+        let linkService = LinkService(context: context)
+        let parser = WikilinkParser(context: context)
+
+        let targetNote: NoteEntity
+        if let existing = parser.findNote(byTitle: title) {
+            targetNote = existing
+        } else {
+            targetNote = noteService.createNote(title: title)
+        }
+
+        if note.objectID != targetNote.objectID {
+            linkService.createLink(from: note, to: targetNote, type: .reference)
+        }
+
+        appState.selectedNote = targetNote
     }
 
     // MARK: - Link Sync (debounced)
