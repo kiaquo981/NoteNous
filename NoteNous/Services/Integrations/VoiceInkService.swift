@@ -7,6 +7,8 @@ import os.log
 /// and imports them into NoteNous as fleeting notes. Read-only access to VoiceInk DB.
 final class VoiceInkService: ObservableObject {
 
+    static let shared = VoiceInkService()
+
     // MARK: - Models
 
     struct VoiceInkTranscription: Identifiable {
@@ -326,6 +328,11 @@ final class VoiceInkService: ObservableObject {
             totalDuration += transcription.duration
         }
 
+        // Save Core Data context after all note modifications
+        if context.hasChanges {
+            try? context.save()
+        }
+
         // Save imported PKs and sync date
         importedPKs = imported
         lastSyncDate = Date()
@@ -468,6 +475,11 @@ final class VoiceInkService: ObservableObject {
             }
         }
 
+        // Save Core Data context after all note modifications
+        if context.hasChanges {
+            try? context.save()
+        }
+
         // Save state
         importedPKs = imported
         lastSyncDate = Date()
@@ -547,6 +559,11 @@ final class VoiceInkService: ObservableObject {
 
             imported.insert(t.id)
             count += 1
+        }
+
+        // Save Core Data context after all note modifications
+        if context.hasChanges {
+            try? context.save()
         }
 
         importedPKs = imported

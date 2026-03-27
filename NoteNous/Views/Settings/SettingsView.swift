@@ -27,7 +27,7 @@ struct SettingsView: View {
 struct GeneralSettingsView: View {
     @AppStorage("defaultPARACategory") private var defaultPARACategory: Int = 0
     @AppStorage("defaultViewMode") private var defaultViewMode: Int = 2
-    @AppStorage("morosThemeMode") private var themeMode: String = "auto"
+    @AppStorage("morosThemeMode") private var themeMode: String = "Auto"
 
     var body: some View {
         Form {

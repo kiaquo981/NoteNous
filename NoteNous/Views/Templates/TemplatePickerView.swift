@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import os.log
 
 /// Grid of template cards for quick note creation.
 /// Shows built-in and custom templates with preview of structure.
@@ -135,7 +136,12 @@ struct TemplatePickerView: View {
         )
         note.noteType = template.noteType
         note.contextNote = template.contextPlaceholder
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            Logger(subsystem: "com.notenous.app", category: "TemplatePickerView")
+                .error("Failed to save note from template: \(error.localizedDescription)")
+        }
         appState.selectedNote = note
     }
 }

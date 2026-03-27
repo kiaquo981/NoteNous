@@ -10,7 +10,7 @@ final class VoiceInkAutoSync {
     private var timer: Timer?
     private let interval: TimeInterval = 300 // 5 minutes
     private let logger = Logger(subsystem: "com.notenous.app", category: "VoiceInkAutoSync")
-    private let voiceInkService = VoiceInkService()
+    private let voiceInkService = VoiceInkService.shared
 
     private static let enabledKey = "voiceInkAutoSyncEnabled"
 
@@ -34,16 +34,18 @@ final class VoiceInkAutoSync {
         logger.info("Starting VoiceInk auto-sync (interval: \(self.interval)s)")
         isEnabled = true
 
-        // Run immediately once
+        // Run immediately once with a fresh background context
         Task {
-            await checkAndSync(context: context)
+            let freshContext = CoreDataStack.shared.newBackgroundContext()
+            await checkAndSync(context: freshContext)
         }
 
-        // Schedule recurring check
+        // Schedule recurring check — create a fresh context each time to avoid stale state
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.checkAndSync(context: context)
+                let freshContext = CoreDataStack.shared.newBackgroundContext()
+                await self.checkAndSync(context: freshContext)
             }
         }
     }

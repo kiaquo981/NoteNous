@@ -21,6 +21,15 @@ final class NoteTemplateService: ObservableObject {
 
         static func == (lhs: NoteTemplate, rhs: NoteTemplate) -> Bool {
             lhs.id == rhs.id
+            && lhs.name == rhs.name
+            && lhs.noteType == rhs.noteType
+            && lhs.titlePlaceholder == rhs.titlePlaceholder
+            && lhs.contentTemplate == rhs.contentTemplate
+            && lhs.contextPlaceholder == rhs.contextPlaceholder
+            && lhs.defaultPARA == rhs.defaultPARA
+            && lhs.defaultTags == rhs.defaultTags
+            && lhs.isBuiltIn == rhs.isBuiltIn
+            && lhs.iconName == rhs.iconName
         }
     }
 
@@ -43,7 +52,11 @@ final class NoteTemplateService: ObservableObject {
     init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dir = appSupport.appendingPathComponent("NoteNous", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            logger.error("Failed to create templates directory at \(dir.path): \(error.localizedDescription)")
+        }
         self.fileURL = dir.appendingPathComponent("templates.json")
 
         loadFromDisk()

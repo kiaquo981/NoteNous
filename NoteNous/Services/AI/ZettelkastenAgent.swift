@@ -423,81 +423,96 @@ final class ZettelkastenAgent: ObservableObject {
 
     // MARK: - Apply Actions
 
-    func applyAction(_ action: AgentAction, context: NSManagedObjectContext) {
+    func applyAction(_ action: AgentAction, context: NSManagedObjectContext) async {
         guard let index = actions.firstIndex(where: { $0.id == action.id }),
               actions[index].status == .approved else { return }
 
-        let noteService = NoteService(context: context)
-        let tagService = TagService(context: context)
-        let linkService = LinkService(context: context)
-        let indexService = IndexService()
+        // Perform Core Data operations on a background context to avoid blocking the main thread
+        let bgContext = CoreDataStack.shared.newBackgroundContext()
 
-        switch action.payload {
-        case .classify(let para, let codeStage, let noteType, let tags):
-            guard let noteId = action.affectedNoteIds.first,
-                  let note = fetchNote(id: noteId, context: context) else { return }
-            note.paraCategory = para
-            note.codeStage = codeStage
-            note.noteType = noteType
-            note.aiClassified = true
-            note.aiConfidence = 0.8
-            note.updatedAt = Date()
-            for tagName in tags {
-                let tag = tagService.findOrCreate(name: tagName)
-                tagService.addTag(tag, to: note)
+        await bgContext.perform {
+            let noteService = NoteService(context: bgContext)
+            let tagService = TagService(context: bgContext)
+            let linkService = LinkService(context: bgContext)
+            let indexService = IndexService()
+
+            switch action.payload {
+            case .classify(let para, let codeStage, let noteType, let tags):
+                guard let noteId = action.affectedNoteIds.first,
+                      let note = self.fetchNote(id: noteId, context: bgContext) else { return }
+                note.paraCategory = para
+                note.codeStage = codeStage
+                note.noteType = noteType
+                note.aiClassified = true
+                note.aiConfidence = 0.8
+                note.updatedAt = Date()
+                for tagName in tags {
+                    let tag = tagService.findOrCreate(name: tagName)
+                    tagService.addTag(tag, to: note)
+                }
+                self.saveContext(bgContext)
+
+            case .promote(_, let toType):
+                guard let noteId = action.affectedNoteIds.first,
+                      let note = self.fetchNote(id: noteId, context: bgContext) else { return }
+                note.noteType = toType
+                note.codeStage = .organized
+                note.updatedAt = Date()
+                self.saveContext(bgContext)
+
+            case .placeFolgezettel(let suggestedId, _, _):
+                guard let noteId = action.affectedNoteIds.first,
+                      let note = self.fetchNote(id: noteId, context: bgContext) else { return }
+                note.zettelId = suggestedId
+                note.updatedAt = Date()
+                self.saveContext(bgContext)
+
+            case .createLink(let sourceId, let targetId, let linkType, let reason):
+                guard let source = self.fetchNote(id: sourceId, context: bgContext),
+                      let target = self.fetchNote(id: targetId, context: bgContext) else { return }
+                linkService.createLink(from: source, to: target, type: linkType, context: reason, strength: 0.7, isAISuggested: true)
+
+            case .updateIndex(let keyword, let noteId):
+                indexService.addEntry(keyword: keyword, noteId: noteId)
+
+            case .splitNote:
+                break // Handled below on MainActor
+
+            case .mergeNotes:
+                break // Handled below on MainActor
+
+            case .createStructureNote(let title, let linkedNoteIds, let content):
+                let structureNote = noteService.createNote(title: title, content: content)
+                structureNote.noteType = .structure
+                structureNote.codeStage = .organized
+                structureNote.updatedAt = Date()
+                for linkedId in linkedNoteIds {
+                    if let linkedNote = self.fetchNote(id: linkedId, context: bgContext) {
+                        linkService.createLink(from: structureNote, to: linkedNote, type: .reference, context: "Structure note link", strength: 0.6, isAISuggested: true)
+                    }
+                }
+                self.saveContext(bgContext)
             }
-            saveContext(context)
+        }
 
-        case .promote(_, let toType):
-            guard let noteId = action.affectedNoteIds.first,
-                  let note = fetchNote(id: noteId, context: context) else { return }
-            note.noteType = toType
-            note.codeStage = .organized
-            note.updatedAt = Date()
-            saveContext(context)
-
-        case .placeFolgezettel(let suggestedId, _, _):
-            guard let noteId = action.affectedNoteIds.first,
-                  let note = fetchNote(id: noteId, context: context) else { return }
-            note.zettelId = suggestedId
-            note.updatedAt = Date()
-            saveContext(context)
-
-        case .createLink(let sourceId, let targetId, let linkType, let reason):
-            guard let source = fetchNote(id: sourceId, context: context),
-                  let target = fetchNote(id: targetId, context: context) else { return }
-            linkService.createLink(from: source, to: target, type: linkType, context: reason, strength: 0.7, isAISuggested: true)
-
-        case .updateIndex(let keyword, let noteId):
-            indexService.addEntry(keyword: keyword, noteId: noteId)
-
+        // Log messages that need MainActor (already on MainActor since class is @MainActor)
+        switch action.payload {
         case .splitNote:
             appendLog("Split requires manual editing. Note flagged for review.", severity: .warning)
-
         case .mergeNotes:
             appendLog("Merge requires manual editing. Notes flagged for review.", severity: .warning)
-
-        case .createStructureNote(let title, let linkedNoteIds, let content):
-            let structureNote = noteService.createNote(title: title, content: content)
-            structureNote.noteType = .structure
-            structureNote.codeStage = .organized
-            structureNote.updatedAt = Date()
-            for linkedId in linkedNoteIds {
-                if let linkedNote = fetchNote(id: linkedId, context: context) {
-                    linkService.createLink(from: structureNote, to: linkedNote, type: .reference, context: "Structure note link", strength: 0.6, isAISuggested: true)
-                }
-            }
-            saveContext(context)
+        default:
+            break
         }
 
         actions[index].status = .applied
         appendLog("Applied: \(action.description)", severity: .action)
     }
 
-    func applyAllApproved(context: NSManagedObjectContext) {
+    func applyAllApproved(context: NSManagedObjectContext) async {
         let approved = actions.filter { $0.status == .approved }
         for action in approved {
-            applyAction(action, context: context)
+            await applyAction(action, context: context)
         }
         appendLog("Applied \(approved.count) actions.", severity: .action)
     }

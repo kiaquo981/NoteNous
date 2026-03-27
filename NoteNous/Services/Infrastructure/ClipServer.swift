@@ -13,6 +13,17 @@ final class ClipServer {
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "com.notenous.clipserver", qos: .utility)
 
+    /// Allowed CORS origins — browser extensions and local development only.
+    private let allowedOriginPrefixes = [
+        "chrome-extension://",
+        "safari-web-extension://",
+        "http://localhost",
+        "http://127.0.0.1"
+    ]
+
+    /// Timeout for accumulating a complete HTTP request body (seconds).
+    private let receiveTimeout: TimeInterval = 5.0
+
     private init() {}
 
     func start() {
@@ -73,58 +84,161 @@ final class ClipServer {
                 return
             }
 
-            let request = String(data: data, encoding: .utf8) ?? ""
-            self.routeRequest(request, connection: connection)
+            let headerString = String(data: data, encoding: .utf8) ?? ""
+
+            // Parse Content-Length from headers to determine if we need more data
+            let expectedContentLength = self.parseContentLength(from: headerString)
+            let bodyStart = self.bodyOffset(in: headerString)
+
+            if let expectedContentLength = expectedContentLength, let bodyStart = bodyStart {
+                let receivedBodyLength = data.count - bodyStart
+                if receivedBodyLength < expectedContentLength {
+                    // Need to accumulate more data
+                    self.accumulateBody(
+                        connection,
+                        accumulated: data,
+                        expectedTotal: bodyStart + expectedContentLength,
+                        deadline: Date().addingTimeInterval(self.receiveTimeout)
+                    )
+                    return
+                }
+            }
+
+            self.routeRequest(headerString, connection: connection)
         }
+    }
+
+    /// Accumulates received data until expectedTotal bytes arrive or timeout.
+    private func accumulateBody(_ connection: NWConnection, accumulated: Data, expectedTotal: Int, deadline: Date) {
+        guard Date() < deadline else {
+            logger.warning("Receive timeout: accumulated \(accumulated.count)/\(expectedTotal) bytes, proceeding with partial data")
+            let request = String(data: accumulated, encoding: .utf8) ?? ""
+            routeRequest(request, connection: connection)
+            return
+        }
+
+        let remaining = expectedTotal - accumulated.count
+        guard remaining > 0 else {
+            let request = String(data: accumulated, encoding: .utf8) ?? ""
+            routeRequest(request, connection: connection)
+            return
+        }
+
+        connection.receive(minimumIncompleteLength: 1, maximumLength: remaining) { [weak self] data, _, isComplete, error in
+            guard let self = self else { return }
+
+            if let error = error {
+                self.logger.error("Connection error during accumulation: \(error.localizedDescription)")
+                connection.cancel()
+                return
+            }
+
+            var combined = accumulated
+            if let data = data {
+                combined.append(data)
+            }
+
+            if combined.count >= expectedTotal || isComplete {
+                let request = String(data: combined, encoding: .utf8) ?? ""
+                self.routeRequest(request, connection: connection)
+            } else {
+                self.accumulateBody(connection, accumulated: combined, expectedTotal: expectedTotal, deadline: deadline)
+            }
+        }
+    }
+
+    /// Parses Content-Length header value from raw HTTP request string.
+    private func parseContentLength(from request: String) -> Int? {
+        let lines = request.components(separatedBy: "\r\n")
+        for line in lines {
+            let lower = line.lowercased()
+            if lower.hasPrefix("content-length:") {
+                let value = line.dropFirst("content-length:".count).trimmingCharacters(in: .whitespaces)
+                return Int(value)
+            }
+        }
+        return nil
+    }
+
+    /// Returns the byte offset where the HTTP body begins (after \r\n\r\n).
+    private func bodyOffset(in request: String) -> Int? {
+        guard let range = request.range(of: "\r\n\r\n") else { return nil }
+        return request.distance(from: request.startIndex, to: range.upperBound)
     }
 
     private func routeRequest(_ rawRequest: String, connection: NWConnection) {
         let lines = rawRequest.components(separatedBy: "\r\n")
         guard let requestLine = lines.first else {
-            sendResponse(connection: connection, status: 400, body: ["error": "Bad request"])
+            sendResponse(connection: connection, status: 400, body: ["error": "Bad request"], origin: nil)
             return
         }
 
         let parts = requestLine.split(separator: " ")
         guard parts.count >= 2 else {
-            sendResponse(connection: connection, status: 400, body: ["error": "Bad request"])
+            sendResponse(connection: connection, status: 400, body: ["error": "Bad request"], origin: nil)
             return
         }
 
         let method = String(parts[0])
         let path = String(parts[1])
 
-        // Add CORS headers for Chrome extension
+        // Extract Origin header
+        let origin = extractHeader("Origin", from: lines)
+
+        // Validate origin for CORS — reject unknown origins
+        if let origin = origin, !isAllowedOrigin(origin) {
+            logger.warning("Rejected request from disallowed origin: \(origin)")
+            sendResponse(connection: connection, status: 403, body: ["error": "Forbidden: origin not allowed"], origin: nil)
+            return
+        }
+
+        // Add CORS headers for browser extension
         if method == "OPTIONS" {
-            sendCORSPreflight(connection: connection)
+            sendCORSPreflight(connection: connection, origin: origin)
             return
         }
 
         switch (method, path) {
         case ("GET", "/health"):
-            sendResponse(connection: connection, status: 200, body: ["status": "ok", "app": "NoteNous"])
+            sendResponse(connection: connection, status: 200, body: ["status": "ok", "app": "NoteNous"], origin: origin)
 
         case ("POST", "/api/clip"):
-            handleClip(rawRequest: rawRequest, connection: connection)
+            handleClip(rawRequest: rawRequest, connection: connection, origin: origin)
 
         default:
-            sendResponse(connection: connection, status: 404, body: ["error": "Not found"])
+            sendResponse(connection: connection, status: 404, body: ["error": "Not found"], origin: origin)
         }
+    }
+
+    // MARK: - Origin Validation
+
+    private func extractHeader(_ name: String, from lines: [String]) -> String? {
+        let prefix = "\(name): "
+        for line in lines {
+            if line.hasPrefix(prefix) {
+                return String(line.dropFirst(prefix.count))
+            }
+        }
+        return nil
+    }
+
+    private func isAllowedOrigin(_ origin: String) -> Bool {
+        allowedOriginPrefixes.contains { origin.hasPrefix($0) }
     }
 
     // MARK: - Clip Handler
 
-    private func handleClip(rawRequest: String, connection: NWConnection) {
+    private func handleClip(rawRequest: String, connection: NWConnection, origin: String? = nil) {
         // Extract JSON body (after the empty line separating headers from body)
         guard let bodyRange = rawRequest.range(of: "\r\n\r\n") else {
-            sendResponse(connection: connection, status: 400, body: ["error": "No body found"])
+            sendResponse(connection: connection, status: 400, body: ["error": "No body found"], origin: origin)
             return
         }
 
         let bodyString = String(rawRequest[bodyRange.upperBound...])
         guard let bodyData = bodyString.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: bodyData) as? [String: Any] else {
-            sendResponse(connection: connection, status: 400, body: ["error": "Invalid JSON"])
+            sendResponse(connection: connection, status: 400, body: ["error": "Invalid JSON"], origin: origin)
             return
         }
 
@@ -175,15 +289,14 @@ final class ClipServer {
             note.setValue(false, forKey: "isPinned")
             note.setValue(false, forKey: "isArchived")
 
+            // Use TagService to deduplicate tags (issue #9)
+            let tagService = TagService(context: bgContext)
             for tagName in tagNames where !tagName.isEmpty {
-                let tag = NSEntityDescription.insertNewObject(forEntityName: "TagEntity", into: bgContext)
-                tag.setValue(UUID(), forKey: "id")
-                tag.setValue(tagName.trimmingCharacters(in: .whitespaces), forKey: "name")
-                tag.setValue(Int32(1), forKey: "usageCount")
-                tag.setValue(now, forKey: "createdAt")
-
+                let trimmed = tagName.trimmingCharacters(in: .whitespaces)
+                let tag = tagService.findOrCreate(name: trimmed)
                 let tags = note.mutableSetValue(forKey: "tags")
                 tags.add(tag)
+                tag.usageCount += 1
             }
 
             do {
@@ -192,24 +305,25 @@ final class ClipServer {
                 self.sendResponse(connection: connection, status: 200, body: [
                     "success": true,
                     "noteId": noteId.uuidString
-                ])
+                ], origin: origin)
             } catch {
                 self.logger.error("Failed to save chrome clip: \(error.localizedDescription)")
                 self.sendResponse(connection: connection, status: 500, body: [
                     "success": false,
                     "error": error.localizedDescription
-                ])
+                ], origin: origin)
             }
         }
     }
 
     // MARK: - Response Helpers
 
-    private func sendResponse(connection: NWConnection, status: Int, body: [String: Any]) {
+    private func sendResponse(connection: NWConnection, status: Int, body: [String: Any], origin: String?) {
         let statusText: String
         switch status {
         case 200: statusText = "OK"
         case 400: statusText = "Bad Request"
+        case 403: statusText = "Forbidden"
         case 404: statusText = "Not Found"
         case 500: statusText = "Internal Server Error"
         default: statusText = "Unknown"
@@ -218,12 +332,14 @@ final class ClipServer {
         let jsonData = (try? JSONSerialization.data(withJSONObject: body)) ?? Data()
         let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
 
+        // Only include CORS headers if origin is provided and allowed
+        let corsHeader = origin.map { "Access-Control-Allow-Origin: \($0)\r\n" } ?? ""
+
         let response = """
         HTTP/1.1 \(status) \(statusText)\r
         Content-Type: application/json\r
         Content-Length: \(jsonData.count)\r
-        Access-Control-Allow-Origin: *\r
-        Access-Control-Allow-Methods: GET, POST, OPTIONS\r
+        \(corsHeader)Access-Control-Allow-Methods: GET, POST, OPTIONS\r
         Access-Control-Allow-Headers: Content-Type\r
         Connection: close\r
         \r
@@ -235,10 +351,11 @@ final class ClipServer {
         })
     }
 
-    private func sendCORSPreflight(connection: NWConnection) {
+    private func sendCORSPreflight(connection: NWConnection, origin: String?) {
+        let corsOrigin = origin ?? ""
         let response = """
         HTTP/1.1 204 No Content\r
-        Access-Control-Allow-Origin: *\r
+        Access-Control-Allow-Origin: \(corsOrigin)\r
         Access-Control-Allow-Methods: GET, POST, OPTIONS\r
         Access-Control-Allow-Headers: Content-Type\r
         Access-Control-Max-Age: 86400\r

@@ -26,7 +26,7 @@ enum MorosThemeMode: String, CaseIterable, Identifiable {
     }
 
     static var current: MorosThemeMode {
-        let raw = UserDefaults.standard.string(forKey: "morosThemeMode") ?? "auto"
+        let raw = UserDefaults.standard.string(forKey: "morosThemeMode") ?? "Auto"
         return MorosThemeMode(rawValue: raw) ?? .auto
     }
 
@@ -82,7 +82,7 @@ extension EnvironmentValues {
 
 struct MorosThemeModifier: ViewModifier {
     @Environment(\.colorScheme) private var systemColorScheme
-    @AppStorage("morosThemeMode") private var themeMode: String = "auto"
+    @AppStorage("morosThemeMode") private var themeMode: String = "Auto"
 
     private var effectiveScheme: ColorScheme {
         let mode = MorosThemeMode(rawValue: themeMode) ?? .auto

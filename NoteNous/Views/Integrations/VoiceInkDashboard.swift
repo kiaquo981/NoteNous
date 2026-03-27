@@ -6,7 +6,7 @@ struct VoiceInkDashboard: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.moros) private var moros
 
-    @StateObject private var voiceInkService = VoiceInkService()
+    @ObservedObject private var voiceInkService = VoiceInkService.shared
     @StateObject private var agent = ZettelkastenAgent()
 
     @State private var selectedTranscriptions: Set<Int> = []

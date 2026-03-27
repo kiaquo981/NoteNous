@@ -55,8 +55,25 @@ final class ReadwiseService: ObservableObject {
     private let logger = Logger(subsystem: "com.notenous.app", category: "ReadwiseService")
     private let session: URLSession
 
+    /// Tracks Readwise highlight IDs that have already been imported to prevent duplicates.
+    private static let importedHighlightIDsKey = "readwiseImportedHighlightIDs"
+
+    private var importedHighlightIDs: Set<Int> {
+        get {
+            let array = UserDefaults.standard.array(forKey: Self.importedHighlightIDsKey) as? [Int] ?? []
+            return Set(array)
+        }
+        set {
+            UserDefaults.standard.set(Array(newValue), forKey: Self.importedHighlightIDsKey)
+        }
+    }
+
     // MARK: - Configuration
 
+    /// API key stored in UserDefaults. On macOS, UserDefaults is sandboxed to the app container
+    /// and protected by the file system sandbox, which is acceptable for a local-only app.
+    /// For higher security requirements, consider migrating to Keychain or .env-based storage
+    /// (similar to OpenRouterClient's EnvLoader approach).
     var apiKey: String? {
         get { UserDefaults.standard.string(forKey: "readwiseAPIKey") }
         set { UserDefaults.standard.set(newValue, forKey: "readwiseAPIKey") }
@@ -167,12 +184,17 @@ final class ReadwiseService: ObservableObject {
         var totalHighlights = 0
         var totalNotes = 0
         var totalSources = 0
+        var importedIDs = importedHighlightIDs
 
         for book in books {
             let sourceType = mapCategory(book.category)
             let dateConsumed = parseDate(book.updated) ?? Date()
 
-            let source = sourceService.addSource(
+            // Check for existing source with same title + author to prevent duplicates
+            let existingSource = sourceService.sources.first {
+                $0.title == book.title && $0.author == book.author
+            }
+            let source = existingSource ?? sourceService.addSource(
                 title: book.title,
                 author: book.author,
                 sourceType: sourceType,
@@ -180,10 +202,13 @@ final class ReadwiseService: ObservableObject {
                 dateConsumed: dateConsumed,
                 notes: "Imported from Readwise (\(book.category))"
             )
-            totalSources += 1
+            if existingSource == nil { totalSources += 1 }
 
             let highlights = try await fetchHighlights(bookId: book.id)
             for highlight in highlights {
+                // Skip already-imported highlights to prevent duplicates
+                guard !importedIDs.contains(highlight.id) else { continue }
+
                 var content = "> \(highlight.text)"
                 if let userNote = highlight.note, !userNote.isEmpty {
                     content += "\n\n**Note:** \(userNote)"
@@ -221,10 +246,14 @@ final class ReadwiseService: ObservableObject {
                     sourceService.linkNote(noteId: noteId, to: source.id)
                 }
 
+                importedIDs.insert(highlight.id)
                 totalNotes += 1
                 totalHighlights += 1
             }
         }
+
+        // Persist imported highlight IDs
+        importedHighlightIDs = importedIDs
 
         let stats = ImportStats(
             booksImported: books.count,
@@ -264,7 +293,11 @@ final class ReadwiseService: ObservableObject {
         let sourceType = mapCategory(book.category)
         let dateConsumed = parseDate(book.updated) ?? Date()
 
-        let source = sourceService.addSource(
+        // Check for existing source with same title + author to prevent duplicates
+        let existingSource = sourceService.sources.first {
+            $0.title == book.title && $0.author == book.author
+        }
+        let source = existingSource ?? sourceService.addSource(
             title: book.title,
             author: book.author,
             sourceType: sourceType,
@@ -275,8 +308,12 @@ final class ReadwiseService: ObservableObject {
 
         let highlights = try await fetchHighlights(bookId: bookId)
         var totalNotes = 0
+        var importedIDs = importedHighlightIDs
 
         for highlight in highlights {
+            // Skip already-imported highlights to prevent duplicates
+            guard !importedIDs.contains(highlight.id) else { continue }
+
             var content = "> \(highlight.text)"
             if let userNote = highlight.note, !userNote.isEmpty {
                 content += "\n\n**Note:** \(userNote)"
@@ -302,14 +339,18 @@ final class ReadwiseService: ObservableObject {
                 sourceService.linkNote(noteId: noteId, to: source.id)
             }
 
+            importedIDs.insert(highlight.id)
             totalNotes += 1
         }
 
+        // Persist imported highlight IDs
+        importedHighlightIDs = importedIDs
+
         let stats = ImportStats(
             booksImported: 1,
-            highlightsImported: highlights.count,
+            highlightsImported: totalNotes,
             notesCreated: totalNotes,
-            sourcesCreated: 1
+            sourcesCreated: existingSource == nil ? 1 : 0
         )
 
         self.importStats = stats

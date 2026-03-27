@@ -193,9 +193,9 @@ struct ReviewView: View {
 
     private var qualityButtons: some View {
         HStack(spacing: MorosIOS.spacing12) {
-            qualityButton(label: "Again", quality: 1, color: MorosIOS.signal)
+            qualityButton(label: "Again", quality: 0, color: MorosIOS.signal)
             qualityButton(label: "Hard", quality: 2, color: MorosIOS.ambient)
-            qualityButton(label: "Good", quality: 4, color: MorosIOS.oracle)
+            qualityButton(label: "Good", quality: 3, color: MorosIOS.oracle)
             qualityButton(label: "Easy", quality: 5, color: MorosIOS.verdit)
         }
         .padding(.horizontal, MorosIOS.spacing16)

@@ -250,7 +250,9 @@ struct AgentDashboard: View {
 
             if agent.approvedCount > 0 {
                 Button {
-                    agent.applyAllApproved(context: context)
+                    Task {
+                        await agent.applyAllApproved(context: context)
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")

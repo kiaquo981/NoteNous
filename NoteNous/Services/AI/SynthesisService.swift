@@ -86,7 +86,13 @@ final class SynthesisService {
         // Parse the result
         let title = request.title ?? extractTitle(from: content)
         let wordCount = content.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
-        let sourcedNotes = request.notes.compactMap { $0.id }
+        let sourcedNotes = request.notes.compactMap { note -> UUID? in
+            guard let id = note.id else {
+                logger.warning("Dropping note with nil ID from synthesis results (title: \(note.title, privacy: .public))")
+                return nil
+            }
+            return id
+        }
         let outline = extractOutline(from: content)
 
         logger.info("Synthesis complete: \(wordCount) words, \(outline.count) sections")

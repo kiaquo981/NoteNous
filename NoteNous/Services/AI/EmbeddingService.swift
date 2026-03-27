@@ -31,7 +31,16 @@ final class EmbeddingService: ObservableObject {
     @Published var totalCount: Int = 0
     @Published var isIndexing: Bool = false
 
-    private var embeddings: [String: NoteEmbedding] = [:] // key = UUID string
+    private var _embeddings: [String: NoteEmbedding] = [:] // key = UUID string
+    /// Serial queue for thread-safe access to the embeddings dictionary.
+    private let embeddingsQueue = DispatchQueue(label: "com.notenous.embeddingservice.embeddings")
+
+    /// Thread-safe read/write access to embeddings.
+    private var embeddings: [String: NoteEmbedding] {
+        get { embeddingsQueue.sync { _embeddings } }
+        set { embeddingsQueue.sync { _embeddings = newValue } }
+    }
+
     private let embeddingDimension = 512 // TF-IDF local dimension
     private let apiDimension = 1536 // OpenAI text-embedding-3-small
     private let maxVocabularySize = 2000
@@ -114,7 +123,10 @@ final class EmbeddingService: ObservableObject {
             input: truncated
         )
 
-        var urlRequest = URLRequest(url: URL(string: "https://openrouter.ai/api/v1/embeddings")!)
+        guard let embeddingURL = URL(string: "https://openrouter.ai/api/v1/embeddings") else {
+            throw OpenRouterError.invalidResponse
+        }
+        var urlRequest = URLRequest(url: embeddingURL)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -252,7 +264,7 @@ final class EmbeddingService: ObservableObject {
             guard let noteId = note.id else { continue }
 
             let text = note.title + " " + note.contentPlainText
-            let hash = text.hashValue
+            let hash = stableHash(text)
 
             // Skip if already up to date
             if let existing = embeddings[noteId.uuidString], existing.textHash == hash {
@@ -325,7 +337,7 @@ final class EmbeddingService: ObservableObject {
         guard let noteId = note.id else { return }
 
         let text = note.title + " " + note.contentPlainText
-        let hash = text.hashValue
+        let hash = stableHash(text)
 
         if let existing = embeddings[noteId.uuidString], existing.textHash == hash {
             return // Already up to date
@@ -516,5 +528,17 @@ final class EmbeddingService: ObservableObject {
 
     var hasEmbeddings: Bool {
         !embeddings.isEmpty
+    }
+
+    // MARK: - Stable Hash
+
+    /// Deterministic hash function (DJB2) that is stable across app launches,
+    /// unlike Swift's `hashValue` which is randomized per process.
+    private func stableHash(_ text: String) -> Int {
+        var hash = 5381
+        for char in text.utf8 {
+            hash = ((hash << 5) &+ hash) &+ Int(char)
+        }
+        return hash
     }
 }

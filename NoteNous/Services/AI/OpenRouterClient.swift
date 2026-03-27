@@ -71,7 +71,10 @@ final class OpenRouterClient {
             temperature: temperature
         )
 
-        var urlRequest = URLRequest(url: URL(string: OpenRouterConfig.baseURL)!)
+        guard let url = URL(string: OpenRouterConfig.baseURL) else {
+            throw OpenRouterError.invalidResponse
+        }
+        var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
