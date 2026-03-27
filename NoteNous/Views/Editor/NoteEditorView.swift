@@ -420,6 +420,11 @@ struct NoteEditorView: View {
         content = note.content
         contextNote = note.contextNote ?? ""
         isContextExpanded = !contextNote.isEmpty
+        // Collapse all panels for clean writing space
+        showBacklinks = false
+        showSimilarNotes = false
+        showLinkSuggestions = false
+        showLocalGraph = false
     }
 
     private func saveChanges() {
