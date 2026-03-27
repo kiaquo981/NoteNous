@@ -38,6 +38,14 @@ struct KeyboardCommands: Commands {
 
             Button("Focus Search") { appState.isSearchFocused = true }
                 .keyboardShortcut("f", modifiers: [.command, .shift])
+
+            Button("Semantic Search") { appState.isSemanticSearchVisible.toggle() }
+                .keyboardShortcut("f", modifiers: [.command, .option])
+
+            Divider()
+
+            Button("Toggle AI Chat") { appState.isAIChatVisible.toggle() }
+                .keyboardShortcut("a", modifiers: [.command, .shift])
         }
 
         // Notes menu

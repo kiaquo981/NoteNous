@@ -272,6 +272,65 @@ final class SearchService {
         )
     }
 
+    // MARK: - Semantic Search
+
+    func semanticSearch(query: String, embeddingService: EmbeddingService, limit: Int = 20) async -> [(note: NoteEntity, similarity: Float)] {
+        return await embeddingService.semanticSearch(query: query, context: context, limit: limit)
+    }
+
+    func combinedSearch(query: String, embeddingService: EmbeddingService, keywordWeight: Float = 0.4, semanticWeight: Float = 0.6) async -> [SearchResult] {
+        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return [] }
+
+        // Keyword results
+        let keywordResults = search(query: query, scope: .all)
+
+        // Semantic results
+        let semanticResults = await embeddingService.semanticSearch(query: query, context: context, limit: 20)
+
+        // Merge: track by objectID
+        var scoreMap: [NSManagedObjectID: (result: SearchResult?, semanticScore: Float)] = [:]
+
+        for kr in keywordResults {
+            scoreMap[kr.note.objectID] = (result: kr, semanticScore: 0)
+        }
+
+        for (note, sim) in semanticResults {
+            if var existing = scoreMap[note.objectID] {
+                existing.semanticScore = sim
+                scoreMap[note.objectID] = existing
+            } else {
+                // Create a SearchResult for semantic-only matches
+                let sr = SearchResult(
+                    id: note.objectID,
+                    note: note,
+                    relevanceScore: Double(sim) * 100,
+                    matchType: .contentMatch,
+                    matchedRanges: []
+                )
+                scoreMap[note.objectID] = (result: sr, semanticScore: sim)
+            }
+        }
+
+        // Compute combined scores and return
+        var combined: [(result: SearchResult, combinedScore: Double)] = []
+        for (_, entry) in scoreMap {
+            guard let result = entry.result else { continue }
+            let kwScore = Float(result.relevanceScore / 100.0)
+            let finalScore = Double(kwScore * keywordWeight + entry.semanticScore * semanticWeight)
+            let merged = SearchResult(
+                id: result.id,
+                note: result.note,
+                relevanceScore: finalScore * 100,
+                matchType: result.matchType,
+                matchedRanges: result.matchedRanges
+            )
+            combined.append((result: merged, combinedScore: finalScore))
+        }
+
+        combined.sort { $0.combinedScore > $1.combinedScore }
+        return combined.map { $0.result }
+    }
+
     private func noteMatches(_ note: NoteEntity, query: String, scope: SearchScope) -> Bool {
         let titleLower = note.title.lowercased()
         let contentLower = note.contentPlainText.lowercased()

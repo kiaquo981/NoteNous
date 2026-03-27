@@ -111,6 +111,18 @@ struct SidebarView: View {
                         Text("Pipeline").foregroundStyle(Moros.textSub)
                     }
                 }
+                NavigationLink(destination: AgentDashboard().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "cpu.fill").foregroundStyle(Moros.oracle)
+                        Text("Zettelkasten Agent").foregroundStyle(Moros.textSub)
+                    }
+                }
+                NavigationLink(destination: AIChatView().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "brain.head.profile").foregroundStyle(Moros.oracle)
+                        Text("AI Chat").foregroundStyle(Moros.textSub)
+                    }
+                }
             } header: {
                 Text("TOOLS")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))

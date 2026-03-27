@@ -12,14 +12,23 @@ struct MainWindowView: View {
         } content: {
             ViewRouter()
         } detail: {
-            if let note = appState.selectedNote {
-                NoteEditorView(note: note)
-            } else {
-                EmptyStateView(
-                    icon: "note.text",
-                    title: "No Note Selected",
-                    subtitle: "Select a note or press \u{2318}N to create one"
-                )
+            HStack(spacing: 0) {
+                if let note = appState.selectedNote {
+                    NoteEditorView(note: note)
+                } else {
+                    EmptyStateView(
+                        icon: "note.text",
+                        title: "No Note Selected",
+                        subtitle: "Select a note or press \u{2318}N to create one"
+                    )
+                }
+
+                if appState.isAIChatVisible {
+                    Rectangle()
+                        .fill(Moros.border)
+                        .frame(width: 1)
+                    AIChatSidePanel()
+                }
             }
         }
         .navigationSplitViewStyle(.balanced)

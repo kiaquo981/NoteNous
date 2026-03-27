@@ -22,6 +22,13 @@ struct NoteNousApp: App {
                         .environment(\.managedObjectContext, appState.viewContext)
                         .preferredColorScheme(.dark)
                 }
+                .sheet(isPresented: $appState.isSemanticSearchVisible) {
+                    SemanticSearchView(embeddingService: EmbeddingService.shared)
+                        .environmentObject(appState)
+                        .environment(\.managedObjectContext, appState.viewContext)
+                        .preferredColorScheme(.dark)
+                        .frame(minWidth: 600, minHeight: 500)
+                }
                 .onAppear {
                     // Force dark mode after NSApp is ready
                     NSApp.appearance = NSAppearance(named: .darkAqua)

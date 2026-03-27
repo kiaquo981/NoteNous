@@ -16,5 +16,8 @@ enum Constants {
     enum Search {
         static let maxResults = 50
         static let debounceInterval: TimeInterval = 0.3
+        static let semanticDebounceInterval: TimeInterval = 0.5
+        static let similarNotesLimit = 5
+        static let semanticSearchLimit = 20
     }
 }

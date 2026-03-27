@@ -25,6 +25,9 @@ final class AppState: ObservableObject {
     @Published var isExportVisible: Bool = false
     @Published var isZettelCreationVisible: Bool = false
     @Published var navigateFolgezettel: FolgezettelDirection? = nil
+    @Published var isSemanticSearchVisible: Bool = false
+    @Published var isAIChatVisible: Bool = false
+    @Published var isAgentDashboardVisible: Bool = false
 
     let coreData = CoreDataStack.shared
 

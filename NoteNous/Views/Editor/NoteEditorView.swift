@@ -7,6 +7,8 @@ struct NoteEditorView: View {
     @State private var title: String = ""
     @State private var content: String = ""
     @State private var showBacklinks: Bool = true
+    @State private var showSimilarNotes: Bool = true
+    @State private var showLinkSuggestions: Bool = true
     @State private var showLinkBrowser: Bool = false
     @State private var showLinkCreation: Bool = false
     @State private var showLocalGraph: Bool = false
@@ -177,6 +179,14 @@ struct NoteEditorView: View {
                 .font(.caption)
                 .foregroundStyle(Moros.textSub)
 
+                Button(action: { appState.isAIChatVisible.toggle() }) {
+                    Image(systemName: "brain.head.profile")
+                }
+                .buttonStyle(.plain)
+                .font(.caption)
+                .foregroundStyle(appState.isAIChatVisible ? Moros.oracle : Moros.textSub)
+                .help("Toggle AI Chat (Cmd+Shift+A)")
+
                 if note.aiClassified {
                     HStack(spacing: 4) {
                         Image(systemName: "brain")
@@ -204,6 +214,25 @@ struct NoteEditorView: View {
                     .fill(Moros.border)
                     .frame(height: 1)
                 BacklinksPanel(note: note)
+            }
+
+            // Similar Notes Panel
+            if showSimilarNotes {
+                Rectangle()
+                    .fill(Moros.border)
+                    .frame(height: 1)
+                SimilarNotesPanel(
+                    note: note,
+                    embeddingService: EmbeddingService.shared
+                )
+            }
+
+            // Link Suggestions Panel
+            if showLinkSuggestions {
+                Rectangle()
+                    .fill(Moros.border)
+                    .frame(height: 1)
+                LinkSuggestionsPanel(note: note)
             }
         }
         .morosBackground(Moros.limit01)
