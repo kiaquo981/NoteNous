@@ -197,9 +197,9 @@ enum AtomicityIssue: Equatable {
     var isCritical: Bool {
         switch self {
         case .tooShort: true
-        case .tooLong: false
-        case .multipleHeadings: false
-        case .tooManyParagraphs: false
+        case .tooLong: true             // 1000+ words = definitely needs splitting
+        case .multipleHeadings: true    // multiple H2+ = multiple ideas
+        case .tooManyParagraphs: true   // 7+ paragraphs = too complex
         case .topicTitle: false
         case .noOutgoingLinks: false
         case .missingSource: false
