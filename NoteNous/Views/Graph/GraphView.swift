@@ -68,6 +68,7 @@ struct GraphView: View {
         ZStack {
             // Canvas rendering
             TimelineView(.animation) { timeline in
+                let _ = stepPhysics() // step every frame
                 graphCanvas
                     .drawingGroup()
             }
@@ -334,8 +335,8 @@ struct GraphView: View {
 
                     canvasContext.draw(
                         Text(truncated)
-                            .font(.system(size: max(8, 10 * zoom), weight: isSelected ? .semibold : .regular))
-                            .foregroundColor(Moros.textSub.opacity(labelOpacity)),
+                            .font(.system(size: max(9, 11 * zoom), weight: isSelected ? .bold : .medium))
+                            .foregroundColor(Color(white: 1.0, opacity: 0.85 * labelOpacity)),
                         at: textPoint,
                         anchor: .top
                     )
@@ -392,39 +393,39 @@ struct GraphView: View {
 
     private func paraColor(_ category: PARACategory) -> Color {
         switch category {
-        case .inbox: return Moros.ambient
-        case .project: return Moros.oracle
-        case .area: return Moros.verdit
-        case .resource: return Moros.ambient.opacity(0.7)
-        case .archive: return Moros.textDim
+        case .inbox: return Color(red: 0.6, green: 0.7, blue: 0.9)   // bright periwinkle
+        case .project: return Color(red: 0.3, green: 0.6, blue: 1.0) // vivid blue
+        case .area: return Color(red: 0.4, green: 0.9, blue: 0.7)    // bright mint
+        case .resource: return Color(red: 0.9, green: 0.7, blue: 0.3) // warm amber
+        case .archive: return Color(red: 0.5, green: 0.5, blue: 0.55) // muted steel
         }
     }
 
     private func noteTypeColor(_ type: NoteType) -> Color {
         switch type {
-        case .fleeting: return Moros.ambient
-        case .literature: return Moros.oracle
-        case .permanent: return Moros.verdit
-        case .structure: return Moros.textSub
+        case .fleeting: return Color(red: 1.0, green: 0.8, blue: 0.3)  // warm yellow
+        case .literature: return Color(red: 0.3, green: 0.7, blue: 1.0) // sky blue
+        case .permanent: return Color(red: 0.5, green: 1.0, blue: 0.7)  // bright green
+        case .structure: return Color(red: 0.8, green: 0.6, blue: 1.0)  // soft purple
         }
     }
 
     private func codeStageColor(_ stage: CODEStage) -> Color {
         switch stage {
-        case .captured: return Moros.signal
-        case .organized: return Moros.ambient
-        case .distilled: return Moros.verdit
-        case .expressed: return Moros.oracle
+        case .captured: return Color(red: 1.0, green: 0.4, blue: 0.3)  // bright red
+        case .organized: return Color(red: 1.0, green: 0.7, blue: 0.3) // orange
+        case .distilled: return Color(red: 0.4, green: 0.9, blue: 0.6) // emerald
+        case .expressed: return Color(red: 0.3, green: 0.6, blue: 1.0) // vivid blue
         }
     }
 
     private func colorForLinkType(_ type: LinkType) -> Color {
         switch type {
-        case .reference: return Moros.ambient
-        case .supports: return Moros.verdit
-        case .contradicts: return Moros.signal
-        case .extends: return Moros.oracle
-        case .example: return Moros.ambient.opacity(0.7)
+        case .reference: return Color(white: 0.5)
+        case .supports: return Color(red: 0.4, green: 0.9, blue: 0.6)
+        case .contradicts: return Color(red: 1.0, green: 0.3, blue: 0.3)
+        case .extends: return Color(red: 0.4, green: 0.7, blue: 1.0)
+        case .example: return Color(red: 0.9, green: 0.7, blue: 0.3)
         }
     }
 
@@ -592,39 +593,37 @@ struct GraphView: View {
         }
     }
 
-    // MARK: - Simulation Timer
+    // MARK: - Physics Step (called by TimelineView every frame)
+
+    @discardableResult
+    private func stepPhysics() -> Bool {
+        if physicsEnabled {
+            if !layout.isRunning { layout.startSimulation() }
+            layout.step(dt: 1.0 / 60.0)
+        }
+
+        pulsePhase += 0.03
+        if pulsePhase > .pi * 2 { pulsePhase -= .pi * 2 }
+
+        for i in 0..<particles.count {
+            particles[i].position.x += particles[i].velocity.x
+            particles[i].position.y += particles[i].velocity.y
+            if particles[i].position.x < -50 { particles[i].position.x = 850 }
+            if particles[i].position.x > 850 { particles[i].position.x = -50 }
+            if particles[i].position.y < -50 { particles[i].position.y = 650 }
+            if particles[i].position.y > 650 { particles[i].position.y = -50 }
+        }
+
+        return true
+    }
 
     private func startSimulationTimer() {
-        simulationTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
-            DispatchQueue.main.async {
-                if physicsEnabled {
-                    if !layout.isRunning { layout.startSimulation() }
-                    layout.step(dt: 1.0 / 60.0)
-                }
-
-                // Animate pulse phase for selected node glow
-                pulsePhase += 0.03
-                if pulsePhase > .pi * 2 { pulsePhase -= .pi * 2 }
-
-                // Drift background particles
-                for i in 0..<particles.count {
-                    particles[i].position.x += particles[i].velocity.x
-                    particles[i].position.y += particles[i].velocity.y
-                    if particles[i].position.x < -50 { particles[i].position.x = 850 }
-                    if particles[i].position.x > 850 { particles[i].position.x = -50 }
-                    if particles[i].position.y < -50 { particles[i].position.y = 650 }
-                    if particles[i].position.y > 650 { particles[i].position.y = -50 }
-                }
-
-                // Force Canvas redraw
-                renderTick &+= 1
-            }
-        }
+        // Physics now runs inside TimelineView — no timer needed
+        layout.startSimulation()
     }
 
     private func stopSimulationTimer() {
-        simulationTimer?.invalidate()
-        simulationTimer = nil
+        // No timer to stop
     }
 
     // MARK: - Background Particles
