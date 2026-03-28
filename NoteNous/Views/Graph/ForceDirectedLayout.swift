@@ -39,15 +39,15 @@ final class ForceDirectedLayout {
 
     // MARK: - Physics Constants (tuned for organic Obsidian-like feel)
 
-    private let repulsionStrength: CGFloat = 1200      // strong repulsion = visible spread force
-    private let attractionStrength: CGFloat = 0.012    // noticeable springs = rubber band feel
-    private let restLength: CGFloat = 140              // moderate rest = compact but not crowded
-    private let centerGravity: CGFloat = 0.008         // moderate gravity = holds cluster together
-    private let damping: CGFloat = 0.88                // lower damping = more visible oscillation
+    private let repulsionStrength: CGFloat = 600       // moderate repulsion
+    private let attractionStrength: CGFloat = 0.08     // STRONG springs = connected nodes pull HARD
+    private let restLength: CGFloat = 100              // short rest = connected nodes stay close
+    private let centerGravity: CGFloat = 0.015         // stronger gravity = keeps graph compact
+    private let damping: CGFloat = 0.85                // smooth deceleration
     private let collisionPadding: CGFloat = 8
-    private let kineticEnergyThreshold: CGFloat = 2.0   // higher = stays active longer before settling
-    private let maxVelocity: CGFloat = 40              // faster = more visible movement
-    private let jitter: CGFloat = 0.5                  // active jitter for organic settling
+    private let kineticEnergyThreshold: CGFloat = 1.0
+    private let maxVelocity: CGFloat = 50              // fast enough to see rubber band effect
+    private let jitter: CGFloat = 0.4                  // organic breathing
 
     // MARK: - State
 
@@ -408,8 +408,20 @@ final class ForceDirectedLayout {
 
     func moveNode(id: UUID, to position: CGPoint) {
         guard let index = nodeIndexMap[id] else { return }
+        let oldPos = nodes[index].position
+        let delta = CGPoint(x: position.x - oldPos.x, y: position.y - oldPos.y)
         nodes[index].position = position
         nodes[index].velocity = .zero
+
+        // Drag propagation: pull connected neighbors too (rubber band effect)
+        let neighborEdges = edges.filter { $0.sourceId == id || $0.targetId == id }
+        for edge in neighborEdges {
+            let neighborId = edge.sourceId == id ? edge.targetId : edge.sourceId
+            guard let ni = nodeIndexMap[neighborId], !nodes[ni].isFixed else { continue }
+            // Pull neighbor 20% of the drag delta — creates elastic following
+            nodes[ni].velocity.x += delta.x * 0.3
+            nodes[ni].velocity.y += delta.y * 0.3
+        }
     }
 
     func pinNode(id: UUID, pinned: Bool) {
