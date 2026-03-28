@@ -13,7 +13,7 @@ final class AppState: ObservableObject {
     @Published var selectedPARAFilter: PARACategory?
     @Published var selectedCODEFilter: CODEStage?
     @Published var selectedNoteTypeFilter: NoteType?
-    @Published var sidebarNavSelection: String?
+    @Published var activeToolView: ToolView? = nil
     @Published var isQuickCaptureVisible: Bool = false
     @Published var isCommandPaletteVisible: Bool = false
     @Published var isSidebarVisible: Bool = true
@@ -38,5 +38,12 @@ final class AppState: ObservableObject {
 
     var viewContext: NSManagedObjectContext {
         coreData.viewContext
+    }
+
+    enum ToolView: String, Identifiable {
+        case sources, readyToCard, cardView
+        case index, dashboard, processingQueue, pipeline
+        case zettelkastenAgent, aiChat, voiceInk, callNotes
+        var id: String { rawValue }
     }
 }

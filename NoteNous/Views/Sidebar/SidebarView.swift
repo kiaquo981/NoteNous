@@ -12,7 +12,7 @@ struct SidebarView: View {
     ) private var tags: FetchedResults<TagEntity>
 
     var body: some View {
-        List(selection: $appState.sidebarNavSelection) {
+        List {
             // Search
             TextField("Search...", text: $appState.searchQuery)
                 .textFieldStyle(.plain)
@@ -67,7 +67,6 @@ struct SidebarView: View {
                             appState.selectedCODEFilter = nil
                         }
                         appState.selectedView = .stack
-                        appState.sidebarNavSelection = nil
                     }
                 }
             } header: {
@@ -91,7 +90,6 @@ struct SidebarView: View {
                                 appState.selectedPARAFilter = nil
                             }
                             appState.selectedView = .stack
-                        appState.sidebarNavSelection = nil
                         }
                 }
             } header: {
@@ -103,14 +101,15 @@ struct SidebarView: View {
 
             // NOTECARDS (Greene/Holiday)
             Section {
-                NavigationLink(destination: SourceBrowserView(sourceService: sidebarSourceService)) {
+                Button { appState.activeToolView = .sources } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "books.vertical").foregroundStyle(Moros.ambient)
                         Text("Sources").foregroundStyle(Moros.textSub)
                     }
                 }
+                .buttonStyle(.plain)
 
-                NavigationLink(destination: SourcesDuePanel(sourceService: sidebarSourceService).environment(\.managedObjectContext, context).environmentObject(appState)) {
+                Button { appState.activeToolView = .readyToCard } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "book.closed.circle.fill").foregroundStyle(Moros.oracle)
                         Text("Ready to Card").foregroundStyle(Moros.textSub)
@@ -118,8 +117,12 @@ struct SidebarView: View {
                         ReadyToCardBadge(sourceService: sidebarSourceService)
                     }
                 }
+                .buttonStyle(.plain)
 
-                Button(action: { appState.selectedView = .cards }) {
+                Button {
+                    appState.selectedView = .cards
+                    appState.activeToolView = nil
+                } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "rectangle.grid.2x2").foregroundStyle(Moros.oracle)
                         Text("Card View").foregroundStyle(Moros.textSub)
@@ -135,54 +138,62 @@ struct SidebarView: View {
 
             // TOOLS
             Section {
-                NavigationLink(destination: IndexBrowserView(indexService: IndexService()).environment(\.managedObjectContext, context)) {
+                Button { appState.activeToolView = .index } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "magnifyingglass").foregroundStyle(Moros.ambient)
                         Text("Index").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: WorkflowDashboard(sourceService: SourceService(), indexService: IndexService()).environment(\.managedObjectContext, context)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .dashboard } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "chart.bar").foregroundStyle(Moros.oracle)
                         Text("Dashboard").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: FleetingReviewQueue().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .processingQueue } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "clock.arrow.circlepath").foregroundStyle(Moros.ambient)
                         Text("Processing Queue").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: ProcessingPipeline().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .pipeline } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.right.arrow.left").foregroundStyle(Moros.oracle)
                         Text("Pipeline").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: AgentDashboard().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .zettelkastenAgent } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "cpu.fill").foregroundStyle(Moros.oracle)
                         Text("Zettelkasten Agent").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: AIChatView().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .aiChat } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "brain.head.profile").foregroundStyle(Moros.oracle)
                         Text("AI Chat").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: VoiceInkDashboard().environment(\.managedObjectContext, context).environmentObject(appState)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .voiceInk } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "mic.fill").foregroundStyle(Moros.oracle)
                         Text("VoiceInk").foregroundStyle(Moros.textSub)
                     }
                 }
-                NavigationLink(destination: CallNoteListView(callNoteService: CallNoteService()).environment(\.managedObjectContext, context).environmentObject(appState)) {
+                .buttonStyle(.plain)
+                Button { appState.activeToolView = .callNotes } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "phone.fill").foregroundStyle(Moros.oracle)
                         Text("Call Notes").foregroundStyle(Moros.textSub)
                     }
                 }
+                .buttonStyle(.plain)
             } header: {
                 Text("TOOLS")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
@@ -204,7 +215,6 @@ struct SidebarView: View {
                                 appState.selectedCODEFilter = nil
                             }
                             appState.selectedView = .stack
-                        appState.sidebarNavSelection = nil
                         }
                 }
             } header: {

@@ -55,7 +55,44 @@ struct MainWindowView: View {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, context)
         }
+        .sheet(item: $appState.activeToolView) { tool in
+            toolView(for: tool)
+                .environmentObject(appState)
+                .environment(\.managedObjectContext, context)
+                .morosTheme()
+                .frame(minWidth: 700, minHeight: 500)
+        }
         .morosBackground()
+    }
+
+    // MARK: - Tool Views
+
+    @ViewBuilder
+    func toolView(for tool: AppState.ToolView) -> some View {
+        switch tool {
+        case .sources:
+            SourceBrowserView(sourceService: SourceService())
+        case .readyToCard:
+            SourcesDuePanel(sourceService: SourceService())
+        case .cardView:
+            EmptyView() // Card view switches ViewMode instead
+        case .index:
+            IndexBrowserView(indexService: IndexService())
+        case .dashboard:
+            WorkflowDashboard(sourceService: SourceService(), indexService: IndexService())
+        case .processingQueue:
+            FleetingReviewQueue()
+        case .pipeline:
+            ProcessingPipeline()
+        case .zettelkastenAgent:
+            AgentDashboard()
+        case .aiChat:
+            AIChatView()
+        case .voiceInk:
+            VoiceInkDashboard()
+        case .callNotes:
+            CallNoteListView(callNoteService: CallNoteService())
+        }
     }
 
     // MARK: - Drop Handling
