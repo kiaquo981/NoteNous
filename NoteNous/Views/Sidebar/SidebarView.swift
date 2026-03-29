@@ -11,6 +11,12 @@ struct SidebarView: View {
         animation: .default
     ) private var tags: FetchedResults<TagEntity>
 
+    // Persisted collapsed/expanded state — TYPE, PIPELINE, TOOLS, TAGS start collapsed
+    @AppStorage("sidebarTypeExpanded") private var typeExpanded = false
+    @AppStorage("sidebarPipelineExpanded") private var pipelineExpanded = false
+    @AppStorage("sidebarToolsExpanded") private var toolsExpanded = false
+    @AppStorage("sidebarTagsExpanded") private var tagsExpanded = false
+
     var body: some View {
         List {
             // Search
@@ -25,7 +31,7 @@ struct SidebarView: View {
             DailyNoteButton()
                 .padding(.bottom, 4)
 
-            // New Zettel Button (opens ZettelCreationSheet)
+            // New Zettel Button
             Button(action: { appState.isZettelCreationVisible = true }) {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
@@ -38,8 +44,47 @@ struct SidebarView: View {
             .buttonStyle(.plain)
             .padding(.bottom, 8)
 
-            // ZETTELKASTEN Section — tappable filters
+            // ── NOTES (PARA) ── Primary section, always expanded
             Section {
+                ForEach(PARACategory.allCases) { category in
+                    SidebarPARARow(category: category, isSelected: appState.selectedPARAFilter == category)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if appState.selectedPARAFilter == category {
+                                appState.selectedPARAFilter = nil
+                            } else {
+                                appState.selectedPARAFilter = category
+                                appState.selectedNoteTypeFilter = nil
+                                appState.selectedCODEFilter = nil
+                            }
+                            appState.selectedView = .stack
+                        }
+                }
+
+                // All Notes — clears all filters
+                Button(action: {
+                    appState.selectedPARAFilter = nil
+                    appState.selectedNoteTypeFilter = nil
+                    appState.selectedCODEFilter = nil
+                    appState.selectedView = .stack
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.on.doc")
+                            .foregroundStyle(Moros.textDim)
+                            .frame(width: 20)
+                        Text("All Notes")
+                            .foregroundStyle(Moros.textSub)
+                    }
+                    .padding(.vertical, 2)
+                    .padding(.horizontal, 6)
+                }
+                .buttonStyle(.plain)
+            } header: {
+                sectionHeader("NOTES")
+            }
+
+            // ▸ TYPE — collapsible, starts collapsed
+            CollapsibleSection(title: "TYPE", isExpanded: $typeExpanded) {
                 ForEach([NoteType.fleeting, .literature, .permanent, .structure], id: \.self) { type in
                     let config: (icon: String, label: String, color: Color) = {
                         switch type {
@@ -62,22 +107,16 @@ struct SidebarView: View {
                             appState.selectedNoteTypeFilter = nil
                         } else {
                             appState.selectedNoteTypeFilter = type
-                            // Clear other filters
                             appState.selectedPARAFilter = nil
                             appState.selectedCODEFilter = nil
                         }
                         appState.selectedView = .stack
                     }
                 }
-            } header: {
-                Text("ZETTELKASTEN")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
             }
 
-            // PIPELINE Section
-            Section {
+            // ▸ PIPELINE — collapsible, starts collapsed
+            CollapsibleSection(title: "PIPELINE", isExpanded: $pipelineExpanded) {
                 ForEach(CODEStage.allCases) { stage in
                     SidebarCODERow(stage: stage, isSelected: appState.selectedCODEFilter == stage)
                         .contentShape(Rectangle())
@@ -92,141 +131,49 @@ struct SidebarView: View {
                             appState.selectedView = .stack
                         }
                 }
-            } header: {
-                Text("PIPELINE")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
             }
 
-            // NOTECARDS (Greene/Holiday)
-            Section {
-                Button { appState.activeToolView = .sources } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "books.vertical").foregroundStyle(Moros.ambient)
-                        Text("Sources").foregroundStyle(Moros.textSub)
-                    }
+            // ▸ TOOLS — collapsible, starts collapsed
+            CollapsibleSection(title: "TOOLS", isExpanded: $toolsExpanded) {
+                SidebarToolButton(icon: "chart.bar", label: "Dashboard", color: Moros.oracle) {
+                    appState.activeToolView = .dashboard
                 }
-                .buttonStyle(.plain)
-
-                Button { appState.activeToolView = .readyToCard } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "book.closed.circle.fill").foregroundStyle(Moros.oracle)
-                        Text("Ready to Card").foregroundStyle(Moros.textSub)
-                        Spacer()
-                        ReadyToCardBadge(sourceService: sidebarSourceService)
-                    }
+                SidebarToolButton(icon: "cpu.fill", label: "Agent", color: Moros.oracle) {
+                    appState.activeToolView = .zettelkastenAgent
                 }
-                .buttonStyle(.plain)
-
-                Button {
+                SidebarToolButton(icon: "brain.head.profile", label: "AI Chat", color: Moros.oracle) {
+                    appState.activeToolView = .aiChat
+                }
+                SidebarToolButton(icon: "phone.fill", label: "Call Notes", color: Moros.oracle) {
+                    appState.activeToolView = .callNotes
+                }
+                SidebarToolButton(icon: "mic.fill", label: "VoiceInk", color: Moros.oracle) {
+                    appState.activeToolView = .voiceInk
+                }
+                SidebarToolButton(icon: "books.vertical", label: "Sources", color: Moros.ambient) {
+                    appState.activeToolView = .sources
+                }
+                SidebarToolButton(icon: "magnifyingglass", label: "Index", color: Moros.ambient) {
+                    appState.activeToolView = .index
+                }
+                SidebarToolButton(icon: "clock.arrow.circlepath", label: "Queue", color: Moros.ambient) {
+                    appState.activeToolView = .processingQueue
+                }
+                SidebarToolButton(icon: "arrow.right.arrow.left", label: "Pipeline", color: Moros.oracle) {
+                    appState.activeToolView = .pipeline
+                }
+                SidebarToolButton(icon: "book.closed.circle.fill", label: "Ready to Card", color: Moros.oracle) {
+                    appState.activeToolView = .readyToCard
+                }
+                SidebarToolButton(icon: "rectangle.grid.2x2", label: "Card View", color: Moros.oracle) {
                     appState.selectedView = .cards
                     appState.activeToolView = nil
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "rectangle.grid.2x2").foregroundStyle(Moros.oracle)
-                        Text("Card View").foregroundStyle(Moros.textSub)
-                    }
                 }
-                .buttonStyle(.plain)
-            } header: {
-                Text("NOTECARDS")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
             }
 
-            // TOOLS
-            Section {
-                Button { appState.activeToolView = .index } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass").foregroundStyle(Moros.ambient)
-                        Text("Index").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .dashboard } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "chart.bar").foregroundStyle(Moros.oracle)
-                        Text("Dashboard").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .processingQueue } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "clock.arrow.circlepath").foregroundStyle(Moros.ambient)
-                        Text("Processing Queue").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .pipeline } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.right.arrow.left").foregroundStyle(Moros.oracle)
-                        Text("Pipeline").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .zettelkastenAgent } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "cpu.fill").foregroundStyle(Moros.oracle)
-                        Text("Zettelkasten Agent").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .aiChat } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "brain.head.profile").foregroundStyle(Moros.oracle)
-                        Text("AI Chat").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .voiceInk } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "mic.fill").foregroundStyle(Moros.oracle)
-                        Text("VoiceInk").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-                Button { appState.activeToolView = .callNotes } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "phone.fill").foregroundStyle(Moros.oracle)
-                        Text("Call Notes").foregroundStyle(Moros.textSub)
-                    }
-                }
-                .buttonStyle(.plain)
-            } header: {
-                Text("TOOLS")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
-            }
-
-            // PARA Section
-            Section {
-                ForEach(PARACategory.allCases) { category in
-                    SidebarPARARow(category: category, isSelected: appState.selectedPARAFilter == category)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if appState.selectedPARAFilter == category {
-                                appState.selectedPARAFilter = nil
-                            } else {
-                                appState.selectedPARAFilter = category
-                                appState.selectedNoteTypeFilter = nil
-                                appState.selectedCODEFilter = nil
-                            }
-                            appState.selectedView = .stack
-                        }
-                }
-            } header: {
-                Text("PARA")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Moros.textDim)
-            }
-
-            // Tags
+            // ▸ TAGS — collapsible, starts collapsed
             if !tags.isEmpty {
-                Section {
+                CollapsibleSection(title: "TAGS", isExpanded: $tagsExpanded) {
                     ForEach(tags.prefix(15), id: \.objectID) { tag in
                         if let name = tag.name {
                             HStack(spacing: 6) {
@@ -236,20 +183,77 @@ struct SidebarView: View {
                             .font(Moros.fontSmall)
                         }
                     }
-                } header: {
-                    Text("TAGS")
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Moros.textDim)
                 }
             }
         }
         .listStyle(.sidebar)
         .frame(minWidth: 200)
         .tint(Moros.oracle)
-        .accentColor(Color(red: 0.267, green: 0.467, blue: 0.800)) // ORACLE for selection highlight
+        .accentColor(Color(red: 0.267, green: 0.467, blue: 0.800))
         .scrollContentBackground(.hidden)
         .morosBackground(Moros.limit01)
+    }
+
+    // MARK: - Section Header
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 9, weight: .medium, design: .monospaced))
+            .textCase(.uppercase)
+            .foregroundStyle(Moros.textDim)
+    }
+}
+
+// MARK: - Collapsible Section
+
+struct CollapsibleSection<Content: View>: View {
+    let title: String
+    @Binding var isExpanded: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        Section {
+            if isExpanded {
+                content
+            }
+        } header: {
+            Button(action: {
+                withAnimation(.easeInOut(duration: Moros.animFast)) {
+                    isExpanded.toggle()
+                }
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundStyle(Moros.textDim)
+                        .frame(width: 10)
+                    Text(title)
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Moros.textDim)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+// MARK: - Sidebar Tool Button
+
+struct SidebarToolButton: View {
+    let icon: String
+    let label: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon).foregroundStyle(color)
+                Text(label).foregroundStyle(Moros.textSub)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

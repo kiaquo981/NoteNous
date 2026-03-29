@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import Combine
 
 enum FolgezettelDirection {
     case parent, child, previousSibling, nextSibling
@@ -33,11 +34,44 @@ final class AppState: ObservableObject {
     @Published var isVoiceInkDashboardVisible: Bool = false
     @Published var isCallNoteVisible: Bool = false
     @Published var activeCallNote: UUID?
+    @Published var isQuickSwitcherVisible: Bool = false
+    @Published var recentNoteIds: [UUID] = [] {
+        didSet {
+            // Persist to UserDefaults
+            let strings = recentNoteIds.map { $0.uuidString }
+            UserDefaults.standard.set(strings, forKey: "AppState.recentNoteIds")
+        }
+    }
 
+    private var cancellables = Set<AnyCancellable>()
     let coreData = CoreDataStack.shared
 
     var viewContext: NSManagedObjectContext {
         coreData.viewContext
+    }
+
+    init() {
+        // Restore recent note IDs from UserDefaults
+        if let strings = UserDefaults.standard.stringArray(forKey: "AppState.recentNoteIds") {
+            recentNoteIds = strings.compactMap { UUID(uuidString: $0) }
+        }
+
+        // Track recent notes when selectedNote changes
+        $selectedNote
+            .compactMap { $0?.id }
+            .removeDuplicates()
+            .sink { [weak self] noteId in
+                self?.trackRecentNote(noteId)
+            }
+            .store(in: &cancellables)
+    }
+
+    func trackRecentNote(_ noteId: UUID) {
+        recentNoteIds.removeAll { $0 == noteId }
+        recentNoteIds.insert(noteId, at: 0)
+        if recentNoteIds.count > 10 {
+            recentNoteIds = Array(recentNoteIds.prefix(10))
+        }
     }
 
     enum ToolView: String, Identifiable {

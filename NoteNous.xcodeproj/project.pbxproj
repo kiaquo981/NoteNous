@@ -185,6 +185,7 @@
 		EF95F2AD29027D67E6877B5A /* IndexServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B2DDE145E5D05466F7194C /* IndexServiceTests.swift */; };
 		F17BF0044B35A394F84A1D33 /* FolgezettelTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72CA477A1CF5361FA57C793 /* FolgezettelTreeView.swift */; };
 		F2AA33679B9B5A8548B8492F /* CallNoteContextBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D80ABB1363A3C5D6C254D38 /* CallNoteContextBar.swift */; };
+		F631D0C0B7C6DBAFD6AAB589 /* QuickSwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5471B4D8FDED69716371FD5D /* QuickSwitcherView.swift */; };
 		FD5C4209B421CE71C18334C0 /* MergeNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC94FCF19429775B0FD7661C /* MergeNoteSheet.swift */; };
 		FD7101BFC728199DE39743C5 /* PDFLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 791EBAA04003E8E6EF589775 /* PDFLibraryView.swift */; };
 /* End PBXBuildFile section */
@@ -253,6 +254,7 @@
 		51CD852402867B28A50A34B5 /* PDFReaderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReaderService.swift; sourceTree = "<group>"; };
 		52A5D766C833DAA8FCA015B3 /* MarkdownExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownExporter.swift; sourceTree = "<group>"; };
 		538542BD840E9026709F19E4 /* AtomicNoteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicNoteService.swift; sourceTree = "<group>"; };
+		5471B4D8FDED69716371FD5D /* QuickSwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickSwitcherView.swift; sourceTree = "<group>"; };
 		54B73187D10C168182D59A8E /* GraphToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphToolbar.swift; sourceTree = "<group>"; };
 		5700A2A6080D0BAC881F4C5D /* NoteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCardView.swift; sourceTree = "<group>"; };
 		57BA2AEBDF18D1499919AC70 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -551,6 +553,14 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		6FF606C31380A53E349D2DCA /* QuickSwitcher */ = {
+			isa = PBXGroup;
+			children = (
+				5471B4D8FDED69716371FD5D /* QuickSwitcherView.swift */,
+			);
+			path = QuickSwitcher;
+			sourceTree = "<group>";
+		};
 		789BE6260A7BCB0FA22D59B9 /* NoteNousIOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -842,6 +852,7 @@
 				BCD88EA07EB7A107AD5B9AE3 /* Main */,
 				1BFB9C740F5D5C88D72FB322 /* PDF */,
 				C6153332B31F7EC294B24A25 /* QuickCapture */,
+				6FF606C31380A53E349D2DCA /* QuickSwitcher */,
 				6BE6AD23F423A8EE27260745 /* Review */,
 				F5C2679C59CF06BF50BDE890 /* Search */,
 				177C9B59BDC6A2C6BC52C888 /* Settings */,
@@ -1139,6 +1150,7 @@
 				1E9997508BDBACF66222A72B /* ProcessingPipeline.swift in Sources */,
 				9256D4E7609F127CAE48C6B7 /* PromotionSheet.swift in Sources */,
 				6B25492CC91B8D754A139419 /* QuickCapturePanel.swift in Sources */,
+				F631D0C0B7C6DBAFD6AAB589 /* QuickSwitcherView.swift in Sources */,
 				CC9AFE101641BE4D87D0E0DB /* ReadwiseBrowserView.swift in Sources */,
 				9EEDDEEA28019EE60DBF37E7 /* ReadwiseService.swift in Sources */,
 				AA0618CE07DA4A71DFF54CBD /* ReadwiseSettingsView.swift in Sources */,

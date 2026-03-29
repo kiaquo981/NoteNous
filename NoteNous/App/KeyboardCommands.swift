@@ -31,6 +31,9 @@ struct KeyboardCommands: Commands {
             Button("Command Palette") { appState.isCommandPaletteVisible.toggle() }
                 .keyboardShortcut("k", modifiers: .command)
 
+            Button("Quick Switcher") { appState.isQuickSwitcherVisible.toggle() }
+                .keyboardShortcut("o", modifiers: .command)
+
             Divider()
 
             Button("Toggle Sidebar") { appState.isSidebarVisible.toggle() }

@@ -50,6 +50,14 @@ struct MainWindowView: View {
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, context)
         }
+        .overlay {
+            if appState.isQuickSwitcherVisible {
+                QuickSwitcherView()
+                    .environmentObject(appState)
+                    .environment(\.managedObjectContext, context)
+                    .transition(.opacity)
+            }
+        }
         .sheet(isPresented: $appState.isZettelCreationVisible) {
             ZettelCreationSheet()
                 .environmentObject(appState)
