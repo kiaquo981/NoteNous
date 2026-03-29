@@ -4,9 +4,18 @@ import CoreSpotlight
 @main
 struct NoteNousApp: App {
     @StateObject private var appState = AppState()
+    @AppStorage("morosThemeMode") private var themeMode: String = "Auto"
 
     init() {
         EnvLoader.loadIfNeeded()
+    }
+
+    private var effectiveColorScheme: ColorScheme? {
+        switch themeMode {
+        case "Dark": return .dark
+        case "Light": return .light
+        default: return nil // Auto — follows system
+        }
     }
 
     var body: some Scene {
@@ -14,12 +23,14 @@ struct NoteNousApp: App {
             MainWindowView()
                 .environmentObject(appState)
                 .environment(\.managedObjectContext, appState.viewContext)
+                .preferredColorScheme(effectiveColorScheme)
                 .morosTheme()
                 .tint(Color(red: 0.267, green: 0.467, blue: 0.800)) // ORACLE blue
                 .sheet(isPresented: $appState.isQuickCaptureVisible) {
                     QuickCapturePanel()
                         .environmentObject(appState)
                         .environment(\.managedObjectContext, appState.viewContext)
+                        .preferredColorScheme(effectiveColorScheme)
                         .morosTheme()
                 }
                 .sheet(isPresented: $appState.isCallNoteVisible) {
@@ -29,6 +40,7 @@ struct NoteNousApp: App {
                     )
                     .environmentObject(appState)
                     .environment(\.managedObjectContext, appState.viewContext)
+                    .preferredColorScheme(effectiveColorScheme)
                     .morosTheme()
                     .frame(minWidth: 600, minHeight: 500)
                 }
@@ -36,20 +48,11 @@ struct NoteNousApp: App {
                     SemanticSearchView(embeddingService: EmbeddingService.shared)
                         .environmentObject(appState)
                         .environment(\.managedObjectContext, appState.viewContext)
+                        .preferredColorScheme(effectiveColorScheme)
                         .morosTheme()
                         .frame(minWidth: 600, minHeight: 500)
                 }
                 .onAppear {
-                    // Apply theme mode from settings
-                    let mode = MorosThemeMode.current
-                    switch mode {
-                    case .dark:
-                        NSApp.appearance = NSAppearance(named: .darkAqua)
-                    case .light:
-                        NSApp.appearance = NSAppearance(named: .aqua)
-                    case .auto:
-                        NSApp.appearance = nil  // follows system
-                    }
                     OnboardingService.runIfNeeded(context: appState.viewContext)
                     SpotlightService.shared.indexAllNotes(context: appState.viewContext)
                     ClipServer.shared.start()
@@ -76,6 +79,7 @@ struct NoteNousApp: App {
         Settings {
             SettingsView()
                 .environmentObject(appState)
+                .preferredColorScheme(effectiveColorScheme)
                 .morosTheme()
         }
 

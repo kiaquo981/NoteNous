@@ -42,6 +42,7 @@ struct SidebarView: View {
                 }
             }
             .buttonStyle(.plain)
+            .pressEffect()
             .padding(.bottom, 8)
 
             // ── NOTES (PARA) ── Primary section, always expanded
@@ -79,6 +80,7 @@ struct SidebarView: View {
                     .padding(.horizontal, 6)
                 }
                 .buttonStyle(.plain)
+                .pressEffect()
             } header: {
                 sectionHeader("NOTES")
             }
@@ -192,6 +194,9 @@ struct SidebarView: View {
         .accentColor(Color(red: 0.267, green: 0.467, blue: 0.800))
         .scrollContentBackground(.hidden)
         .morosBackground(Moros.limit01)
+        .animation(.morosSnap, value: appState.selectedPARAFilter)
+        .animation(.morosSnap, value: appState.selectedNoteTypeFilter)
+        .animation(.morosSnap, value: appState.selectedCODEFilter)
     }
 
     // MARK: - Section Header
@@ -218,7 +223,7 @@ struct CollapsibleSection<Content: View>: View {
             }
         } header: {
             Button(action: {
-                withAnimation(.easeInOut(duration: Moros.animFast)) {
+                withAnimation(.morosSnap) {
                     isExpanded.toggle()
                 }
             }) {
@@ -254,6 +259,7 @@ struct SidebarToolButton: View {
             }
         }
         .buttonStyle(.plain)
+        .pressEffect()
     }
 }
 
@@ -283,6 +289,7 @@ struct SidebarPARARow: View {
         .padding(.horizontal, 6)
         .background(isSelected ? Moros.oracle : .clear, in: Rectangle())
         .foregroundStyle(isSelected ? Moros.void : Moros.textMain)
+        .animation(.morosSnap, value: isSelected)
     }
 
     private var count: Int {
@@ -315,6 +322,7 @@ struct SidebarCODERow: View {
         .padding(.horizontal, 6)
         .background(isSelected ? Moros.oracle : .clear, in: Rectangle())
         .foregroundStyle(isSelected ? Moros.void : Moros.textMain)
+        .animation(.morosSnap, value: isSelected)
     }
 
     private var count: Int {
@@ -353,6 +361,7 @@ struct SidebarNoteTypeRow: View {
         .padding(.vertical, 2)
         .padding(.horizontal, 6)
         .background(isSelected ? color.opacity(0.2) : .clear, in: Rectangle())
+        .animation(.morosSnap, value: isSelected)
     }
 
     private var count: Int {

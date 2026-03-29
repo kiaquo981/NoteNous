@@ -204,13 +204,14 @@ enum Moros {
 
 // MARK: - View Modifiers
 
-/// Applies the MOROS VOID background to a view.
+/// Applies the MOROS VOID background to a view, adapting to light/dark mode.
 struct MorosBackground: ViewModifier {
     var surface: Color = Moros.void
+    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
-            .background(surface)
+            .background(colorScheme == .dark ? surface : Color(NSColor.windowBackgroundColor))
     }
 }
 

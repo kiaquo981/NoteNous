@@ -18,6 +18,7 @@ struct QuickSwitcherView: View {
             // Dark backdrop
             Color.black.opacity(0.5)
                 .ignoresSafeArea()
+                .transition(.opacity)
                 .onTapGesture {
                     dismiss()
                 }
@@ -295,6 +296,7 @@ struct QuickSwitcherNoteRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(isHighlighted ? Moros.oracle.opacity(0.15) : .clear, in: Rectangle())
+        .animation(.morosMicro, value: isHighlighted)
     }
 
     private var noteTypeIcon: String {

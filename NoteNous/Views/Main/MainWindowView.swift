@@ -27,7 +27,9 @@ struct MainWindowView: View {
                     Rectangle()
                         .fill(Moros.border)
                         .frame(width: 1)
+                        .transition(.opacity)
                     AIChatSidePanel()
+                        .transition(.morosSlideIn)
                 }
             }
         }
@@ -55,9 +57,11 @@ struct MainWindowView: View {
                 QuickSwitcherView()
                     .environmentObject(appState)
                     .environment(\.managedObjectContext, context)
-                    .transition(.opacity)
+                    .transition(.morosScale)
             }
         }
+        .animation(.morosPanel, value: appState.isQuickSwitcherVisible)
+        .animation(.morosPanel, value: appState.isAIChatVisible)
         .sheet(isPresented: $appState.isZettelCreationVisible) {
             ZettelCreationSheet()
                 .environmentObject(appState)

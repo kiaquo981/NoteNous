@@ -70,9 +70,11 @@ struct NoteCardGrid: View {
                                 .onTapGesture {
                                     appState.selectedNote = note
                                 }
+                                .transition(.morosScale)
                         }
                     }
                     .padding(16)
+                    .animation(.morosGentle, value: filteredAndSortedNotes.count)
                 }
             }
         }
@@ -201,8 +203,9 @@ struct GridNoteCard: View {
         .background(Moros.limit02)
         .overlay(Rectangle().stroke(isHovered ? Moros.borderLit : Moros.border, lineWidth: 1))
         .shadow(color: isHovered ? Moros.oracle.opacity(0.1) : .clear, radius: 8, x: 0, y: 0)
+        .scaleEffect(isHovered ? 1.03 : 1.0)
         .onHover { isHovered = $0 }
-        .animation(.easeOut(duration: Moros.animFast), value: isHovered)
+        .animation(.morosSnap, value: isHovered)
         .contextMenu { noteContextMenu }
     }
 

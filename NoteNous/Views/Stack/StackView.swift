@@ -44,6 +44,9 @@ struct StackView: View {
         .listStyle(.inset(alternatesRowBackgrounds: false))
         .scrollContentBackground(.hidden)
         .morosBackground(Moros.limit01)
+        .animation(.morosGentle, value: appState.selectedPARAFilter)
+        .animation(.morosGentle, value: appState.selectedCODEFilter)
+        .animation(.morosGentle, value: appState.selectedNoteTypeFilter)
         .searchable(text: $appState.searchQuery, prompt: "Search notes...")
         .toolbar {
             if !appState.searchQuery.isEmpty {
@@ -165,6 +168,6 @@ struct NoteCardRow: View {
         .padding(.horizontal, 4)
         .background(isHovered ? Moros.limit02 : .clear, in: Rectangle())
         .onHover { isHovered = $0 }
-        .animation(.easeOut(duration: Moros.animFast), value: isHovered)
+        .animation(.morosMicro, value: isHovered)
     }
 }

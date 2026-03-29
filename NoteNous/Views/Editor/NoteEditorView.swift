@@ -103,6 +103,7 @@ struct NoteEditorView: View {
                         // (user will see the placeholder "What is this note's claim?")
                     }
                 )
+                .transition(.morosScale)
             }
 
             Rectangle()
@@ -227,6 +228,7 @@ struct NoteEditorView: View {
                     .frame(height: 1)
                 LocalGraphView(centerNote: note)
                     .frame(height: 260)
+                    .transition(.morosDropDown)
             }
 
             // Backlinks Panel
@@ -235,6 +237,7 @@ struct NoteEditorView: View {
                     .fill(Moros.border)
                     .frame(height: 1)
                 BacklinksPanel(note: note)
+                    .transition(.morosDropDown)
             }
 
             // Similar Notes Panel
@@ -246,6 +249,7 @@ struct NoteEditorView: View {
                     note: note,
                     embeddingService: EmbeddingService.shared
                 )
+                .transition(.morosDropDown)
             }
 
             // Link Suggestions Panel
@@ -254,9 +258,14 @@ struct NoteEditorView: View {
                     .fill(Moros.border)
                     .frame(height: 1)
                 LinkSuggestionsPanel(note: note)
+                    .transition(.morosDropDown)
             }
         }
         .morosBackground(Moros.limit01)
+        .animation(.morosPanel, value: showLocalGraph)
+        .animation(.morosPanel, value: showBacklinks)
+        .animation(.morosPanel, value: showSimilarNotes)
+        .animation(.morosPanel, value: showLinkSuggestions)
         .onAppear {
             loadNote()
             wikilinkState.configure(context: context)
@@ -383,7 +392,7 @@ struct NoteEditorView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Toggle header
             Button(action: {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.morosSnap) {
                     isContextExpanded.toggle()
                 }
             }) {
