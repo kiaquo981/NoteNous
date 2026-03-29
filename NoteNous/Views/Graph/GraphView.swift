@@ -152,7 +152,7 @@ struct GraphView: View {
                 }
             }
         }
-        .morosBackground()
+
         .onAppear {
             reloadGraph()
             generateParticles()

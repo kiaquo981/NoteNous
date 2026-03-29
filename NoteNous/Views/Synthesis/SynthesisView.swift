@@ -65,7 +65,7 @@ struct SynthesisView: View {
             case .review: reviewStep
             }
         }
-        .morosBackground(Moros.void)
+
         .preferredColorScheme(.dark)
     }
 
@@ -170,7 +170,7 @@ struct SynthesisView: View {
                 }
             }
             .listStyle(.inset(alternatesRowBackgrounds: false))
-            .scrollContentBackground(.hidden)
+    
 
             // Navigation
             HStack {
@@ -243,7 +243,7 @@ struct SynthesisView: View {
                 }
             }
             .listStyle(.inset(alternatesRowBackgrounds: false))
-            .scrollContentBackground(.hidden)
+    
 
             // Navigation
             HStack {

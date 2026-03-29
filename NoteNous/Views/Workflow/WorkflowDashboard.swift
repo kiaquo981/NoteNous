@@ -35,7 +35,7 @@ struct WorkflowDashboard: View {
             }
             .padding()
         }
-        .morosBackground()
+
     }
 
     // MARK: - Inbox Card

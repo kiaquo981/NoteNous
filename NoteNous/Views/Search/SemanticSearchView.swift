@@ -71,7 +71,7 @@ struct SemanticSearchView: View {
                 resultsList
             }
         }
-        .morosBackground(Moros.limit01)
+
         .preferredColorScheme(.dark)
     }
 

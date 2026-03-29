@@ -37,13 +37,13 @@ struct StackView: View {
                 ForEach(filteredNotes, id: \.objectID) { note in
                     NoteCardRow(note: note)
                         .tag(note)
-                        .listRowBackground(Moros.limit01)
+                        .listRowBackground(Color.clear)
                 }
             }
         }
         .listStyle(.inset(alternatesRowBackgrounds: false))
-        .scrollContentBackground(.hidden)
-        .morosBackground(Moros.limit01)
+
+
         .animation(.morosGentle, value: appState.selectedPARAFilter)
         .animation(.morosGentle, value: appState.selectedCODEFilter)
         .animation(.morosGentle, value: appState.selectedNoteTypeFilter)

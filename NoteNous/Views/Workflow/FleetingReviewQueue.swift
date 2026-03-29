@@ -38,7 +38,7 @@ struct FleetingReviewQueue: View {
                 notesList
             }
         }
-        .morosBackground(Moros.limit01)
+
         .sheet(isPresented: $showPromotionSheet) {
             if let note = promotionTarget {
                 PromotionSheet(note: note)
@@ -138,7 +138,7 @@ struct FleetingReviewQueue: View {
             }
         }
         .listStyle(.inset(alternatesRowBackgrounds: false))
-        .scrollContentBackground(.hidden)
+
     }
 
     // MARK: - Empty State

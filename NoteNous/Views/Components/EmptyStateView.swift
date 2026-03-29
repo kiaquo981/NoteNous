@@ -18,6 +18,6 @@ struct EmptyStateView: View {
                 .foregroundStyle(Moros.textDim)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .morosBackground()
+
     }
 }

@@ -30,7 +30,7 @@ struct ReadwiseSettingsView: View {
             }
             .padding(Moros.spacing20)
         }
-        .morosBackground(Moros.limit01)
+
         .onAppear {
             apiKeyInput = readwiseService.apiKey ?? ""
         }

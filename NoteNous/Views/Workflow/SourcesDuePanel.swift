@@ -75,7 +75,7 @@ struct SourcesDuePanel: View {
                 .background(Moros.ambient.opacity(0.04))
             }
         }
-        .morosBackground(Moros.limit01)
+
         .sheet(isPresented: $showLiteratureSheet) {
             if let source = selectedSource {
                 LiteratureNoteSheet()

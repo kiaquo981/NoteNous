@@ -80,7 +80,7 @@ struct TemplatePickerView: View {
                 .padding(16)
             }
         }
-        .morosBackground(Moros.limit02)
+
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showCreateSheet) {
             TemplateEditorSheet(templateService: templateService)
@@ -313,7 +313,7 @@ struct TemplateEditorSheet: View {
                         TextEditor(text: $contentTemplate)
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundStyle(Moros.textMain)
-                            .scrollContentBackground(.hidden)
+                    
                             .frame(minHeight: 120)
                             .background(Moros.limit02)
                     }
@@ -359,7 +359,7 @@ struct TemplateEditorSheet: View {
             .padding()
         }
         .frame(width: 500, height: 600)
-        .morosBackground(Moros.limit01)
+
         .preferredColorScheme(.dark)
         .onAppear {
             if let t = existing {

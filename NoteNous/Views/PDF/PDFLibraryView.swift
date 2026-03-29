@@ -42,7 +42,7 @@ struct PDFLibraryView: View {
                 listLayout
             }
         }
-        .morosBackground(Moros.limit01)
+
         .sheet(isPresented: $showPDFReader) {
             if let docId = selectedDocumentId {
                 PDFReaderView(pdfService: pdfService, documentId: docId)

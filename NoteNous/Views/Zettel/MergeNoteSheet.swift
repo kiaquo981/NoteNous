@@ -111,7 +111,7 @@ struct MergeNoteSheet: View {
                     }
                 }
                 .listStyle(.inset(alternatesRowBackgrounds: false))
-                .scrollContentBackground(.hidden)
+        
             }
 
             Rectangle().fill(Moros.border).frame(height: 1)
@@ -131,7 +131,7 @@ struct MergeNoteSheet: View {
             .padding()
         }
         .frame(minWidth: 480, minHeight: 500)
-        .morosBackground(Moros.limit01)
+
         .preferredColorScheme(.dark)
     }
 

@@ -22,7 +22,7 @@ struct ReadwiseBrowserView: View {
             highlightDetailPanel
                 .frame(minWidth: 400)
         }
-        .morosBackground(Moros.limit01)
+
         .onAppear { loadBooks() }
     }
 
@@ -95,7 +95,7 @@ struct ReadwiseBrowserView: View {
                 }
             }
         }
-        .morosBackground(Moros.limit01)
+
     }
 
     private func bookRow(_ book: ReadwiseService.ReadwiseBook) -> some View {
@@ -216,7 +216,7 @@ struct ReadwiseBrowserView: View {
                 Spacer()
             }
         }
-        .morosBackground(Moros.limit01)
+
     }
 
     private func highlightCard(_ highlight: ReadwiseService.ReadwiseHighlight, bookTitle: String) -> some View {

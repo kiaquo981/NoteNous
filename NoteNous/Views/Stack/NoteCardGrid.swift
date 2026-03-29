@@ -78,7 +78,7 @@ struct NoteCardGrid: View {
                 }
             }
         }
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Filtering & Sorting

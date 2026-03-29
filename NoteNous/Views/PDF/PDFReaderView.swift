@@ -45,7 +45,7 @@ struct PDFReaderView: View {
                     .frame(minWidth: 260, maxWidth: 360)
                 }
             }
-            .morosBackground(Moros.limit01)
+    
             .sheet(isPresented: $showAnnotationSheet) {
                 annotationCreationSheet(doc: doc)
             }
@@ -59,7 +59,7 @@ struct PDFReaderView: View {
                     .foregroundStyle(Moros.textDim)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .morosBackground(Moros.limit01)
+    
         }
     }
 
@@ -256,7 +256,7 @@ struct PDFReaderView: View {
         }
         .padding(Moros.spacing20)
         .frame(width: 420)
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Navigation

@@ -36,7 +36,7 @@ struct LinkBrowserView: View {
             Rectangle().fill(Moros.border).frame(height: 1)
             linksList
         }
-        .morosBackground(Moros.limit01)
+
         .onAppear { loadLinks() }
         .onChange(of: note.objectID) { loadLinks() }
         .sheet(isPresented: $showLinkCreation) {

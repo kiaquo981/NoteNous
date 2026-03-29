@@ -35,7 +35,7 @@ struct ReviewCalendarView: View {
                 .padding(16)
             }
         }
-        .morosBackground(Moros.void)
+
         .preferredColorScheme(.dark)
     }
 

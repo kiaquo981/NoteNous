@@ -114,7 +114,7 @@ struct AtomicityIndicator: View {
         }
         .padding(12)
         .frame(width: 300)
-        .morosBackground(Moros.limit02)
+
     }
 
     private func statRow(label: String, value: String, ideal: String) -> some View {

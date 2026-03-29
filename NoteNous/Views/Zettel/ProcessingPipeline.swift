@@ -31,7 +31,7 @@ struct ProcessingPipeline: View {
                 emptyDetail
             }
         }
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Header
@@ -181,7 +181,7 @@ struct ProcessingPipeline: View {
                     }
                 }
                 .listStyle(.inset(alternatesRowBackgrounds: false))
-                .scrollContentBackground(.hidden)
+        
             }
         }
     }

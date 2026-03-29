@@ -43,7 +43,7 @@ struct VoiceInkDashboard: View {
             }
             .padding(Moros.spacing16)
         }
-        .morosBackground(moros.void)
+
         .navigationTitle("VoiceInk")
     }
 

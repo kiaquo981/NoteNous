@@ -79,7 +79,7 @@ struct LinkCreationSheet: View {
             .padding()
         }
         .frame(width: 480, height: 560)
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Source Note Section

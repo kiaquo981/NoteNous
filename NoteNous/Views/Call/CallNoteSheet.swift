@@ -60,7 +60,7 @@ struct CallNoteSheet: View {
             }
         }
         .frame(minWidth: 600, minHeight: 500)
-        .morosBackground(moros.limit01)
+
         .onAppear(perform: loadExisting)
         .onDisappear(perform: saveAndCleanup)
         .onChange(of: callListener.isListening) { wasListening, nowListening in
@@ -113,7 +113,7 @@ struct CallNoteSheet: View {
             .background(moros.oracle.opacity(0.15), in: Rectangle())
         }
         .padding(Moros.spacing12)
-        .morosBackground(moros.limit02)
+
     }
 
     private var timerBadge: some View {
@@ -183,7 +183,7 @@ struct CallNoteSheet: View {
             TextEditor(text: $annotations)
                 .font(Moros.fontBody)
                 .foregroundStyle(moros.textMain)
-                .scrollContentBackground(.hidden)
+        
                 .frame(minHeight: 250)
                 .padding(8)
                 .background(moros.limit02, in: Rectangle())
@@ -264,7 +264,7 @@ struct CallNoteSheet: View {
                 TextEditor(text: $transcription)
                     .font(Moros.fontBody)
                     .foregroundStyle(moros.textMain)
-                    .scrollContentBackground(.hidden)
+            
                     .frame(minHeight: 120)
                     .padding(8)
                     .background(moros.limit02, in: Rectangle())

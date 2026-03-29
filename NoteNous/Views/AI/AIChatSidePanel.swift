@@ -105,7 +105,7 @@ struct AIChatSidePanel: View {
             .background(Moros.limit02)
         }
         .frame(width: 300)
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Compact Empty State

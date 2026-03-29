@@ -114,7 +114,7 @@ struct PDFAnnotationPanel: View {
             }
             .padding(Moros.spacing12)
         }
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Filters

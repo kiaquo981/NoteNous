@@ -60,7 +60,7 @@ struct QuickCapturePanel: View {
             TextEditor(text: $content)
                 .font(.system(size: 13, weight: .regular, design: .monospaced))
                 .foregroundStyle(Moros.textMain)
-                .scrollContentBackground(.hidden)
+        
                 .padding(8)
                 .background(Moros.limit02, in: Rectangle())
                 .frame(minHeight: 120)
@@ -93,7 +93,7 @@ struct QuickCapturePanel: View {
         .padding(20)
         .frame(minWidth: 440, minHeight: 280)
         .fixedSize(horizontal: true, vertical: false)
-        .morosBackground(Moros.limit02)
+
         .overlay(Rectangle().stroke(Moros.borderLit, lineWidth: 1))
     }
 

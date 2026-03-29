@@ -196,8 +196,8 @@ struct SidebarView: View {
         .frame(minWidth: 200)
         .tint(Moros.oracle)
         .accentColor(Color(red: 0.267, green: 0.467, blue: 0.800))
-        .scrollContentBackground(.hidden)
-        .morosBackground(Moros.limit01)
+
+
         .animation(.morosSnap, value: appState.selectedPARAFilter)
         .animation(.morosSnap, value: appState.selectedNoteTypeFilter)
         .animation(.morosSnap, value: appState.selectedCODEFilter)

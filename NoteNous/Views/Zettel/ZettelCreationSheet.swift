@@ -67,7 +67,7 @@ struct ZettelCreationSheet: View {
             sheetFooter
         }
         .frame(minWidth: 560, minHeight: 500)
-        .morosBackground(Moros.limit01)
+
         .preferredColorScheme(.dark)
     }
 
@@ -614,7 +614,7 @@ struct ZettelCreationSheet: View {
                 TextEditor(text: $content)
                     .font(.system(size: 13, weight: .regular, design: .monospaced))
                     .foregroundStyle(Moros.textMain)
-                    .scrollContentBackground(.hidden)
+            
                     .padding(10)
                     .background(Moros.limit02, in: Rectangle())
                     .frame(minHeight: 160)

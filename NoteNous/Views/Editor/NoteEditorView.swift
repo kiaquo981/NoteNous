@@ -265,7 +265,7 @@ struct NoteEditorView: View {
         }
         .frame(maxWidth: .infinity)
         .clipped()
-        .morosBackground(Moros.limit01)
+
         .animation(.morosPanel, value: showLocalGraph)
         .animation(.morosPanel, value: showBacklinks)
         .animation(.morosPanel, value: showSimilarNotes)
@@ -438,7 +438,7 @@ struct NoteEditorView: View {
                     TextEditor(text: $contextNote)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(Moros.textSub)
-                        .scrollContentBackground(.hidden)
+                
                         .frame(minHeight: 48, maxHeight: 120)
                         .padding(.horizontal, 12)
                         .onChange(of: contextNote) { saveChanges() }

@@ -103,7 +103,7 @@ struct AIChatView: View {
             .padding(.vertical, 10)
             .background(Moros.limit02)
         }
-        .morosBackground(Moros.limit01)
+
         .onAppear { isInputFocused = true }
     }
 

@@ -29,7 +29,7 @@ struct AgentDashboard: View {
             Rectangle().fill(Moros.border).frame(height: 1)
             statsBar
         }
-        .morosBackground(Moros.limit01)
+
     }
 
     // MARK: - Header

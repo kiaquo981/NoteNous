@@ -98,7 +98,7 @@ struct LiteratureNoteSheet: View {
                         TextEditor(text: $content)
                             .font(.system(size: 13, weight: .regular, design: .monospaced))
                             .foregroundStyle(Moros.textMain)
-                            .scrollContentBackground(.hidden)
+                    
                             .padding(10)
                             .background(Moros.limit02, in: Rectangle())
                             .frame(minHeight: 140)
@@ -129,7 +129,7 @@ struct LiteratureNoteSheet: View {
             .padding()
         }
         .frame(minWidth: 500, minHeight: 550)
-        .morosBackground(Moros.limit01)
+
         .preferredColorScheme(.dark)
         .onAppear {
             if let note = existingNote {

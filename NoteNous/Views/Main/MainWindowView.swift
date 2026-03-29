@@ -74,7 +74,7 @@ struct MainWindowView: View {
                 .morosTheme()
                 .frame(minWidth: 700, minHeight: 500)
         }
-        .morosBackground()
+
     }
 
     // MARK: - Tool Views

@@ -89,7 +89,7 @@ struct CallNoteListView: View {
                 .frame(width: 240)
             }
             .padding(Moros.spacing16)
-            .morosBackground(moros.limit02)
+
 
             Divider().background(moros.border)
 
@@ -110,11 +110,11 @@ struct CallNoteListView: View {
                     .onDelete(perform: deleteNotes)
                 }
                 .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .morosBackground(moros.limit01)
+        
+
             }
         }
-        .morosBackground(moros.limit01)
+
         .sheet(isPresented: $showNewCallNote) {
             CallNoteSheet(callNoteService: callNoteService, callNoteId: nil)
                 .environmentObject(appState)

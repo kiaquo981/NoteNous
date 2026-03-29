@@ -39,7 +39,7 @@ struct FolgezettelTreeView: View {
                 }
             }
         }
-        .morosBackground(Moros.limit01)
+
         .onAppear { buildTree() }
         .onChange(of: rootZettelId) { buildTree() }
     }

@@ -172,7 +172,7 @@ struct SplitNoteSheet: View {
             .padding()
         }
         .frame(minWidth: 700, minHeight: 500)
-        .morosBackground(Moros.limit01)
+
         .onAppear { setupContent() }
     }
 

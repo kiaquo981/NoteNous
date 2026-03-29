@@ -29,7 +29,7 @@ struct ReviewSessionView: View {
                 cardView
             }
         }
-        .morosBackground(Moros.void)
+
         .preferredColorScheme(.dark)
         .onAppear {
             sessionCards = srsService.dueCards()
