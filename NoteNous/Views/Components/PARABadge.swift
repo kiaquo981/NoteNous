@@ -2,30 +2,33 @@ import SwiftUI
 
 struct PARABadge: View {
     let category: PARACategory
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: category.icon)
-            Text(category.label.uppercased())
+            Text(shortLabel.uppercased())
         }
         .font(.system(size: 9, weight: .medium, design: .monospaced))
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background(backgroundColor, in: Rectangle())
-        .foregroundStyle(foregroundColor)
+        .frame(height: 20)
+        .background(accentColor.opacity(0.15), in: Rectangle())
+        .overlay(Rectangle().stroke(accentColor.opacity(0.30), lineWidth: 1))
+        .foregroundStyle(colorScheme == .dark ? accentColor : accentColor.opacity(0.85))
     }
 
-    private var backgroundColor: Color {
+    private var shortLabel: String {
         switch category {
-        case .inbox: Moros.ambient.opacity(0.12)
-        case .project: Moros.oracle.opacity(0.12)
-        case .area: Moros.verdit.opacity(0.12)
-        case .resource: Moros.ambient.opacity(0.12)
-        case .archive: Moros.textGhost.opacity(0.5)
+        case .inbox: "IN"
+        case .project: "PRJ"
+        case .area: "AREA"
+        case .resource: "RES"
+        case .archive: "ARC"
         }
     }
 
-    private var foregroundColor: Color {
+    private var accentColor: Color {
         switch category {
         case .inbox: Moros.ambient
         case .project: Moros.oracle

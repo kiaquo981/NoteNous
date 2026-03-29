@@ -113,9 +113,22 @@ struct NoteCardRow: View {
     @ObservedObject var note: NoteEntity
     @State private var isHovered = false
 
+    /// Strips YAML frontmatter from content preview
+    private var cleanContent: String {
+        let text = note.contentPlainText
+        if text.hasPrefix("---") {
+            let searchStart = text.index(text.startIndex, offsetBy: min(3, text.count))
+            if let endRange = text.range(of: "---", range: searchStart..<text.endIndex) {
+                return String(text[endRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return text
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
+            // Row 1: [Pin] Title ... [PARA badge]
+            HStack(spacing: 6) {
                 if note.isPinned {
                     Image(systemName: "pin.fill")
                         .font(.caption2)
@@ -129,43 +142,49 @@ struct NoteCardRow: View {
                 PARABadge(category: note.paraCategory)
             }
 
-            if !note.contentPlainText.isEmpty {
-                Text(note.contentPlainText)
+            // Row 2: Preview text (2 lines max)
+            if !cleanContent.isEmpty {
+                Text(cleanContent)
                     .font(Moros.fontSmall)
                     .foregroundStyle(Moros.textSub)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
+            // Row 3: zettelId | relative time | tags
             HStack(spacing: 8) {
                 if let zettelId = note.zettelId {
                     Text(zettelId)
-                        .font(Moros.fontMonoSmall)
+                        .font(.system(size: 9, weight: .regular, design: .monospaced))
                         .foregroundStyle(Moros.textDim)
+                        .lineLimit(1)
                 }
 
                 Spacer()
 
                 if let date = note.updatedAt {
                     Text(date, style: .relative)
-                        .font(Moros.fontMonoSmall)
+                        .font(.system(size: 9, weight: .regular, design: .monospaced))
                         .foregroundStyle(Moros.textDim)
+                        .lineLimit(1)
                 }
 
                 if !note.tagsArray.isEmpty {
-                    HStack(spacing: 2) {
-                        ForEach(note.tagsArray.prefix(3), id: \.objectID) { tag in
+                    HStack(spacing: 4) {
+                        ForEach(note.tagsArray.prefix(2), id: \.objectID) { tag in
                             if let name = tag.name {
-                                Text("#\(name)")
-                                    .font(Moros.fontMonoSmall)
-                                    .foregroundStyle(Moros.oracle)
+                                Text("#\(String(name.prefix(10)))")
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
                             }
                         }
                     }
                 }
             }
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 4)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
         .background(isHovered ? Moros.limit02 : .clear, in: Rectangle())
         .onHover { isHovered = $0 }
         .animation(.morosMicro, value: isHovered)

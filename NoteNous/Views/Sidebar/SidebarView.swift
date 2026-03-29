@@ -115,6 +115,8 @@ struct SidebarView: View {
                         appState.selectedView = .stack
                     }
                 }
+            } collapsedSummary: {
+                TypeCollapsedSummary()
             }
 
             // ▸ PIPELINE — collapsible, starts collapsed
@@ -133,6 +135,8 @@ struct SidebarView: View {
                             appState.selectedView = .stack
                         }
                 }
+            } collapsedSummary: {
+                PipelineCollapsedSummary()
             }
 
             // ▸ TOOLS — collapsible, starts collapsed
@@ -211,10 +215,23 @@ struct SidebarView: View {
 
 // MARK: - Collapsible Section
 
-struct CollapsibleSection<Content: View>: View {
+struct CollapsibleSection<Content: View, Summary: View>: View {
     let title: String
     @Binding var isExpanded: Bool
     @ViewBuilder let content: Content
+    @ViewBuilder let collapsedSummary: Summary
+
+    init(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder collapsedSummary: () -> Summary
+    ) {
+        self.title = title
+        self._isExpanded = isExpanded
+        self.content = content()
+        self.collapsedSummary = collapsedSummary()
+    }
 
     var body: some View {
         Section {
@@ -236,10 +253,24 @@ struct CollapsibleSection<Content: View>: View {
                         .font(.system(size: 9, weight: .medium, design: .monospaced))
                         .textCase(.uppercase)
                         .foregroundStyle(Moros.textDim)
+                    if !isExpanded {
+                        Spacer()
+                        collapsedSummary
+                    }
                 }
             }
             .buttonStyle(.plain)
         }
+    }
+}
+
+extension CollapsibleSection where Summary == EmptyView {
+    init(
+        title: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.init(title: title, isExpanded: isExpanded, content: content, collapsedSummary: { EmptyView() })
     }
 }
 
@@ -367,5 +398,51 @@ struct SidebarNoteTypeRow: View {
     private var count: Int {
         let service = NoteService(context: context)
         return service.countNotes(noteType: noteType)
+    }
+}
+
+// MARK: - Collapsed Summary Views
+
+struct TypeCollapsedSummary: View {
+    @Environment(\.managedObjectContext) private var context
+
+    var body: some View {
+        HStack(spacing: 6) {
+            summaryItem(icon: "bolt.fill", type: .fleeting)
+            summaryItem(icon: "book.fill", type: .literature)
+            summaryItem(icon: "diamond.fill", type: .permanent)
+            summaryItem(icon: "folder.fill", type: .structure)
+        }
+        .foregroundStyle(Moros.textDim)
+    }
+
+    private func summaryItem(icon: String, type: NoteType) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: icon).font(.system(size: 8))
+            Text("\(NoteService(context: context).countNotes(noteType: type))")
+                .font(.system(size: 9, design: .monospaced))
+        }
+    }
+}
+
+struct PipelineCollapsedSummary: View {
+    @Environment(\.managedObjectContext) private var context
+
+    var body: some View {
+        HStack(spacing: 6) {
+            summaryItem(icon: "square.and.arrow.down", stage: .captured)
+            summaryItem(icon: "folder.badge.gearshape", stage: .organized)
+            summaryItem(icon: "text.badge.star", stage: .distilled)
+            summaryItem(icon: "paperplane", stage: .expressed)
+        }
+        .foregroundStyle(Moros.textDim)
+    }
+
+    private func summaryItem(icon: String, stage: CODEStage) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: icon).font(.system(size: 8))
+            Text("\(NoteService(context: context).countNotes(codeStage: stage))")
+                .font(.system(size: 9, design: .monospaced))
+        }
     }
 }

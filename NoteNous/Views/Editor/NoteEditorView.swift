@@ -69,10 +69,12 @@ struct NoteEditorView: View {
                     .help(note.aiClassified ? "Re-classify with AI" : "Classify with AI")
                     .disabled(isClassifying)
 
-                    NoteAtomicityIndicator(note: note)
-                    NoteTypeBadge(type: note.noteType)
-                    CODEStageBadge(stage: note.codeStage)
-                    PARABadge(category: note.paraCategory)
+                    HStack(spacing: 4) {
+                        NoteAtomicityIndicator(note: note)
+                        NoteTypeBadge(type: note.noteType)
+                        CODEStageBadge(stage: note.codeStage)
+                        PARABadge(category: note.paraCategory)
+                    }
                 }
 
                 TextField("What is this note's claim?", text: $title)
@@ -261,6 +263,8 @@ struct NoteEditorView: View {
                     .transition(.morosDropDown)
             }
         }
+        .frame(maxWidth: .infinity)
+        .clipped()
         .morosBackground(Moros.limit01)
         .animation(.morosPanel, value: showLocalGraph)
         .animation(.morosPanel, value: showBacklinks)
