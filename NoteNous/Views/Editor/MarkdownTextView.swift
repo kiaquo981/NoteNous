@@ -4,17 +4,17 @@ import AppKit
 // MARK: - MOROS Color Constants for NSColor
 
 private enum MorosNS {
-    static let textMain = NSColor(white: 1.0, alpha: 0.92)
-    static let textSub = NSColor(white: 1.0, alpha: 0.68)
-    static let textDim = NSColor(white: 1.0, alpha: 0.45)
-    static let textGhost = NSColor(white: 1.0, alpha: 0.14)
+    static let textMain = NSColor.labelColor
+    static let textSub = NSColor.secondaryLabelColor
+    static let textDim = NSColor.tertiaryLabelColor
+    static let textGhost = NSColor.quaternaryLabelColor
     static let oracle = NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 1.0)
     static let signal = NSColor(red: 0.800, green: 0.133, blue: 0.200, alpha: 1.0)
     static let verdit = NSColor(red: 0.784, green: 0.831, blue: 0.941, alpha: 1.0)
     static let ambient = NSColor(red: 0.533, green: 0.600, blue: 0.733, alpha: 1.0)
-    static let codeBg = NSColor(white: 1.0, alpha: 0.06)
-    static let blockquoteBg = NSColor(white: 1.0, alpha: 0.03)
-    static let hrColor = NSColor(white: 1.0, alpha: 0.11)
+    static let codeBg = NSColor.separatorColor.withAlphaComponent(0.15)
+    static let blockquoteBg = NSColor.separatorColor.withAlphaComponent(0.08)
+    static let hrColor = NSColor.separatorColor
     static let checkboxDone = NSColor(red: 0.267, green: 0.467, blue: 0.800, alpha: 0.6)
 }
 

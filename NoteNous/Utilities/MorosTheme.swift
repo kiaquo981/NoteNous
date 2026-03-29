@@ -37,32 +37,33 @@ enum MorosThemeMode: String, CaseIterable, Identifiable {
 
 // MARK: - Adaptive Colors
 
-/// Resolves MOROS colors based on current color scheme (dark or light)
+/// Resolves MOROS colors based on current color scheme (dark or light).
+/// Since Moros static colors now use system-adaptive NSColors, these simply delegate.
 struct MorosAdaptive {
     let colorScheme: ColorScheme
 
-    // Backgrounds
-    var void: Color { colorScheme == .dark ? Moros.void : Color(red: 0.98, green: 0.98, blue: 0.99) }
-    var limit01: Color { colorScheme == .dark ? Moros.limit01 : Color(red: 0.95, green: 0.95, blue: 0.96) }
-    var limit02: Color { colorScheme == .dark ? Moros.limit02 : Color(red: 0.92, green: 0.92, blue: 0.93) }
-    var limit03: Color { colorScheme == .dark ? Moros.limit03 : Color(red: 0.88, green: 0.88, blue: 0.90) }
-    var limit04: Color { colorScheme == .dark ? Moros.limit04 : Color(red: 0.85, green: 0.85, blue: 0.87) }
+    // Backgrounds — already adaptive via NSColor
+    var void: Color { Moros.void }
+    var limit01: Color { Moros.limit01 }
+    var limit02: Color { Moros.limit02 }
+    var limit03: Color { Moros.limit03 }
+    var limit04: Color { Moros.limit04 }
 
-    // Text
-    var textMain: Color { colorScheme == .dark ? Moros.textMain : Color.black.opacity(0.88) }
-    var textSub: Color { colorScheme == .dark ? Moros.textSub : Color.black.opacity(0.65) }
-    var textDim: Color { colorScheme == .dark ? Moros.textDim : Color.black.opacity(0.42) }
-    var textGhost: Color { colorScheme == .dark ? Moros.textGhost : Color.black.opacity(0.12) }
+    // Text — already adaptive via NSColor
+    var textMain: Color { Moros.textMain }
+    var textSub: Color { Moros.textSub }
+    var textDim: Color { Moros.textDim }
+    var textGhost: Color { Moros.textGhost }
 
-    // Borders
-    var border: Color { colorScheme == .dark ? Moros.border : Color.black.opacity(0.08) }
-    var borderLit: Color { colorScheme == .dark ? Moros.borderLit : Color.black.opacity(0.14) }
+    // Borders — already adaptive via NSColor
+    var border: Color { Moros.border }
+    var borderLit: Color { Moros.borderLit }
 
     // Accent colors stay the same in both modes
     var oracle: Color { Moros.oracle }
     var signal: Color { Moros.signal }
-    var verdit: Color { colorScheme == .dark ? Moros.verdit : Color(red: 0.15, green: 0.25, blue: 0.55) }
-    var ambient: Color { colorScheme == .dark ? Moros.ambient : Color(red: 0.35, green: 0.40, blue: 0.50) }
+    var verdit: Color { Moros.verdit }
+    var ambient: Color { Moros.ambient }
 }
 
 // MARK: - Environment Key
@@ -109,22 +110,26 @@ extension View {
 
 // MARK: - MOROS Design System
 
-/// The MOROS Design System — dark-first, sharp-cornered, glow-based visual language.
-/// Static colors for direct use. For adaptive (light/dark), use @Environment(\.moros).
+/// The MOROS Design System — adaptive visual language using macOS native colors.
+/// All background and text colors adapt automatically to light/dark mode.
+/// Accent colors (oracle, signal, verdit, ambient) are brand colors and stay consistent.
 enum Moros {
 
-    // MARK: - Color Primitives (9)
+    // MARK: - Color Primitives (system-adaptive backgrounds)
 
-    /// #000000 — absolute black background
-    static let void = Color(red: 0, green: 0, blue: 0)
-    /// #06060a — base surface
-    static let limit01 = Color(red: 0.024, green: 0.024, blue: 0.039)
-    /// #0b0b11 — elevated surface
-    static let limit02 = Color(red: 0.043, green: 0.043, blue: 0.067)
-    /// #121219 — hover state
-    static let limit03 = Color(red: 0.071, green: 0.071, blue: 0.098)
-    /// #191921 — active/selected
-    static let limit04 = Color(red: 0.098, green: 0.098, blue: 0.129)
+    /// Window background — adapts to light/dark
+    static let void = Color(NSColor.windowBackgroundColor)
+    /// Base surface
+    static let limit01 = Color(NSColor.windowBackgroundColor)
+    /// Elevated surface
+    static let limit02 = Color(NSColor.controlBackgroundColor)
+    /// Hover/active state
+    static let limit03 = Color(NSColor.unemphasizedSelectedContentBackgroundColor)
+    /// Selected state
+    static let limit04 = Color(NSColor.selectedContentBackgroundColor)
+
+    // MARK: - Accent Colors (brand — same in both modes)
+
     /// #8899bb — idle/neutral text
     static let ambient = Color(red: 0.533, green: 0.6, blue: 0.733)
     /// #cc2233 — alert/active/error
@@ -134,25 +139,25 @@ enum Moros {
     /// #c8d4f0 — output/resolution/success
     static let verdit = Color(red: 0.784, green: 0.831, blue: 0.941)
 
-    // MARK: - Text Colors (White Opacity-Based)
+    // MARK: - Text Colors (system-adaptive)
 
-    /// rgba(255,255,255,0.92)
-    static let textMain = Color.white.opacity(0.92)
-    /// rgba(255,255,255,0.68)
-    static let textSub = Color.white.opacity(0.68)
-    /// rgba(255,255,255,0.45)
-    static let textDim = Color.white.opacity(0.45)
-    /// rgba(255,255,255,0.14)
-    static let textGhost = Color.white.opacity(0.14)
+    /// Primary text — adapts to light/dark
+    static let textMain = Color(NSColor.labelColor)
+    /// Secondary text
+    static let textSub = Color(NSColor.secondaryLabelColor)
+    /// Tertiary text
+    static let textDim = Color(NSColor.tertiaryLabelColor)
+    /// Quaternary text
+    static let textGhost = Color(NSColor.quaternaryLabelColor)
 
-    // MARK: - Border Colors
+    // MARK: - Border Colors (system-adaptive)
 
-    /// rgba(255,255,255,0.03)
-    static let borderDim = Color.white.opacity(0.03)
-    /// rgba(255,255,255,0.06)
-    static let border = Color.white.opacity(0.06)
-    /// rgba(255,255,255,0.11)
-    static let borderLit = Color.white.opacity(0.11)
+    /// Subtle separator
+    static let borderDim = Color(NSColor.separatorColor).opacity(0.5)
+    /// Standard separator
+    static let border = Color(NSColor.separatorColor)
+    /// Emphasized separator
+    static let borderLit = Color(NSColor.separatorColor)
 
     // MARK: - Type Scale (macOS adapted)
 
@@ -204,14 +209,13 @@ enum Moros {
 
 // MARK: - View Modifiers
 
-/// Applies the MOROS VOID background to a view, adapting to light/dark mode.
+/// Applies the MOROS background to a view. Colors are already system-adaptive.
 struct MorosBackground: ViewModifier {
-    var surface: Color = Moros.void
-    @Environment(\.colorScheme) private var colorScheme
+    var surface: Color = Color(NSColor.windowBackgroundColor)
 
     func body(content: Content) -> some View {
         content
-            .background(colorScheme == .dark ? surface : Color(NSColor.windowBackgroundColor))
+            .background(surface)
     }
 }
 
