@@ -90,12 +90,18 @@ struct StackView: View {
     }
 
     private var filteredNotes: [NoteEntity] {
-        // Deduplicate by zettelId to prevent showing same note twice
-        var seen = Set<String>()
+        // Deduplicate by objectID AND zettelId
+        var seenObjectIDs = Set<NSManagedObjectID>()
+        var seenZettelIds = Set<String>()
         var result = Array(notes).filter { note in
-            guard let zid = note.zettelId else { return true }
-            if seen.contains(zid) { return false }
-            seen.insert(zid)
+            // Dedup by objectID (Core Data level)
+            if seenObjectIDs.contains(note.objectID) { return false }
+            seenObjectIDs.insert(note.objectID)
+            // Dedup by zettelId (business level)
+            if let zid = note.zettelId, !zid.isEmpty {
+                if seenZettelIds.contains(zid) { return false }
+                seenZettelIds.insert(zid)
+            }
             return true
         }
 
