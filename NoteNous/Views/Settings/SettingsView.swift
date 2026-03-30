@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -28,6 +29,8 @@ struct GeneralSettingsView: View {
     @AppStorage("defaultPARACategory") private var defaultPARACategory: Int = 0
     @AppStorage("defaultViewMode") private var defaultViewMode: Int = 2
     @AppStorage("morosThemeMode") private var themeMode: String = "Auto"
+    @ObservedObject private var vaultService = VaultService.shared
+    @State private var isSyncingAll = false
 
     var body: some View {
         Form {
@@ -57,8 +60,70 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Section("Markdown Vault") {
+                LabeledContent("Vault Path") {
+                    HStack {
+                        Text(vaultService.vaultPath.path)
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Button("Change...") {
+                            chooseVaultPath()
+                        }
+                    }
+                }
+
+                LabeledContent("Files on Disk") {
+                    Text("\(vaultService.noteCount()) notes")
+                        .monospacedDigit()
+                }
+
+                LabeledContent("Disk Usage") {
+                    Text(ByteCountFormatter.string(fromByteCount: vaultService.diskUsage(), countStyle: .file))
+                        .monospacedDigit()
+                }
+
+                HStack {
+                    Button("Sync All Now") {
+                        isSyncingAll = true
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            vaultService.syncAll(context: CoreDataStack.shared.viewContext)
+                            DispatchQueue.main.async {
+                                isSyncingAll = false
+                            }
+                        }
+                    }
+                    .disabled(isSyncingAll)
+
+                    if isSyncingAll {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+
+                    Spacer()
+
+                    Button("Open Vault in Finder") {
+                        vaultService.openVaultInFinder()
+                    }
+                }
+            }
         }
         .padding()
+    }
+
+    private func chooseVaultPath() {
+        let panel = NSOpenPanel()
+        panel.title = "Choose Vault Location"
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+
+        if panel.runModal() == .OK, let url = panel.url {
+            vaultService.updateVaultPath(url)
+        }
     }
 }
 

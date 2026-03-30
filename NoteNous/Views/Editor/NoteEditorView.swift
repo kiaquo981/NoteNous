@@ -46,11 +46,22 @@ struct NoteEditorView: View {
             // Header
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    if let zettelId = note.zettelId {
-                        Text(zettelId)
-                            .font(Moros.fontMonoCaption)
-                            .foregroundStyle(Moros.textDim)
-                            .textSelection(.enabled)
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let zettelId = note.zettelId {
+                            Text(zettelId)
+                                .font(Moros.fontMonoCaption)
+                                .foregroundStyle(Moros.textDim)
+                                .textSelection(.enabled)
+                        }
+                        Button(action: { VaultService.shared.showInFinder(note) }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "folder")
+                                Text(VaultService.shared.filePath(for: note).path)
+                            }
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.plain)
                     }
                     Spacer()
 
@@ -473,6 +484,7 @@ struct NoteEditorView: View {
             note.contextNote = contextNote.isEmpty ? nil : contextNote
             try? context.save()
         }
+        VaultService.shared.syncNote(note)
     }
 
     // MARK: - Wikilink Insertion

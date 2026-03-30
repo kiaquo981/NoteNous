@@ -29,6 +29,7 @@ final class NoteService {
 
         save()
         logger.info("Created note: \(note.zettelId ?? "unknown")")
+        VaultService.shared.syncNote(note)
         return note
     }
 
@@ -48,9 +49,11 @@ final class NoteService {
         note.archivedAt = Date()
         note.updatedAt = Date()
         save()
+        VaultService.shared.syncNote(note)
     }
 
     func deleteNote(_ note: NoteEntity) {
+        VaultService.shared.deleteNoteFile(note)
         context.delete(note)
         save()
     }

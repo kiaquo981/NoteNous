@@ -38,6 +38,31 @@ struct StackView: View {
                     NoteCardRow(note: note)
                         .tag(note)
                         .listRowBackground(Color.clear)
+                        .contextMenu {
+                            Button("Show in Finder") {
+                                VaultService.shared.showInFinder(note)
+                            }
+                            Button("Open in External Editor") {
+                                VaultService.shared.openInExternalEditor(note)
+                            }
+                            Button("Copy File Path") {
+                                VaultService.shared.copyPath(note)
+                            }
+                            Divider()
+                            Button(note.isPinned ? "Unpin" : "Pin") {
+                                let service = NoteService(context: context)
+                                service.togglePin(note)
+                            }
+                            Button("Archive") {
+                                let service = NoteService(context: context)
+                                service.archiveNote(note)
+                            }
+                            Divider()
+                            Button("Delete", role: .destructive) {
+                                let service = NoteService(context: context)
+                                service.deleteNote(note)
+                            }
+                        }
                 }
             }
         }

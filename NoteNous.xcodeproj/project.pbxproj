@@ -65,6 +65,7 @@
 		55ED0ECB98D95D76CA4F2248 /* DailyNoteButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1536B0F8FC043A31818B4E2 /* DailyNoteButton.swift */; };
 		56E645349A45282D60FB9627 /* FleetingReviewQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3922D27D521718A3DCB78CFD /* FleetingReviewQueue.swift */; };
 		57546C48DC1D74919477B40A /* MarkdownExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A5D766C833DAA8FCA015B3 /* MarkdownExporter.swift */; };
+		5AC43D8DB196DD6B26236E77 /* VaultService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10FA8AEAA8E9B6C3D5D322D /* VaultService.swift */; };
 		5B3FC86849E83B686AFD26EA /* DeskColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B26CAB893ADC796CFFC384E /* DeskColorPicker.swift */; };
 		5BD5E4A3245E55CFE3521491 /* EnvLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFE7E2B55A53004901FB5CFB /* EnvLoader.swift */; };
 		5D3D816CD2F616FF6E56664A /* WikilinkParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E607D723EE5F22BDC223CB2 /* WikilinkParserTests.swift */; };
@@ -329,6 +330,7 @@
 		BEC64EF5F26EE284BC68FDCC /* LinkServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkServiceTests.swift; sourceTree = "<group>"; };
 		C0B821A871EA056C88B37CED /* ChatServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatServiceTests.swift; sourceTree = "<group>"; };
 		C0F97115AFD9FB0A4E97A213 /* AtomicWarningBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicWarningBar.swift; sourceTree = "<group>"; };
+		C10FA8AEAA8E9B6C3D5D322D /* VaultService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultService.swift; sourceTree = "<group>"; };
 		C22BDBE50325645EBAC4D7D1 /* AtomicNoteServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicNoteServiceTests.swift; sourceTree = "<group>"; };
 		C2A47693FB1625EEDDE15B0E /* CanvasToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasToolbar.swift; sourceTree = "<group>"; };
 		C54C74B487B15E0391489962 /* StackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackView.swift; sourceTree = "<group>"; };
@@ -524,6 +526,7 @@
 				99F3EC9596B341F60F7A44DC /* SourceService.swift */,
 				FABB8DE5E733870EC6A42C55 /* SpacedRepetitionService.swift */,
 				7F88B1A11ACF783118ED9DAA /* TagService.swift */,
+				C10FA8AEAA8E9B6C3D5D322D /* VaultService.swift */,
 				2BF1B1BCF1935F2C6BE1A537 /* WikilinkParser.swift */,
 				FDEB7198A7A78A9B5C2D499A /* ZettelIDGenerator.swift */,
 			);
@@ -1179,6 +1182,7 @@
 				030F36575365C293724BD42B /* TagBadge.swift in Sources */,
 				D76F24020E9B1FF2AE50DCBB /* TagService.swift in Sources */,
 				C6F6E9F32D1C8BEB1CABC439 /* TemplatePickerView.swift in Sources */,
+				5AC43D8DB196DD6B26236E77 /* VaultService.swift in Sources */,
 				6F72497B219A3B0D5341EBFF /* ViewMode.swift in Sources */,
 				10809FFFAFC44F108F15DC6D /* ViewRouter.swift in Sources */,
 				1F1A95573E5BE9EEB5CBB40D /* VoiceInkAutoSync.swift in Sources */,

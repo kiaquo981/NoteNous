@@ -55,6 +55,7 @@ struct NoteNousApp: App {
                 .onAppear {
                     OnboardingService.runIfNeeded(context: appState.viewContext)
                     SpotlightService.shared.indexAllNotes(context: appState.viewContext)
+                    VaultService.shared.syncAllIfNeeded(context: appState.viewContext)
                     ClipServer.shared.start()
 
                     // Start VoiceInk auto-sync if enabled
