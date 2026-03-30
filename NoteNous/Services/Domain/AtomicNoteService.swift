@@ -10,11 +10,11 @@ final class AtomicNoteService {
     // MARK: - Configuration
 
     struct Config {
-        var minWords: Int = 40
-        var maxWords: Int = 400
-        var maxHeadings: Int = 1
-        var maxParagraphs: Int = 4
-        var minTitleWords: Int = 4
+        var minWords: Int = 20
+        var maxWords: Int = 100_000   // effectively no limit
+        var maxHeadings: Int = 50     // effectively no limit
+        var maxParagraphs: Int = 500  // effectively no limit
+        var minTitleWords: Int = 3
     }
 
     var config = Config()

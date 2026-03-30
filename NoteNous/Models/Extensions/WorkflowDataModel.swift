@@ -196,10 +196,10 @@ enum AtomicityIssue: Equatable {
 
     var isCritical: Bool {
         switch self {
-        case .tooShort: true
-        case .tooLong: true             // 1000+ words = definitely needs splitting
-        case .multipleHeadings: true    // multiple H2+ = multiple ideas
-        case .tooManyParagraphs: true   // 7+ paragraphs = too complex
+        case .tooShort: false           // just a suggestion
+        case .tooLong: false            // no limit — write as much as you want
+        case .multipleHeadings: false   // suggestion, not blocker
+        case .tooManyParagraphs: false  // suggestion, not blocker
         case .topicTitle: false
         case .noOutgoingLinks: false
         case .missingSource: false
