@@ -258,8 +258,8 @@ struct MarkdownTextView: NSViewRepresentable {
             // --- HORIZONTAL RULES: --- or *** or ___ ---
             applyLinePattern(#"^(---|\*\*\*|___)$"#, to: storage, in: text, attributes: [
                 .foregroundColor: MorosNS.hrColor,
-                .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                .strikethroughColor: MorosNS.hrColor
+
+
             ])
 
             // --- CHECKLISTS: - [ ] unchecked, - [x] checked ---
@@ -373,8 +373,8 @@ struct MarkdownTextView: NSViewRepresentable {
                     if match.numberOfRanges > 2 {
                         storage.addAttributes([
                             .foregroundColor: MorosNS.textDim,
-                            .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                            .strikethroughColor: MorosNS.textDim
+            
+
                         ], range: match.range(at: 2))
                     }
                 }
