@@ -167,7 +167,6 @@ struct NoteCardRow: View {
                 }
                 Text(note.title.isEmpty ? "Untitled" : note.title)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Moros.textMain)
                     .lineLimit(1)
                 Spacer()
                 PARABadge(category: note.paraCategory)
@@ -177,7 +176,7 @@ struct NoteCardRow: View {
             if !cleanContent.isEmpty {
                 Text(cleanContent)
                     .font(Moros.fontSmall)
-                    .foregroundStyle(Moros.textSub)
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -187,7 +186,7 @@ struct NoteCardRow: View {
                 if let zettelId = note.zettelId {
                     Text(zettelId)
                         .font(.system(size: 9, weight: .regular, design: .monospaced))
-                        .foregroundStyle(Moros.textDim)
+                        .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
 
@@ -196,7 +195,7 @@ struct NoteCardRow: View {
                 if let date = note.updatedAt {
                     Text(date, style: .relative)
                         .font(.system(size: 9, weight: .regular, design: .monospaced))
-                        .foregroundStyle(Moros.textDim)
+                        .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
 
