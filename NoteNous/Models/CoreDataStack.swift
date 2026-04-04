@@ -103,6 +103,7 @@ final class CoreDataStack: ObservableObject {
         let updatedAt = NSAttributeDescription.attribute(name: "updatedAt", type: .dateAttributeType)
         let archivedAt = NSAttributeDescription.optionalAttribute(name: "archivedAt", type: .dateAttributeType)
         let contextNote = NSAttributeDescription.optionalAttribute(name: "contextNote", type: .stringAttributeType)
+        let noteSortOrder = NSAttributeDescription.attribute(name: "sortOrder", type: .integer32AttributeType, defaultValue: Int32(0))
 
         noteEntity.properties = [
             noteId, zettelId, title, content, contentPlainText,
@@ -112,7 +113,7 @@ final class CoreDataStack: ObservableObject {
             positionX, positionY, colorHex,
             isPinned, isArchived,
             createdAt, updatedAt, archivedAt,
-            contextNote
+            contextNote, noteSortOrder
         ]
 
         // --- Tag Entity ---
