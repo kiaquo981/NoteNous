@@ -178,6 +178,12 @@ final class AppState: ObservableObject {
     func switchToTab(_ noteId: UUID) {
         guard openTabIds.contains(noteId) else { return }
         activeTabId = noteId
+        let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
+        request.predicate = NSPredicate(format: "id == %@", noteId as CVarArg)
+        request.fetchLimit = 1
+        if let note = try? viewContext.fetch(request).first {
+            selectedNote = note
+        }
     }
 
     private var cancellables = Set<AnyCancellable>()
@@ -197,8 +203,14 @@ final class AppState: ObservableObject {
         if let tabStrings = UserDefaults.standard.stringArray(forKey: "AppState.openTabIds") {
             openTabIds = tabStrings.compactMap { UUID(uuidString: $0) }
         }
-        if let activeStr = UserDefaults.standard.string(forKey: "AppState.activeTabId") {
-            activeTabId = UUID(uuidString: activeStr)
+        if let activeStr = UserDefaults.standard.string(forKey: "AppState.activeTabId"),
+           let tabId = UUID(uuidString: activeStr) {
+            activeTabId = tabId
+            // Restore selectedNote from active tab
+            let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
+            request.predicate = NSPredicate(format: "id == %@", tabId as CVarArg)
+            request.fetchLimit = 1
+            selectedNote = try? viewContext.fetch(request).first
         }
 
         // Track recent notes when selectedNote changes
@@ -212,6 +224,7 @@ final class AppState: ObservableObject {
     }
 
     func trackRecentNote(_ noteId: UUID) {
+        guard !isNavigatingHistory else { return }
         recentNoteIds.removeAll { $0 == noteId }
         recentNoteIds.insert(noteId, at: 0)
         if recentNoteIds.count > 10 {

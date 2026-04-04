@@ -170,6 +170,7 @@ struct NoteEditorView: View {
                         let refined = Constants.autoTitle(from: note.content, fallback: note.title)
                         if refined != note.title {
                             note.title = refined
+                            title = refined
                             note.updatedAt = Date()
                             try? context.save()
                         }
@@ -588,7 +589,7 @@ struct NoteEditorView: View {
             if note.objectID != existing.objectID {
                 linkService.createLink(from: note, to: existing, type: .reference)
             }
-            appState.selectedNote = existing
+            appState.navigateToNote(existing)
         } else {
             // Note does not exist — ask the user before creating
             pendingWikilinkTitle = title

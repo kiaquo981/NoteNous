@@ -51,9 +51,11 @@ enum Constants {
             if trimmed == "---" { continue }
             if trimmed.unicodeScalars.allSatisfy({ !CharacterSet.letters.contains($0) }) { continue }
 
-            if let dot = trimmed.range(of: ". ") ?? trimmed.range(of: ".\n") {
+            if let dot = trimmed.range(of: ". ") {
                 let sentence = String(trimmed[trimmed.startIndex..<dot.lowerBound])
                 if sentence.count >= 8 { return String(sentence.prefix(80)) }
+            } else if trimmed.hasSuffix(".") && trimmed.count >= 9 {
+                return String(trimmed.dropLast().prefix(80))
             }
             return String(trimmed.prefix(80))
         }
