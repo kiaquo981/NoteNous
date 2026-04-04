@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreData
+import AppKit
 
 // MARK: - Color Mode for Graph Nodes
 
@@ -74,6 +75,25 @@ struct GraphView: View {
             }
                 .gesture(backgroundDragGesture)
                 .gesture(scrollZoomGesture)
+                .onContinuousHover { phase in
+                    switch phase {
+                    case .active(let location):
+                        if let node = layout.nodeAt(point: location, zoom: zoom, offset: offset) {
+                            hoveredNodeId = node.id
+                        } else {
+                            hoveredNodeId = nil
+                        }
+                    case .ended:
+                        hoveredNodeId = nil
+                    }
+                }
+                .overlay {
+                    ScrollWheelView { delta in
+                        let scaleFactor: CGFloat = 1.0 + delta * -0.005
+                        let newZoom = max(0.1, min(5.0, zoom * scaleFactor))
+                        zoom = newZoom
+                    }
+                }
                 .onTapGesture(count: 2) { location in
                     handleDoubleTap(at: location)
                 }
@@ -163,7 +183,8 @@ struct GraphView: View {
         }
         .onChange(of: isLocalGraph) { _, _ in reloadGraph() }
         .onChange(of: localDepth) { _, _ in reloadGraph() }
-        .onChange(of: appState.selectedNote) { _, _ in
+        .onChange(of: appState.selectedNote) { _, newNote in
+            selectedNodeId = newNote?.id
             if isLocalGraph { reloadGraph() }
         }
     }
@@ -461,6 +482,9 @@ struct GraphView: View {
                 }
             }
             .onEnded { _ in
+                if let nodeId = draggingNodeId {
+                    layout.pinNode(id: nodeId, pinned: false)
+                }
                 draggingNodeId = nil
                 isDraggingBackground = false
             }
@@ -479,6 +503,7 @@ struct GraphView: View {
     private func handleSingleTap(at location: CGPoint) {
         if let node = layout.nodeAt(point: location, zoom: zoom, offset: offset) {
             selectedNodeId = node.id
+            appState.selectedNote = node.note
         } else {
             selectedNodeId = nil
         }
@@ -662,6 +687,34 @@ struct BackgroundParticle {
     var velocity: CGPoint
     var size: CGFloat
     var opacity: Double
+}
+
+// MARK: - Scroll Wheel Handler (macOS)
+
+/// NSViewRepresentable that captures scroll wheel events for zoom control.
+struct ScrollWheelView: NSViewRepresentable {
+    var onScroll: (CGFloat) -> Void
+
+    func makeNSView(context: Context) -> ScrollWheelNSView {
+        let view = ScrollWheelNSView()
+        view.onScroll = onScroll
+        return view
+    }
+
+    func updateNSView(_ nsView: ScrollWheelNSView, context: Context) {
+        nsView.onScroll = onScroll
+    }
+}
+
+final class ScrollWheelNSView: NSView {
+    var onScroll: ((CGFloat) -> Void)?
+
+    override func scrollWheel(with event: NSEvent) {
+        let delta = event.deltaY
+        if abs(delta) > 0.01 {
+            onScroll?(delta)
+        }
+    }
 }
 
 // Color(hex:) is defined in Utilities/ColorExtensions.swift
