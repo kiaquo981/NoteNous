@@ -21,6 +21,8 @@ final class AppState: ObservableObject {
     @Published var selectedPARAFilter: PARACategory?
     @Published var selectedCODEFilter: CODEStage?
     @Published var selectedNoteTypeFilter: NoteType?
+    @Published var selectedProjectId: NSManagedObjectID?
+    @Published var selectedAreaId: NSManagedObjectID?
     @Published var stackSortMode: StackSortMode = .updatedAt
     @Published var activeToolView: ToolView? = nil
     @Published var isQuickCaptureVisible: Bool = false

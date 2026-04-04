@@ -169,10 +169,6 @@ struct StackView: View {
         var mutable = section
         let service = NoteService(context: context)
         service.moveNotes(in: &mutable, from: source, to: destination)
-        // Switch to manual mode on first drag
-        if appState.stackSortMode != .manual {
-            appState.stackSortMode = .manual
-        }
     }
 
     // MARK: - Filtered Notes
@@ -200,6 +196,12 @@ struct StackView: View {
 
         if let para = appState.selectedPARAFilter {
             result = result.filter { $0.paraCategory == para }
+        }
+        if let projectId = appState.selectedProjectId {
+            result = result.filter { $0.project?.objectID == projectId }
+        }
+        if let areaId = appState.selectedAreaId {
+            result = result.filter { $0.area?.objectID == areaId }
         }
         if let code = appState.selectedCODEFilter {
             result = result.filter { $0.codeStage == code }
@@ -255,29 +257,31 @@ struct NoteDropDelegate: DropDelegate {
     let sortMode: StackSortMode
 
     func performDrop(info: DropInfo) -> Bool {
+        // Persist sort order only on drop (not during hover)
+        guard sortMode == .manual,
+              let dragging = draggingNote,
+              dragging.objectID != note.objectID,
+              dragging.isPinned == note.isPinned else {
+            draggingNote = nil
+            return true
+        }
+
+        let group = notes.filter { $0.isPinned == note.isPinned }
+        if let fromIndex = group.firstIndex(where: { $0.objectID == dragging.objectID }),
+           let toIndex = group.firstIndex(where: { $0.objectID == note.objectID }),
+           fromIndex != toIndex {
+            var mutable = group
+            mutable.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+            let service = NoteService(context: context)
+            service.assignSortOrders(mutable)
+        }
+
         draggingNote = nil
         return true
     }
 
     func dropEntered(info: DropInfo) {
-        guard sortMode == .manual else { return }
-        guard let dragging = draggingNote,
-              dragging.objectID != note.objectID else { return }
-        // Only reorder within same pinned group
-        guard dragging.isPinned == note.isPinned else { return }
-
-        let group = notes.filter { $0.isPinned == note.isPinned }
-        guard let fromIndex = group.firstIndex(where: { $0.objectID == dragging.objectID }),
-              let toIndex = group.firstIndex(where: { $0.objectID == note.objectID }) else { return }
-
-        if fromIndex != toIndex {
-            var mutable = group
-            withAnimation(.morosGentle) {
-                mutable.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
-                let service = NoteService(context: context)
-                service.assignSortOrders(mutable)
-            }
-        }
+        // Visual feedback only — no persistence here
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {

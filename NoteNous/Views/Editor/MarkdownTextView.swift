@@ -233,8 +233,8 @@ struct MarkdownTextView: NSViewRepresentable {
                 .foregroundColor: MorosNS.textMain
             ])
 
-            // --- STRIKETHROUGH: ~~text~~ (must have non-tilde content between) ---
-            applyPattern(#"~~([^~\n]+)~~"#, to: storage, in: text, attributes: [
+            // --- STRIKETHROUGH: ~~text~~ (non-greedy, requires non-~ start, allows internal tildes) ---
+            applyPattern(#"~~([^~\s].*?)~~"#, to: storage, in: text, attributes: [
                 .strikethroughStyle: NSUnderlineStyle.single.rawValue,
                 .foregroundColor: MorosNS.textDim
             ])

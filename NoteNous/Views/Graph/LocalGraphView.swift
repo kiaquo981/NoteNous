@@ -295,10 +295,11 @@ struct LocalGraphView: View {
         }
     }
 
-    private func localNodeTooltip(for node: ForceDirectedLayout.Node) -> some View {
+    private func localNodeTooltip(for node: ForceDirectedLayout.Node, containerSize: CGSize? = nil) -> some View {
+        let size = containerSize ?? panelSize
         let screenPos = CGPoint(
-            x: node.position.x * zoom + offset.x + panelSize.width / 2,
-            y: node.position.y * zoom + offset.y + panelSize.height / 2 - node.radius * zoom - 30
+            x: node.position.x * zoom + offset.x + size.width / 2,
+            y: node.position.y * zoom + offset.y + size.height / 2 - node.radius * zoom - 30
         )
 
         return Text(node.cachedTitle.isEmpty ? "Untitled" : node.cachedTitle)

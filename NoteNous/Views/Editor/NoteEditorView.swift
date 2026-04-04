@@ -768,6 +768,8 @@ struct BreadcrumbBar: View {
                     accentColor: Moros.oracle
                 ) {
                     appState.selectedPARAFilter = .project
+                    appState.selectedProjectId = project.objectID
+                    appState.selectedAreaId = nil
                 }
             } else if let area = note.area, let areaName = area.name {
                 BreadcrumbChevron()
@@ -777,6 +779,8 @@ struct BreadcrumbBar: View {
                     accentColor: Moros.verdit
                 ) {
                     appState.selectedPARAFilter = .area
+                    appState.selectedAreaId = area.objectID
+                    appState.selectedProjectId = nil
                 }
             }
 
