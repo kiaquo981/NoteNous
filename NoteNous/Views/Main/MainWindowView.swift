@@ -5,6 +5,8 @@ struct MainWindowView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.managedObjectContext) private var context
     @State private var isDropTargeted = false
+    /// Tracks whether initial note load has happened — skip animation on first render.
+    @State private var hasAppearedWithNote = false
 
     var body: some View {
         NavigationSplitView {
@@ -15,6 +17,8 @@ struct MainWindowView: View {
             HStack(spacing: 0) {
                 if let note = appState.selectedNote {
                     NoteEditorView(note: note)
+                        .id(note.objectID)
+                        .transition(.morosNoteSwitch)
                 } else {
                     EmptyStateView(
                         icon: "note.text",
@@ -62,6 +66,13 @@ struct MainWindowView: View {
         }
         .animation(.morosPanel, value: appState.isQuickSwitcherVisible)
         .animation(.morosPanel, value: appState.isAIChatVisible)
+        .animation(hasAppearedWithNote ? .morosNoteSwitch : nil, value: appState.selectedNote?.objectID)
+        .onChange(of: appState.selectedNote?.objectID) {
+            // After the first note is rendered, enable transition animations
+            if !hasAppearedWithNote && appState.selectedNote != nil {
+                hasAppearedWithNote = true
+            }
+        }
         .sheet(isPresented: $appState.isZettelCreationVisible) {
             ZettelCreationSheet()
                 .environmentObject(appState)

@@ -17,6 +17,9 @@ extension Animation {
 
     /// Slow for dramatic reveals
     static let morosReveal = Animation.spring(response: 0.6, dampingFraction: 0.85)
+
+    /// Fast fade for note switching in the editor (200-300ms range)
+    static let morosNoteSwitch = Animation.easeInOut(duration: Moros.animBase)
 }
 
 // MARK: - Transition Presets
@@ -42,6 +45,12 @@ extension AnyTransition {
 
     /// Fade only
     static let morosFade = AnyTransition.opacity
+
+    /// Subtle fade + slight vertical offset for note switching
+    static let morosNoteSwitch = AnyTransition.asymmetric(
+        insertion: .opacity.combined(with: .offset(y: 6)),
+        removal: .opacity
+    )
 }
 
 // MARK: - View Modifiers for Motion
