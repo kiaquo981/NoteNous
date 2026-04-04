@@ -29,4 +29,38 @@ enum Constants {
         static let similarNotesLimit = 5
         static let semanticSearchLimit = 20
     }
+
+    /// Zettelkasten auto-title: extracts a descriptive title from note content.
+    /// Priority: first markdown heading > first sentence > first N words > timestamp.
+    static func autoTitle(from content: String, fallback: String = "Capture") -> String {
+        let lines = content.components(separatedBy: .newlines)
+
+        // 1. First markdown heading
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("#") {
+                let clean = trimmed.drop(while: { $0 == "#" || $0 == " " })
+                if !clean.isEmpty { return String(clean.prefix(80)) }
+            }
+        }
+
+        // 2. First meaningful line
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            if trimmed == "---" { continue }
+            if trimmed.unicodeScalars.allSatisfy({ !CharacterSet.letters.contains($0) }) { continue }
+
+            if let dot = trimmed.range(of: ". ") ?? trimmed.range(of: ".\n") {
+                let sentence = String(trimmed[trimmed.startIndex..<dot.lowerBound])
+                if sentence.count >= 8 { return String(sentence.prefix(80)) }
+            }
+            return String(trimmed.prefix(80))
+        }
+
+        // 3. Timestamp fallback
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd HH:mm"
+        return "\(fallback) — \(fmt.string(from: Date()))"
+    }
 }

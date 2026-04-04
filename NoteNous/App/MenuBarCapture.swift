@@ -55,10 +55,11 @@ struct MenuBarCaptureView: View {
     }
 
     private func capture() {
-        let noteTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "Quick Capture"
-            : title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let noteContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let noteTitle = trimmedTitle.isEmpty
+            ? Self.autoTitle(from: noteContent)
+            : trimmedTitle
 
         let service = NoteService(context: context)
         let note = service.createNote(
@@ -76,5 +77,9 @@ struct MenuBarCaptureView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             didCapture = false
         }
+    }
+
+    private static func autoTitle(from content: String) -> String {
+        Constants.autoTitle(from: content)
     }
 }

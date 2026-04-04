@@ -955,10 +955,16 @@ struct ZettelCreationSheet: View {
         let tagService = TagService(context: context)
         let linkService = LinkService(context: context)
 
-        let noteTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? (selectedNoteType == .fleeting ? "Quick Capture" : "Untitled")
-            : title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let noteContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let noteTitle: String
+        if !trimmedTitle.isEmpty {
+            noteTitle = trimmedTitle
+        } else if !noteContent.isEmpty {
+            noteTitle = Constants.autoTitle(from: noteContent)
+        } else {
+            noteTitle = selectedNoteType == .fleeting ? "Fleeting — \(Date().formatted(.dateTime.month().day().hour().minute()))" : "Untitled"
+        }
 
         let note = noteService.createNote(
             title: noteTitle,

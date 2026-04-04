@@ -11,7 +11,7 @@ struct StackView: View {
             NSSortDescriptor(keyPath: \NoteEntity.updatedAt, ascending: false)
         ],
         predicate: NSPredicate(format: "isArchived == NO"),
-        animation: .default
+        animation: nil
     ) private var notes: FetchedResults<NoteEntity>
 
     @State private var searchMatchCount: Int = 0

@@ -121,10 +121,11 @@ struct QuickCapturePanel: View {
     }
 
     private func capture() {
-        let noteTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "Quick Capture"
-            : title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let noteContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let noteTitle = trimmedTitle.isEmpty
+            ? Constants.autoTitle(from: noteContent)
+            : trimmedTitle
 
         let service = NoteService(context: context)
         let note = service.createNote(

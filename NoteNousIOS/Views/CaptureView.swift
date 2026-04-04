@@ -134,7 +134,7 @@ struct CaptureView: View {
     private func captureNote() {
         let noteService = NoteService(context: viewContext)
         let note = noteService.createNote(
-            title: title.isEmpty ? "Untitled" : title,
+            title: title.isEmpty ? Constants.autoTitle(from: content) : title,
             content: content,
             paraCategory: .inbox
         )
