@@ -49,6 +49,14 @@ struct KeyboardCommands: Commands {
 
             Button("Toggle AI Chat") { appState.isAIChatVisible.toggle() }
                 .keyboardShortcut("a", modifiers: [.command, .shift])
+
+            Button("Toggle Split View") {
+                appState.isSplitActive.toggle()
+                if !appState.isSplitActive {
+                    appState.splitNote = nil
+                }
+            }
+            .keyboardShortcut("\\", modifiers: .command)
         }
 
         // Notes menu
