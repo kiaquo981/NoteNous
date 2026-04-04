@@ -35,6 +35,11 @@ final class AppState: ObservableObject {
     @Published var isCallNoteVisible: Bool = false
     @Published var activeCallNote: UUID?
     @Published var isQuickSwitcherVisible: Bool = false
+
+    // Split View
+    @Published var isSplitActive: Bool = false
+    @Published var splitNote: NoteEntity?
+
     @Published var recentNoteIds: [UUID] = [] {
         didSet {
             // Persist to UserDefaults
