@@ -43,6 +43,9 @@ struct NoteEditorView: View {
                     .padding(.top, 6)
             }
 
+            // Breadcrumb Navigation
+            BreadcrumbBar(note: note)
+
             // Header
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -650,5 +653,117 @@ struct NoteEditorView: View {
                 classifyNote()
             }
         }
+    }
+}
+
+// MARK: - Breadcrumb Navigation Bar
+
+struct BreadcrumbBar: View {
+    @ObservedObject var note: NoteEntity
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // PARA Category segment
+            BreadcrumbSegment(
+                icon: note.paraCategory.icon,
+                label: note.paraCategory.label,
+                accentColor: paraAccentColor
+            ) {
+                if appState.selectedPARAFilter == note.paraCategory {
+                    appState.selectedPARAFilter = nil
+                } else {
+                    appState.selectedPARAFilter = note.paraCategory
+                }
+            }
+
+            // Project or Area segment (if assigned)
+            if let project = note.project, let projectName = project.name {
+                BreadcrumbChevron()
+                BreadcrumbSegment(
+                    icon: "folder.fill",
+                    label: projectName,
+                    accentColor: Moros.oracle
+                ) {
+                    appState.selectedPARAFilter = .project
+                }
+            } else if let area = note.area, let areaName = area.name {
+                BreadcrumbChevron()
+                BreadcrumbSegment(
+                    icon: "square.stack.3d.up.fill",
+                    label: areaName,
+                    accentColor: Moros.verdit
+                ) {
+                    appState.selectedPARAFilter = .area
+                }
+            }
+
+            // Note title segment (non-interactive)
+            BreadcrumbChevron()
+            Text(note.title.isEmpty ? "Untitled" : note.title)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Moros.textMain)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 6)
+        .background(Moros.border.opacity(0.15))
+    }
+
+    private var paraAccentColor: Color {
+        switch note.paraCategory {
+        case .inbox: return Moros.ambient
+        case .project: return Moros.oracle
+        case .area: return Moros.verdit
+        case .resource: return Moros.ambient
+        case .archive: return Moros.textDim
+        }
+    }
+}
+
+// MARK: - Breadcrumb Segment (clickable)
+
+private struct BreadcrumbSegment: View {
+    let icon: String
+    let label: String
+    let accentColor: Color
+    let action: () -> Void
+
+    @State private var isHovered: Bool = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                Text(label)
+                    .font(.system(size: 11, weight: .regular))
+            }
+            .foregroundStyle(isHovered ? accentColor : Moros.textSub)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                isHovered ? accentColor.opacity(0.08) : Color.clear,
+                in: RoundedRectangle(cornerRadius: 4)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+}
+
+// MARK: - Breadcrumb Chevron Separator
+
+private struct BreadcrumbChevron: View {
+    var body: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 8, weight: .semibold))
+            .foregroundStyle(Moros.textGhost)
+            .padding(.horizontal, 4)
     }
 }
