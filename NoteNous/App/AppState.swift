@@ -6,6 +6,13 @@ enum FolgezettelDirection {
     case parent, child, previousSibling, nextSibling
 }
 
+enum StackSortMode: String, CaseIterable, Identifiable {
+    case updatedAt = "Date Modified"
+    case manual = "Manual"
+
+    var id: String { rawValue }
+}
+
 @MainActor
 final class AppState: ObservableObject {
     @Published var selectedView: ViewMode = .stack
@@ -14,6 +21,7 @@ final class AppState: ObservableObject {
     @Published var selectedPARAFilter: PARACategory?
     @Published var selectedCODEFilter: CODEStage?
     @Published var selectedNoteTypeFilter: NoteType?
+    @Published var stackSortMode: StackSortMode = .updatedAt
     @Published var activeToolView: ToolView? = nil
     @Published var isQuickCaptureVisible: Bool = false
     @Published var isCommandPaletteVisible: Bool = false

@@ -23,6 +23,7 @@ public class NoteEntity: NSManagedObject {
     @NSManaged public var updatedAt: Date?
     @NSManaged public var archivedAt: Date?
     @NSManaged public var contextNote: String?
+    @NSManaged public var sortOrder: Int32
 
     @NSManaged public var tags: NSSet?
     @NSManaged public var concepts: NSSet?

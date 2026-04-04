@@ -64,6 +64,24 @@ final class NoteService {
         save()
     }
 
+    /// Reorder notes by moving items at `source` indices to `destination` within the given array.
+    /// Persists the new order into `sortOrder` fields.
+    func moveNotes(in notes: inout [NoteEntity], from source: IndexSet, to destination: Int) {
+        notes.move(fromOffsets: source, toOffset: destination)
+        assignSortOrders(notes)
+    }
+
+    /// Assign sequential `sortOrder` values (0, 1, 2, ...) to preserve the array order.
+    func assignSortOrders(_ notes: [NoteEntity]) {
+        for (index, note) in notes.enumerated() {
+            let newOrder = Int32(index)
+            if note.sortOrder != newOrder {
+                note.sortOrder = newOrder
+            }
+        }
+        save()
+    }
+
     // MARK: - Queries
 
     func fetchNotes(

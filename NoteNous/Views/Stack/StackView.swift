@@ -15,6 +15,7 @@ struct StackView: View {
     ) private var notes: FetchedResults<NoteEntity>
 
     @State private var searchMatchCount: Int = 0
+    @State private var draggingNote: NoteEntity?
 
     private var searchService: SearchService {
         SearchService(context: context)
@@ -34,45 +35,65 @@ struct StackView: View {
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
             } else {
-                ForEach(filteredNotes, id: \.objectID) { note in
-                    NoteCardRow(note: note)
-                        .tag(note)
-                        .contextMenu {
-                            Button("Show in Finder") {
-                                VaultService.shared.showInFinder(note)
-                            }
-                            Button("Open in External Editor") {
-                                VaultService.shared.openInExternalEditor(note)
-                            }
-                            Button("Copy File Path") {
-                                VaultService.shared.copyPath(note)
-                            }
-                            Divider()
-                            Button(note.isPinned ? "Unpin" : "Pin") {
-                                let service = NoteService(context: context)
-                                service.togglePin(note)
-                            }
-                            Button("Archive") {
-                                let service = NoteService(context: context)
-                                service.archiveNote(note)
-                            }
-                            Divider()
-                            Button("Delete", role: .destructive) {
-                                let service = NoteService(context: context)
-                                service.deleteNote(note)
-                            }
+                // Pinned section
+                let pinned = filteredNotes.filter(\.isPinned)
+                let unpinned = filteredNotes.filter { !$0.isPinned }
+
+                if !pinned.isEmpty {
+                    Section {
+                        ForEach(pinned, id: \.objectID) { note in
+                            noteRow(note)
                         }
+                        .onMove { source, destination in
+                            guard appState.stackSortMode == .manual else { return }
+                            moveNotes(isPinned: true, from: source, to: destination)
+                        }
+                    } header: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pin.fill")
+                                .font(.caption2)
+                            Text("Pinned")
+                                .font(Moros.fontMonoSmall)
+                        }
+                        .foregroundStyle(Moros.signal)
+                    }
+                }
+
+                Section {
+                    ForEach(unpinned, id: \.objectID) { note in
+                        noteRow(note)
+                    }
+                    .onMove { source, destination in
+                        guard appState.stackSortMode == .manual else { return }
+                        moveNotes(isPinned: false, from: source, to: destination)
+                    }
+                } header: {
+                    if !pinned.isEmpty {
+                        Text("Notes")
+                            .font(Moros.fontMonoSmall)
+                            .foregroundStyle(Moros.textDim)
+                    }
                 }
             }
         }
         .listStyle(.inset(alternatesRowBackgrounds: false))
-
-
         .animation(.morosGentle, value: appState.selectedPARAFilter)
         .animation(.morosGentle, value: appState.selectedCODEFilter)
         .animation(.morosGentle, value: appState.selectedNoteTypeFilter)
+        .animation(.morosGentle, value: appState.stackSortMode)
         .searchable(text: $appState.searchQuery, prompt: "Search notes...")
         .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Picker("Sort", selection: $appState.stackSortMode) {
+                    ForEach(StackSortMode.allCases) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+                .help("Manual mode enables drag-to-reorder")
+            }
+
             if !appState.searchQuery.isEmpty {
                 ToolbarItem(placement: .automatic) {
                     Text("\(searchMatchCount) match\(searchMatchCount == 1 ? "" : "es")")
@@ -87,6 +108,68 @@ struct StackView: View {
         .onChange(of: appState.selectedCODEFilter) { updateMatchCount() }
         .onChange(of: appState.selectedNoteTypeFilter) { updateMatchCount() }
     }
+
+    // MARK: - Note Row with Drag Support
+
+    @ViewBuilder
+    private func noteRow(_ note: NoteEntity) -> some View {
+        NoteCardRow(note: note)
+            .tag(note)
+            .opacity(draggingNote?.objectID == note.objectID ? 0.4 : 1.0)
+            .onDrag {
+                self.draggingNote = note
+                return NSItemProvider(object: (note.zettelId ?? note.objectID.uriRepresentation().absoluteString) as NSString)
+            }
+            .onDrop(of: [.text], delegate: NoteDropDelegate(
+                note: note,
+                draggingNote: $draggingNote,
+                notes: filteredNotes,
+                context: context,
+                sortMode: appState.stackSortMode
+            ))
+            .contextMenu {
+                Button("Show in Finder") {
+                    VaultService.shared.showInFinder(note)
+                }
+                Button("Open in External Editor") {
+                    VaultService.shared.openInExternalEditor(note)
+                }
+                Button("Copy File Path") {
+                    VaultService.shared.copyPath(note)
+                }
+                Divider()
+                Button(note.isPinned ? "Unpin" : "Pin") {
+                    let service = NoteService(context: context)
+                    service.togglePin(note)
+                }
+                Button("Archive") {
+                    let service = NoteService(context: context)
+                    service.archiveNote(note)
+                }
+                Divider()
+                Button("Delete", role: .destructive) {
+                    let service = NoteService(context: context)
+                    service.deleteNote(note)
+                }
+            }
+    }
+
+    // MARK: - Move Notes (onMove handler)
+
+    private func moveNotes(isPinned: Bool, from source: IndexSet, to destination: Int) {
+        let section = isPinned
+            ? filteredNotes.filter(\.isPinned)
+            : filteredNotes.filter { !$0.isPinned }
+        var mutable = section
+        let service = NoteService(context: context)
+        service.moveNotes(in: &mutable, from: source, to: destination)
+        // Switch to manual mode on first drag
+        if appState.stackSortMode != .manual {
+            appState.stackSortMode = .manual
+        }
+    }
+
+    // MARK: - Filtered Notes
 
     private var filteredNotes: [NoteEntity] {
         // Deduplicate by objectID AND zettelId
@@ -132,6 +215,20 @@ struct StackView: View {
                 let rhsScore = scoreMap[rhs.objectID] ?? 0
                 return lhsScore > rhsScore
             }
+        } else {
+            // Apply sort mode
+            switch appState.stackSortMode {
+            case .updatedAt:
+                result.sort { lhs, rhs in
+                    if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
+                    return (lhs.updatedAt ?? .distantPast) > (rhs.updatedAt ?? .distantPast)
+                }
+            case .manual:
+                result.sort { lhs, rhs in
+                    if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
+                    return lhs.sortOrder < rhs.sortOrder
+                }
+            }
         }
 
         return result
@@ -139,6 +236,46 @@ struct StackView: View {
 
     private func updateMatchCount() {
         searchMatchCount = filteredNotes.count
+    }
+}
+
+// MARK: - Drop Delegate for Drag Reorder
+
+struct NoteDropDelegate: DropDelegate {
+    let note: NoteEntity
+    @Binding var draggingNote: NoteEntity?
+    let notes: [NoteEntity]
+    let context: NSManagedObjectContext
+    let sortMode: StackSortMode
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggingNote = nil
+        return true
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard sortMode == .manual else { return }
+        guard let dragging = draggingNote,
+              dragging.objectID != note.objectID else { return }
+        // Only reorder within same pinned group
+        guard dragging.isPinned == note.isPinned else { return }
+
+        let group = notes.filter { $0.isPinned == note.isPinned }
+        guard let fromIndex = group.firstIndex(where: { $0.objectID == dragging.objectID }),
+              let toIndex = group.firstIndex(where: { $0.objectID == note.objectID }) else { return }
+
+        if fromIndex != toIndex {
+            var mutable = group
+            withAnimation(.morosGentle) {
+                mutable.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+                let service = NoteService(context: context)
+                service.assignSortOrders(mutable)
+            }
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
     }
 }
 
