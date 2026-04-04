@@ -37,7 +37,6 @@ struct StackView: View {
                 ForEach(filteredNotes, id: \.objectID) { note in
                     NoteCardRow(note: note)
                         .tag(note)
-                        .listRowBackground(Color.clear)
                         .contextMenu {
                             Button("Show in Finder") {
                                 VaultService.shared.showInFinder(note)
@@ -147,7 +146,7 @@ struct StackView: View {
 
 struct NoteCardRow: View {
     @ObservedObject var note: NoteEntity
-    @State private var isHovered = false
+    // Hover removed — macOS List handles selection highlighting natively
 
     /// Strips YAML frontmatter from content preview
     private var cleanContent: String {
@@ -220,8 +219,5 @@ struct NoteCardRow: View {
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 8)
-        .background(isHovered ? Moros.limit02 : .clear, in: Rectangle())
-        .onHover { isHovered = $0 }
-        .animation(.morosMicro, value: isHovered)
     }
 }

@@ -112,8 +112,12 @@ struct NoteEditorView: View {
                     report: report,
                     onSplit: { showSplitSheet = true },
                     onRefineTitle: {
-                        // Focus title field — clear it to prompt rewrite
-                        // (user will see the placeholder "What is this note's claim?")
+                        let refined = Constants.autoTitle(from: note.content, fallback: note.title)
+                        if refined != note.title {
+                            note.title = refined
+                            note.updatedAt = Date()
+                            try? context.save()
+                        }
                     }
                 )
                 .transition(.morosScale)
