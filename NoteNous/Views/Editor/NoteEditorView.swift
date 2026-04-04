@@ -24,6 +24,10 @@ struct NoteEditorView: View {
     // Auto-classify debounce
     @State private var autoClassifyTask: Task<Void, Never>?
 
+    // Wikilink navigation — create-on-click confirmation
+    @State private var pendingWikilinkTitle: String?
+    @State private var showCreateWikilinkSheet: Bool = false
+
     // Promotion
     @State private var showPromotionSheet: Bool = false
     @State private var contextNote: String = ""
@@ -312,6 +316,24 @@ struct NoteEditorView: View {
                 .environment(\.managedObjectContext, context)
                 .environmentObject(appState)
         }
+        .alert(
+            "Create note?",
+            isPresented: $showCreateWikilinkSheet
+        ) {
+            Button("Create") {
+                if let title = pendingWikilinkTitle {
+                    confirmCreateAndNavigate(title: title)
+                    pendingWikilinkTitle = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                pendingWikilinkTitle = nil
+            }
+        } message: {
+            if let title = pendingWikilinkTitle {
+                Text("No note titled \"\(title)\" exists. Create it now?")
+            }
+        }
     }
 
     // MARK: - Methodology Context Bar
@@ -507,22 +529,33 @@ struct NoteEditorView: View {
     // MARK: - Wikilink Navigation
 
     private func handleWikilinkNavigation(title: String) {
-        let noteService = NoteService(context: context)
-        let linkService = LinkService(context: context)
         let parser = WikilinkParser(context: context)
 
-        let targetNote: NoteEntity
         if let existing = parser.findNote(byTitle: title) {
-            targetNote = existing
+            // Note exists — navigate directly and ensure link
+            let linkService = LinkService(context: context)
+            if note.objectID != existing.objectID {
+                linkService.createLink(from: note, to: existing, type: .reference)
+            }
+            appState.selectedNote = existing
         } else {
-            targetNote = noteService.createNote(title: title)
+            // Note does not exist — ask the user before creating
+            pendingWikilinkTitle = title
+            showCreateWikilinkSheet = true
+        }
+    }
+
+    private func confirmCreateAndNavigate(title: String) {
+        let noteService = NoteService(context: context)
+        let linkService = LinkService(context: context)
+
+        let newNote = noteService.createNote(title: title)
+
+        if note.objectID != newNote.objectID {
+            linkService.createLink(from: note, to: newNote, type: .reference)
         }
 
-        if note.objectID != targetNote.objectID {
-            linkService.createLink(from: note, to: targetNote, type: .reference)
-        }
-
-        appState.selectedNote = targetNote
+        appState.selectedNote = newNote
     }
 
     // MARK: - Link Sync (debounced)

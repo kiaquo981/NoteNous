@@ -467,7 +467,9 @@ final class MarkdownNSTextView: NSTextView {
         let point = convert(event.locationInWindow, from: nil)
         let charIndex = characterIndexForInsertion(at: point)
 
-        if let title = extractWikilinkAt(charIndex: charIndex) {
+        // Cmd+Click or Option+Click navigates wikilinks; plain click places cursor
+        let hasModifier = event.modifierFlags.contains(.command) || event.modifierFlags.contains(.option)
+        if hasModifier, let title = extractWikilinkAt(charIndex: charIndex) {
             onWikilinkClick?(title)
             return
         }
