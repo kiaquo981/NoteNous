@@ -94,6 +94,11 @@ struct StackView: View {
         var seenObjectIDs = Set<NSManagedObjectID>()
         var seenZettelIds = Set<String>()
         var result = Array(notes).filter { note in
+            // Skip ghost notes (no title AND no content)
+            if note.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && note.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return false
+            }
             // Dedup by objectID (Core Data level)
             if seenObjectIDs.contains(note.objectID) { return false }
             seenObjectIDs.insert(note.objectID)
