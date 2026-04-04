@@ -65,7 +65,7 @@ struct LocalGraphView: View {
                             y: location.y - panelSize.height / 2
                         )
                         if let node = layout.nodeAt(point: adjustedPoint, zoom: zoom, offset: offset) {
-                            appState.selectedNote = node.note
+                            appState.navigateToNote(node.note)
                         }
                     }
                     .onTapGesture(count: 1) { location in
@@ -74,7 +74,7 @@ struct LocalGraphView: View {
                             y: location.y - panelSize.height / 2
                         )
                         if let node = layout.nodeAt(point: adjustedPoint, zoom: zoom, offset: offset) {
-                            appState.selectedNote = node.note
+                            appState.navigateToNote(node.note)
                         }
                     }
 

@@ -230,7 +230,7 @@ struct ProcessingPipeline: View {
 
             // Open button
             Button {
-                appState.selectedNote = note
+                appState.navigateToNote(note)
             } label: {
                 Image(systemName: "arrow.forward.square")
                     .font(.system(size: 12))

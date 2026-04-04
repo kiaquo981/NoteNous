@@ -220,7 +220,7 @@ struct QuickSwitcherView: View {
     }
 
     private func openNote(_ note: NoteEntity) {
-        appState.selectedNote = note
+        appState.navigateToNote(note)
         dismiss()
     }
 

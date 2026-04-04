@@ -68,7 +68,7 @@ struct NoteCardGrid: View {
                         ForEach(filteredAndSortedNotes, id: \.objectID) { note in
                             GridNoteCard(note: note)
                                 .onTapGesture {
-                                    appState.selectedNote = note
+                                    appState.navigateToNote(note)
                                 }
                                 .transition(.morosScale)
                         }

@@ -28,7 +28,7 @@ struct SimilarNotesPanel: View {
                                     note: item.note,
                                     similarity: item.similarity,
                                     onNavigate: {
-                                        appState.selectedNote = item.note
+                                        appState.navigateToNote(item.note)
                                     },
                                     onLink: {
                                         createWikilink(to: item.note)

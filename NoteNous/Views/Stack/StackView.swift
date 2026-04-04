@@ -24,7 +24,13 @@ struct StackView: View {
     var body: some View {
         List(selection: Binding(
             get: { appState.selectedNote },
-            set: { appState.selectedNote = $0 }
+            set: { newNote in
+                if let note = newNote {
+                    appState.navigateToNote(note)
+                } else {
+                    appState.selectedNote = nil
+                }
+            }
         )) {
             if filteredNotes.isEmpty {
                 EmptyStateView(

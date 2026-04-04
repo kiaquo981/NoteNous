@@ -155,7 +155,7 @@ struct AIChatSidePanel: View {
                             .font(Moros.fontMicro)
                             .foregroundStyle(Moros.textGhost)
                         ForEach(message.referencedNotes.prefix(3), id: \.objectID) { note in
-                            Button(action: { appState.selectedNote = note }) {
+                            Button(action: { appState.navigateToNote(note) }) {
                                 Text(note.title.prefix(15) + (note.title.count > 15 ? "..." : ""))
                                     .font(Moros.fontMicro)
                                     .foregroundStyle(Moros.oracle)

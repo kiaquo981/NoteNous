@@ -40,11 +40,59 @@ struct NoteEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Sequence Navigator
-            if let zettelId = note.zettelId {
-                SequenceNavigator(zettelId: zettelId)
-                    .padding(.horizontal)
-                    .padding(.top, 6)
+            // Navigation Bar: History + Sequence Navigator
+            HStack(spacing: 8) {
+                // Back / Forward history buttons
+                HStack(spacing: 2) {
+                    Button {
+                        appState.navigateBack()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.caption)
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(appState.canGoBack ? Moros.oracle : Moros.textGhost)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!appState.canGoBack)
+                    .help("Back (Cmd+[)")
+
+                    Button {
+                        appState.navigateForward()
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(appState.canGoForward ? Moros.oracle : Moros.textGhost)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!appState.canGoForward)
+                    .help("Forward (Cmd+])")
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
+                .background(Moros.limit02, in: Rectangle())
+
+                if let zettelId = note.zettelId {
+                    SequenceNavigator(zettelId: zettelId)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top, 6)
+            .onChange(of: appState.shouldNavigateBack) {
+                if appState.shouldNavigateBack {
+                    appState.navigateBack()
+                    appState.shouldNavigateBack = false
+                }
+            }
+            .onChange(of: appState.shouldNavigateForward) {
+                if appState.shouldNavigateForward {
+                    appState.navigateForward()
+                    appState.shouldNavigateForward = false
+                }
             }
 
             // Breadcrumb Navigation
@@ -558,7 +606,15 @@ struct NoteEditorView: View {
             linkService.createLink(from: note, to: newNote, type: .reference)
         }
 
+<<<<<<< HEAD
         appState.selectedNote = newNote
+=======
+        if note.objectID != targetNote.objectID {
+            linkService.createLink(from: note, to: targetNote, type: .reference)
+        }
+
+        appState.navigateToNote(targetNote)
+>>>>>>> feature/moros/nav-history
     }
 
     // MARK: - Link Sync (debounced)
