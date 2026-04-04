@@ -135,7 +135,7 @@ struct IndexBrowserView: View {
                     List {
                         ForEach(entryNotes, id: \.objectID) { note in
                             EntryNoteRow(note: note) {
-                                appState.selectedNote = note
+                                appState.navigateToNote(note)
                             } onRemove: {
                                 if let noteId = note.id {
                                     indexService.removeNoteFromEntry(keyword: entry.keyword, noteId: noteId)

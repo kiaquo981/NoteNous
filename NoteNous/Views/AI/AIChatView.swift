@@ -160,7 +160,7 @@ struct AIChatView: View {
                             .foregroundStyle(Moros.textDim)
                         FlowLayout(spacing: 4) {
                             ForEach(message.referencedNotes, id: \.objectID) { note in
-                                Button(action: { appState.selectedNote = note }) {
+                                Button(action: { appState.navigateToNote(note) }) {
                                     Text("[[\(note.title)]]")
                                         .font(Moros.fontCaption)
                                         .foregroundStyle(Moros.oracle)

@@ -90,6 +90,14 @@ struct KeyboardCommands: Commands {
 
         // Navigate menu
         CommandMenu("Navigate") {
+            Button("Back") { appState.shouldNavigateBack = true }
+                .keyboardShortcut("[", modifiers: .command)
+
+            Button("Forward") { appState.shouldNavigateForward = true }
+                .keyboardShortcut("]", modifiers: .command)
+
+            Divider()
+
             Button("Folgezettel Parent") { appState.navigateFolgezettel = .parent }
                 .keyboardShortcut(.upArrow, modifiers: .command)
 

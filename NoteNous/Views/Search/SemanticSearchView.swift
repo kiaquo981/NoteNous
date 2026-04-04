@@ -203,7 +203,7 @@ struct SemanticSearchView: View {
                     SemanticSearchResultRow(
                         result: result,
                         onNavigate: {
-                            appState.selectedNote = result.note
+                            appState.navigateToNote(result.note)
                         },
                         onFindSimilar: {
                             findSimilarTo(result.note)

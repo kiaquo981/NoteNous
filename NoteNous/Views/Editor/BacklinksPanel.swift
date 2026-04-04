@@ -147,7 +147,7 @@ struct BacklinksPanel: View {
 
             ForEach(unlinkedMentions, id: \.objectID) { mentioningNote in
                 Button {
-                    appState.selectedNote = mentioningNote
+                    appState.navigateToNote(mentioningNote)
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "doc.text")
@@ -226,7 +226,7 @@ struct BacklinksPanel: View {
 
     private func navigateToSource(of link: NoteLinkEntity) {
         guard let sourceNote = link.sourceNote else { return }
-        appState.selectedNote = sourceNote
+        appState.navigateToNote(sourceNote)
     }
 
     private func confirmLink(_ link: NoteLinkEntity) {

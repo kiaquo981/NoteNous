@@ -28,6 +28,8 @@ final class AppState: ObservableObject {
     @Published var isExportVisible: Bool = false
     @Published var isZettelCreationVisible: Bool = false
     @Published var navigateFolgezettel: FolgezettelDirection? = nil
+    @Published var shouldNavigateBack: Bool = false
+    @Published var shouldNavigateForward: Bool = false
     @Published var isSemanticSearchVisible: Bool = false
     @Published var isAIChatVisible: Bool = false
     @Published var isAgentDashboardVisible: Bool = false
@@ -41,6 +43,59 @@ final class AppState: ObservableObject {
             let strings = recentNoteIds.map { $0.uuidString }
             UserDefaults.standard.set(strings, forKey: "AppState.recentNoteIds")
         }
+    }
+
+    // Navigation history (back/forward like a browser)
+    private(set) var navBackStack: [NSManagedObjectID] = []
+    private(set) var navForwardStack: [NSManagedObjectID] = []
+    private var isNavigatingHistory: Bool = false
+
+    var canGoBack: Bool { !navBackStack.isEmpty }
+    var canGoForward: Bool { !navForwardStack.isEmpty }
+
+    /// Navigate to a note and push the current note onto the back stack.
+    /// Call this instead of setting selectedNote directly when the user
+    /// initiates navigation (clicking a note, following a wikilink, etc.).
+    func navigateToNote(_ note: NoteEntity) {
+        guard note.objectID != selectedNote?.objectID else { return }
+        if let current = selectedNote {
+            navBackStack.append(current.objectID)
+            // Limit history depth
+            if navBackStack.count > 50 {
+                navBackStack.removeFirst(navBackStack.count - 50)
+            }
+        }
+        navForwardStack.removeAll()
+        isNavigatingHistory = true
+        selectedNote = note
+        isNavigatingHistory = false
+        objectWillChange.send()
+    }
+
+    func navigateBack() {
+        guard let previousID = navBackStack.popLast() else { return }
+        if let current = selectedNote {
+            navForwardStack.append(current.objectID)
+        }
+        isNavigatingHistory = true
+        selectedNote = fetchNote(by: previousID)
+        isNavigatingHistory = false
+        objectWillChange.send()
+    }
+
+    func navigateForward() {
+        guard let nextID = navForwardStack.popLast() else { return }
+        if let current = selectedNote {
+            navBackStack.append(current.objectID)
+        }
+        isNavigatingHistory = true
+        selectedNote = fetchNote(by: nextID)
+        isNavigatingHistory = false
+        objectWillChange.send()
+    }
+
+    private func fetchNote(by objectID: NSManagedObjectID) -> NoteEntity? {
+        try? viewContext.existingObject(with: objectID) as? NoteEntity
     }
 
     private var cancellables = Set<AnyCancellable>()

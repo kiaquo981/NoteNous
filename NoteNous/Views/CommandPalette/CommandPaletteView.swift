@@ -169,7 +169,7 @@ struct CommandPaletteView: View {
 
     private func selectNote(_ note: NoteEntity) {
         searchService.addRecentSearch(query)
-        appState.selectedNote = note
+        appState.navigateToNote(note)
         dismiss()
     }
 

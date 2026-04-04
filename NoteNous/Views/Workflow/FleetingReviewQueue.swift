@@ -128,7 +128,7 @@ struct FleetingReviewQueue: View {
                     selectedFleetingNote = note
                     showDiscardAlert = true
                 } onDevelop: {
-                    appState.selectedNote = note
+                    appState.navigateToNote(note)
                 } onMerge: {
                     mergeTarget = note
                     showMergeSheet = true

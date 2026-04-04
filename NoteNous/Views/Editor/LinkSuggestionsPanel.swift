@@ -94,7 +94,7 @@ struct LinkSuggestionsPanel: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 // Target note title (clickable)
-                Button(action: { appState.selectedNote = suggestion.targetNote }) {
+                Button(action: { appState.navigateToNote(suggestion.targetNote) }) {
                     Text(suggestion.targetNote.title.isEmpty ? "(untitled)" : suggestion.targetNote.title)
                         .font(Moros.fontSmall)
                         .foregroundStyle(Moros.oracle)

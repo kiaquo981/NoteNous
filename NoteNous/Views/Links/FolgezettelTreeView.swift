@@ -157,7 +157,7 @@ struct FolgezettelTreeView: View {
     private func navigateTo(zettelId: String) {
         let service = FolgezettelService(context: context)
         if let note = service.findNote(byFolgezettelId: zettelId, in: context) {
-            appState.selectedNote = note
+            appState.navigateToNote(note)
         }
     }
 

@@ -262,7 +262,7 @@ struct DeskCanvasView: View {
             zoomLevel: canvasState.zoomLevel,
             onTap: { shiftHeld in
                 canvasState.toggleSelection(noteId, shiftHeld: shiftHeld)
-                appState.selectedNote = note
+                appState.navigateToNote(note)
             },
             onDragChanged: { value in
                 if !canvasState.isDragging {
@@ -318,7 +318,7 @@ struct DeskCanvasView: View {
                     editingTitle = note.title
                 },
                 onOpenInEditor: {
-                    appState.selectedNote = note
+                    appState.navigateToNote(note)
                     appState.selectedView = .stack
                 },
                 onLinkTo: {

@@ -38,7 +38,7 @@ struct LocalGraphView: View {
                 .gesture(panGesture)
                 .onTapGesture(count: 2) { location in
                     if let node = layout.nodeAt(point: location, zoom: zoom, offset: offset) {
-                        appState.selectedNote = node.note
+                        appState.navigateToNote(node.note)
                     }
                 }
 

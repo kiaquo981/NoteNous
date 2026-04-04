@@ -493,7 +493,7 @@ struct GraphView: View {
                     y: -node.position.y * zoom + 300
                 )
             }
-            appState.selectedNote = node.note
+            appState.navigateToNote(node.note)
         }
     }
 
@@ -504,7 +504,7 @@ struct GraphView: View {
         if let sid = selectedNodeId, let idx = layout.nodeIndex(for: sid) {
             let node = layout.nodes[idx]
             Button("Open Note") {
-                appState.selectedNote = node.note
+                appState.navigateToNote(node.note)
             }
             Divider()
             Button(node.isFixed ? "Unpin from Graph" : "Pin in Graph") {

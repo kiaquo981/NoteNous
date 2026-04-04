@@ -198,7 +198,7 @@ struct LinkBrowserView: View {
     private func navigateTo(link: NoteLinkEntity) {
         let target = selectedSection == .outgoing ? link.targetNote : link.sourceNote
         if let target {
-            appState.selectedNote = target
+            appState.navigateToNote(target)
         }
     }
 
