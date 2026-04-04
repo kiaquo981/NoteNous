@@ -111,6 +111,75 @@ final class AppState: ObservableObject {
         try? viewContext.existingObject(with: objectID) as? NoteEntity
     }
 
+    // MARK: - Tab State
+
+    @Published var openTabIds: [UUID] = [] {
+        didSet {
+            let strings = openTabIds.map { $0.uuidString }
+            UserDefaults.standard.set(strings, forKey: "AppState.openTabIds")
+        }
+    }
+
+    @Published var activeTabId: UUID? {
+        didSet {
+            if let id = activeTabId {
+                UserDefaults.standard.set(id.uuidString, forKey: "AppState.activeTabId")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "AppState.activeTabId")
+            }
+        }
+    }
+
+    static let maxTabs = 10
+
+    var hasOpenTabs: Bool { !openTabIds.isEmpty }
+
+    func openTab(for note: NoteEntity) {
+        guard let noteId = note.id else { return }
+        if !openTabIds.contains(noteId) {
+            openTabIds.append(noteId)
+            while openTabIds.count > Self.maxTabs {
+                openTabIds.removeFirst()
+            }
+        }
+        activeTabId = noteId
+        selectedNote = note
+    }
+
+    func closeTab(_ noteId: UUID) {
+        guard let index = openTabIds.firstIndex(of: noteId) else { return }
+        openTabIds.remove(at: index)
+        if activeTabId == noteId {
+            if openTabIds.isEmpty {
+                activeTabId = nil
+                selectedNote = nil
+            } else {
+                let newIndex = min(index, openTabIds.count - 1)
+                let newTabId = openTabIds[newIndex]
+                activeTabId = newTabId
+                let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
+                request.predicate = NSPredicate(format: "id == %@", newTabId as CVarArg)
+                request.fetchLimit = 1
+                selectedNote = try? viewContext.fetch(request).first
+            }
+        }
+    }
+
+    func closeActiveTab() {
+        guard let tabId = activeTabId else { return }
+        closeTab(tabId)
+    }
+
+    func openCurrentNoteAsTab() {
+        guard let note = selectedNote else { return }
+        openTab(for: note)
+    }
+
+    func switchToTab(_ noteId: UUID) {
+        guard openTabIds.contains(noteId) else { return }
+        activeTabId = noteId
+    }
+
     private var cancellables = Set<AnyCancellable>()
     let coreData = CoreDataStack.shared
 
@@ -122,6 +191,14 @@ final class AppState: ObservableObject {
         // Restore recent note IDs from UserDefaults
         if let strings = UserDefaults.standard.stringArray(forKey: "AppState.recentNoteIds") {
             recentNoteIds = strings.compactMap { UUID(uuidString: $0) }
+        }
+
+        // Restore open tabs from UserDefaults
+        if let tabStrings = UserDefaults.standard.stringArray(forKey: "AppState.openTabIds") {
+            openTabIds = tabStrings.compactMap { UUID(uuidString: $0) }
+        }
+        if let activeStr = UserDefaults.standard.string(forKey: "AppState.activeTabId") {
+            activeTabId = UUID(uuidString: activeStr)
         }
 
         // Track recent notes when selectedNote changes

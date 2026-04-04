@@ -273,20 +273,27 @@ struct MainWindowView: View {
             ViewRouter()
         } detail: {
             HStack(spacing: 0) {
-                if let note = appState.selectedNote {
-                    if appState.isSplitActive {
-                        SplitEditorView(primaryNote: note)
-                    } else {
-                        NoteEditorView(note: note)
-                            .id(note.objectID)
-                            .transition(.morosNoteSwitch)
+                VStack(spacing: 0) {
+                    if appState.hasOpenTabs {
+                        NoteTabBar()
+                            .transition(.morosDropDown)
                     }
-                } else {
-                    EmptyStateView(
-                        icon: "note.text",
-                        title: "No Note Selected",
-                        subtitle: "Select a note or press \u{2318}N to create one"
-                    )
+
+                    if let note = appState.selectedNote {
+                        if appState.isSplitActive {
+                            SplitEditorView(primaryNote: note)
+                        } else {
+                            NoteEditorView(note: note)
+                                .id(note.objectID)
+                                .transition(.morosNoteSwitch)
+                        }
+                    } else {
+                        EmptyStateView(
+                            icon: "note.text",
+                            title: "No Note Selected",
+                            subtitle: "Select a note or press \u{2318}N to create one"
+                        )
+                    }
                 }
 
                 if appState.isAIChatVisible {
@@ -299,6 +306,7 @@ struct MainWindowView: View {
                 }
             }
             .animation(.morosPanel, value: appState.isSplitActive)
+            .animation(.morosSnap, value: appState.hasOpenTabs)
         }
         .navigationSplitViewStyle(.balanced)
         .frame(minWidth: 900, minHeight: 600)
@@ -425,5 +433,116 @@ struct MainWindowView: View {
         let service = NoteService(context: context)
         let note = service.createNote(title: title, content: content)
         appState.selectedNote = note
+    }
+}
+
+// MARK: - Note Tab Bar
+
+struct NoteTabBar: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.managedObjectContext) private var context
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                ForEach(appState.openTabIds, id: \.self) { tabId in
+                    NoteTabItem(
+                        noteId: tabId,
+                        isActive: tabId == appState.activeTabId,
+                        onSelect: { selectTab(tabId) },
+                        onClose: { appState.closeTab(tabId) },
+                        onMiddleClick: { appState.closeTab(tabId) }
+                    )
+                }
+            }
+        }
+        .frame(height: 30)
+        .background(Moros.limit01)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Moros.border).frame(height: 1)
+        }
+    }
+
+    private func selectTab(_ noteId: UUID) {
+        appState.switchToTab(noteId)
+        let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
+        request.predicate = NSPredicate(format: "id == %@", noteId as CVarArg)
+        request.fetchLimit = 1
+        if let note = try? context.fetch(request).first {
+            appState.selectedNote = note
+        }
+    }
+}
+
+struct NoteTabItem: View {
+    let noteId: UUID
+    let isActive: Bool
+    let onSelect: () -> Void
+    let onClose: () -> Void
+    let onMiddleClick: () -> Void
+
+    @Environment(\.managedObjectContext) private var context
+    @State private var isHovered: Bool = false
+    @State private var tabTitle: String = "Untitled"
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(tabTitle)
+                .font(Moros.fontSmall)
+                .foregroundStyle(isActive ? Moros.textMain : Moros.textSub)
+                .lineLimit(1)
+                .frame(maxWidth: 140)
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(isHovered ? Moros.textSub : Moros.textGhost)
+            }
+            .buttonStyle(.plain)
+            .opacity(isHovered || isActive ? 1 : 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(isActive ? Moros.limit02 : (isHovered ? Moros.limit01.opacity(0.6) : Color.clear))
+        .overlay(alignment: .bottom) {
+            if isActive { Rectangle().fill(Moros.oracle).frame(height: 2) }
+        }
+        .overlay(alignment: .trailing) {
+            Rectangle().fill(Moros.borderDim).frame(width: 1)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { onSelect() }
+        .onHover { isHovered = $0 }
+        .background(MiddleClickView(action: onMiddleClick))
+        .onAppear { loadTitle() }
+        .animation(.morosMicro, value: isActive)
+        .animation(.morosMicro, value: isHovered)
+    }
+
+    private func loadTitle() {
+        let request = NoteEntity.fetchRequest() as! NSFetchRequest<NoteEntity>
+        request.predicate = NSPredicate(format: "id == %@", noteId as CVarArg)
+        request.fetchLimit = 1
+        if let note = try? context.fetch(request).first {
+            tabTitle = note.title.isEmpty ? "Untitled" : note.title
+        }
+    }
+}
+
+struct MiddleClickView: NSViewRepresentable {
+    let action: () -> Void
+    func makeNSView(context: Context) -> MiddleClickNSView {
+        let view = MiddleClickNSView()
+        view.action = action
+        return view
+    }
+    func updateNSView(_ nsView: MiddleClickNSView, context: Context) {
+        nsView.action = action
+    }
+    class MiddleClickNSView: NSView {
+        var action: (() -> Void)?
+        override func otherMouseDown(with event: NSEvent) {
+            if event.buttonNumber == 2 { action?() } else { super.otherMouseDown(with: event) }
+        }
+        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     }
 }

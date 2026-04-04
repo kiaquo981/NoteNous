@@ -96,6 +96,14 @@ struct KeyboardCommands: Commands {
             .keyboardShortcut("c", modifiers: [.command, .shift])
         }
 
+        // Tabs menu
+        CommandMenu("Tabs") {
+            Button("Open Note in Tab") { appState.openCurrentNoteAsTab() }
+                .keyboardShortcut("t", modifiers: .command)
+            Button("Close Tab") { appState.closeActiveTab() }
+                .keyboardShortcut("w", modifiers: .command)
+        }
+
         // Navigate menu
         CommandMenu("Navigate") {
             Button("Back") { appState.shouldNavigateBack = true }

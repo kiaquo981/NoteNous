@@ -606,15 +606,7 @@ struct NoteEditorView: View {
             linkService.createLink(from: note, to: newNote, type: .reference)
         }
 
-<<<<<<< HEAD
-        appState.selectedNote = newNote
-=======
-        if note.objectID != targetNote.objectID {
-            linkService.createLink(from: note, to: targetNote, type: .reference)
-        }
-
-        appState.navigateToNote(targetNote)
->>>>>>> feature/moros/nav-history
+        appState.navigateToNote(newNote)
     }
 
     // MARK: - Link Sync (debounced)
