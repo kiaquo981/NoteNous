@@ -32,15 +32,59 @@ struct LocalGraphView: View {
             Divider()
 
             // Canvas
-            graphCanvas
-                .frame(height: panelSize.height)
-                .clipped()
-                .gesture(panGesture)
-                .onTapGesture(count: 2) { location in
-                    if let node = layout.nodeAt(point: location, zoom: zoom, offset: offset) {
-                        appState.selectedNote = node.note
+            ZStack {
+                graphCanvas
+                    .frame(height: panelSize.height)
+                    .clipped()
+                    .gesture(panGesture)
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active(let location):
+                            let adjustedPoint = CGPoint(
+                                x: location.x - panelSize.width / 2,
+                                y: location.y - panelSize.height / 2
+                            )
+                            if let node = layout.nodeAt(point: adjustedPoint, zoom: zoom, offset: offset) {
+                                hoveredNodeId = node.id
+                            } else {
+                                hoveredNodeId = nil
+                            }
+                        case .ended:
+                            hoveredNodeId = nil
+                        }
                     }
+                    .overlay {
+                        ScrollWheelView { delta in
+                            let scaleFactor: CGFloat = 1.0 + delta * -0.005
+                            zoom = max(0.2, min(4.0, zoom * scaleFactor))
+                        }
+                    }
+                    .onTapGesture(count: 2) { location in
+                        let adjustedPoint = CGPoint(
+                            x: location.x - panelSize.width / 2,
+                            y: location.y - panelSize.height / 2
+                        )
+                        if let node = layout.nodeAt(point: adjustedPoint, zoom: zoom, offset: offset) {
+                            appState.selectedNote = node.note
+                        }
+                    }
+                    .onTapGesture(count: 1) { location in
+                        let adjustedPoint = CGPoint(
+                            x: location.x - panelSize.width / 2,
+                            y: location.y - panelSize.height / 2
+                        )
+                        if let node = layout.nodeAt(point: adjustedPoint, zoom: zoom, offset: offset) {
+                            appState.selectedNote = node.note
+                        }
+                    }
+
+                // Tooltip on hover
+                if let hid = hoveredNodeId, let idx = layout.nodeIndex(for: hid) {
+                    localNodeTooltip(for: layout.nodes[idx])
                 }
+            }
+            .frame(height: panelSize.height)
+            .clipped()
 
             Divider()
 
@@ -251,6 +295,22 @@ struct LocalGraphView: View {
         }
     }
 
+    private func localNodeTooltip(for node: ForceDirectedLayout.Node) -> some View {
+        let screenPos = CGPoint(
+            x: node.position.x * zoom + offset.x + panelSize.width / 2,
+            y: node.position.y * zoom + offset.y + panelSize.height / 2 - node.radius * zoom - 30
+        )
+
+        return Text(node.cachedTitle.isEmpty ? "Untitled" : node.cachedTitle)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 4))
+            .position(screenPos)
+            .allowsHitTesting(false)
+    }
+
     private var panGesture: some Gesture {
         DragGesture()
             .onChanged { value in
@@ -283,6 +343,9 @@ struct LocalGraphView: View {
                 }
             }
             .onEnded { _ in
+                if let nodeId = draggingNodeId {
+                    layout.pinNode(id: nodeId, pinned: false)
+                }
                 draggingNodeId = nil
                 isDraggingBackground = false
             }
